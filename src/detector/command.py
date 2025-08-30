@@ -16,8 +16,8 @@ def detector_command():
 # Initialize a detector.
 @click.command("init")
 @click.argument("path", type=click.Path())
-@click.option("-w", "--width", type=click.INT, default=256)
-@click.option("-h", "--height", type=click.INT, default=256)
+@click.option("-w", "--width", type=click.INT, default=512)
+@click.option("-h", "--height", type=click.INT, default=512)
 @click.option("-d", "--depth", type=click.INT, default=4)
 def init_command(path: str, width: int, height: int, depth: int):
     processed_path = Path(path).with_suffix(".pth")
@@ -33,9 +33,8 @@ def init_command(path: str, width: int, height: int, depth: int):
 @click.option("-d", "--dataset", type=click.Path(True, file_okay=False), required=1)
 @click.option("-e", "--epochs", type=click.INT)
 @click.option("-t", "--threshold", type=click.FLOAT)
-@click.option("-b", "--batch-size", type=click.INT, default=4)
 @click.option("-D", "--device", type=click.Choice(["auto", "cpu", "cuda"]), default="auto")
-def train_command(path: str, dataset: str, epochs: int, threshold: float, batch_size: int, device: str):
+def train_command(path: str, dataset: str, epochs: int, threshold: float, device: str):
     detector = Detector.load(device, Path(path).with_suffix(".pth"))
 
     duration_history = []
@@ -44,6 +43,12 @@ def train_command(path: str, dataset: str, epochs: int, threshold: float, batch_
     def callback(iteration, loss, duration): 
         duration_history.append(duration)
         loss_history.append(loss)
+
+        if len(duration_history) > 10:
+            del duration_history[0]
+
+        if len(loss_history) > 5:
+            del loss_history[0]
 
         if epochs != None and iteration < epochs:
             parts = [
@@ -73,7 +78,7 @@ def train_command(path: str, dataset: str, epochs: int, threshold: float, batch_
 
         return False
 
-    detector.train(Dataset(Path(dataset)), batch_size, callback)
+    detector.train(Dataset(Path(dataset)), callback)
     detector.save(Path(path))
 
 # Detect the censored parts of an image.
@@ -85,7 +90,7 @@ def train_command(path: str, dataset: str, epochs: int, threshold: float, batch_
 def detect_command(path: str, image: str, output: str, device: str):
     detector = Detector.load(device, Path(path).with_suffix(".pth"))
 
-    output_image = detector.detect(Image.open(Path(image).absolute()).convert("RGB"))[0].squeeze()
+    output_image = detector.detect(Image.open(Path(image).absolute()).convert("RGB"))
     output_image = (torch.sigmoid(output_image) * 255).byte().cpu().numpy()
     output_image = Image.fromarray(output_image)
 

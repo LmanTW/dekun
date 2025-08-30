@@ -72,10 +72,7 @@ class Detector:
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr = 1e-4)
 
     # Train the detector.
-    def train(self, dataset: Dataset, batch_size: int = 4, callback: Union[Callable[[int, int, int], bool], None] = None):
-        if batch_size < 1:
-            raise Exception("The batch size must be equal or larger than 1")
-
+    def train(self, dataset: Dataset, callback: Union[Callable[[int, int, int], bool], None] = None):
         self.model.train()
 
         iteration = 1
@@ -108,11 +105,11 @@ class Detector:
 
     # Detect the censored parts of an image.
     def detect(self, image: pil.Image):
-        transformed_image, transform = transform_image(fit_image(image, self.width, self.height))
+        resized_image, transform = fit_image(image, self.width, self.height)
 
-        output = self.model(cast(torch.Tensor, transformed_image).unsqueeze(0).squeeze(0).to(self.device))
-        output = output[transform[1]:transform[1] + transform[3], transform[0]:transform[0] + transform[2]]
-        output = torch.nn.functional.interpolate(output.unsqueeze(0).unsqueeze(0), size=(image.height, image.width))
+        output = self.model(cast(torch.Tensor, transform_image(resized_image)).unsqueeze(0).to(self.device))
+        output = output[:, :, transform[1]:transform[1] + transform[3], transform[0]:transform[0] + transform[2]]
+        output = torch.nn.functional.interpolate(output, size=(image.height, image.width)).squeeze(0).squeeze(0)
 
         return output
 

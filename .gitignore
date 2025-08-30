@@ -7,3 +7,7 @@ model
 dataset
 
 .DS_Store
+
+*.pth
+*.png
+*.jpg
