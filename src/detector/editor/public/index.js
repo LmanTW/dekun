@@ -75,11 +75,11 @@ class Scene {
       ctx.drawImage(image.element, image.transform.x, image.transform.y, image.transform.width, image.transform.height)
 
       for (const stroke of Control.strokes) {
-        Scene.drawLine('rgb(0,255,0)', stroke.size, stroke.x1, stroke.y1, stroke.x2, stroke.y2)
+        Scene.drawLine('rgb(0,255,0)', stroke.type, stroke.size, stroke.x1, stroke.y1, stroke.x2, stroke.y2)
       }
 
       if (mouse.state === 'create') {
-        Scene.drawLine('rgba(0,255,0,0.5)', Control.stroke_size, mouse.startX, mouse.startY, mouse.imageX, mouse.imageY)
+        Scene.drawLine('rgba(0,255,0,0.5)', Control.stroke_type, Control.stroke_size, mouse.startX, mouse.startY, mouse.imageX, mouse.imageY)
       } else {
         ctx.fillStyle = 'rgba(255,0,0,0.5)'
         ctx.arc(mouse.globalX * window.devicePixelRatio, mouse.globalY * window.devicePixelRatio, (image.transform.widthScale + image.transform.heightScale) * (Control.stroke_size / 2), 0, 2 * Math.PI);
@@ -98,8 +98,9 @@ class Scene {
   } 
 
   // Draw a line in image space.
-  static drawLine(color, size, x1, y1, x2, y2) {
+  static drawLine(color, type, size, x1, y1, x2, y2) {
     ctx.strokeStyle = color
+    ctx.lineCap = type
     ctx.lineWidth = (image.transform.widthScale + image.transform.heightScale) * size
     ctx.moveTo(image.transform.x + (x1 * image.transform.widthScale), image.transform.y + y1 * image.transform.heightScale)
     ctx.lineTo(image.transform.x + (x2 * image.transform.widthScale), image.transform.y + y2 * image.transform.heightScale)
@@ -115,6 +116,7 @@ window.addEventListener('resize', Scene.resize)
 // The control.
 class Control {
   static strokes = []
+  static stroke_type = 'butt'
   static stroke_size = 5
 
   static save_start = undefined
@@ -158,6 +160,7 @@ class Control {
 
     for (const stroke of Control.strokes) {
       image_ctx.strokeStyle = 'rgb(255,255,255)'
+      image_ctx.lineCap = stroke.type
       image_ctx.lineWidth = stroke.size * 2
       image_ctx.moveTo(stroke.x1, stroke.y1)
       image_ctx.lineTo(stroke.x2, stroke.y2)
@@ -212,6 +215,7 @@ window.addEventListener('mouseup', () => {
         y1: mouse.startY,
         x2: mouse.imageX,
         y2: mouse.imageY,
+        type: Control.stroke_type,
         size: Control.stroke_size
       })
     }
@@ -227,7 +231,11 @@ window.addEventListener('wheel', (event) => {
 
 window.addEventListener('keydown', (event) => {
   if (image.transform !== undefined) {
-    if (Control.strokes.length > 0 && (event.key === 'Backspace' || event.key === 'Delete')) {
+    if (event.key === '1') {
+      Control.stroke_type = 'butt'
+    } else if (event.key === '2') {
+      Control.stroke_type = 'round'
+    } else if (Control.strokes.length > 0 && (event.key === 'Backspace' || event.key === 'Delete')) {
       Control.stroke_size = Control.strokes[Control.strokes.length - 1].size
       Control.strokes.splice(Control.strokes.length - 1, 1)
     } else if (Control.save_start === undefined && event.key === 'Enter') {
