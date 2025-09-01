@@ -78,7 +78,7 @@ class Scene {
         Scene.drawLine('rgb(0,255,0)', stroke.type, stroke.size, stroke.x1, stroke.y1, stroke.x2, stroke.y2)
       }
 
-      if (mouse.state === 'create') {
+      if (mouse.state === 'line') {
         Scene.drawLine('rgba(0,255,0,0.5)', Control.stroke_type, Control.stroke_size, mouse.startX, mouse.startY, mouse.imageX, mouse.imageY)
       } else {
         ctx.fillStyle = 'rgba(255,0,0,0.5)'
@@ -137,7 +137,7 @@ class Control {
 
     image.id = data.id
     image.page = data.page
-    image.element.src = `/image/${data.media}/${data.page}`
+    image.element.src = `/nhentai/${data.media}/${data.page}`
 
     Control.strokes = []
   }
@@ -197,7 +197,7 @@ window.addEventListener('mousemove', (event) => {
 
 window.addEventListener('mousedown', () => {
   if (image.transform !== undefined) {
-    mouse.state = 'create'
+    mouse.state = 'line'
   }
 
   mouse.pressed = true
@@ -209,7 +209,7 @@ window.addEventListener('mouseup', () => {
   mouse.pressed = false
 
   if (image.transform !== undefined) {
-    if (mouse.state === 'create') {
+    if (mouse.state === 'line') {
       Control.strokes.push({
         x1: mouse.startX,
         y1: mouse.startY,
@@ -231,9 +231,13 @@ window.addEventListener('wheel', (event) => {
 
 window.addEventListener('keydown', (event) => {
   if (image.transform !== undefined) {
-    if (event.key === '1') {
+    if (event.key === '-') {
+      Control.stroke_size = Math.max(2, Control.stroke_size - 1)
+    } else if (event.key === '=') {
+      Control.stroke_size += 1
+    } else if (event.key === '[') {
       Control.stroke_type = 'butt'
-    } else if (event.key === '2') {
+    } else if (event.key === ']') {
       Control.stroke_type = 'round'
     } else if (Control.strokes.length > 0 && (event.key === 'Backspace' || event.key === 'Delete')) {
       Control.stroke_size = Control.strokes[Control.strokes.length - 1].size

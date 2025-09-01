@@ -1,6 +1,7 @@
 from core.utils import format_duration, average_difference
 import PIL.Image as Image
 from pathlib import Path
+from math import ceil
 import click
 import torch
 
@@ -52,14 +53,14 @@ def train_command(path: str, dataset: str, iterations: int, threshold: float, de
     duration_history = []
     loss_history = []
 
-    def callback(iteration, loss, duration): 
+    def callback(iteration, loss, duration):
         duration_history.append(duration)
         loss_history.append(loss)
 
         if len(duration_history) > 10:
             del duration_history[0]
 
-        if len(loss_history) > 5:
+        if len(loss_history) > 3:
             del loss_history[0]
 
         if iterations != None and iteration < iterations:
@@ -75,13 +76,13 @@ def train_command(path: str, dataset: str, iterations: int, threshold: float, de
             return True
 
         if threshold != None and loss > threshold:
-            estimate = format_duration(((loss - threshold) / average_difference(loss_history)) * (sum(duration_history) / len(duration_history))) if len(loss_history) > 1 else "unknown"
+            estimate = ceil((loss - threshold) / average_difference(loss_history)) * (sum(duration_history) / len(duration_history)) if len(loss_history) > 1 else 0
 
             parts = [
                 f"Iteration: {iteration}",
                 f"Loss: {loss:.5f}",
                 f"Duration: {format_duration(duration)}",
-                f"Estimate: {estimate}"
+                f"Estimate: {format_duration(estimate) if len(loss_history) > 1 and estimate >= 0 else 'unknown'}"
             ]
 
             print(" | ".join(f"{part: <20}" for part in parts))
@@ -102,7 +103,7 @@ def train_command(path: str, dataset: str, iterations: int, threshold: float, de
 def detect_command(path: str, image: str, output: str, device: str):
     detector = Detector.load(device, Path(path).with_suffix(".pth"))
 
-    output_image = detector.detect(Image.open(Path(image).absolute()).convert("RGB"))
+    output_image = detector.detect(Image.open(Path(image)).convert("RGB"))
     output_image = (torch.sigmoid(output_image) * 255).byte().cpu().numpy()
     output_image = Image.fromarray(output_image)
 

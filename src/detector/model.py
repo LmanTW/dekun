@@ -94,7 +94,6 @@ class Detector:
                 self.optimizer.zero_grad()
                 loss.backward()
                 self.optimizer.step()
-
                 self.loss = loss.item()
 
             self.iterations += 1
