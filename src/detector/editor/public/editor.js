@@ -235,9 +235,9 @@ window.addEventListener('keydown', (event) => {
       Control.stroke_size = Math.max(2, Control.stroke_size - 1)
     } else if (event.key === '=') {
       Control.stroke_size += 1
-    } else if (event.key === '[') {
+    } else if (event.key === '1') {
       Control.stroke_type = 'butt'
-    } else if (event.key === ']') {
+    } else if (event.key === '2') {
       Control.stroke_type = 'round'
     } else if (Control.strokes.length > 0 && (event.key === 'Backspace' || event.key === 'Delete')) {
       Control.stroke_size = Control.strokes[Control.strokes.length - 1].size
