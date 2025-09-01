@@ -97,7 +97,7 @@ class Detector:
 
                 self.loss = loss.item()
 
-            self.iteration += 1
+            self.iterations += 1
 
             if callback == None:
                 break
