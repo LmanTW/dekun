@@ -49,10 +49,13 @@ class Detector:
     @staticmethod
     def load(device: str, path: Path):
         data = torch.load(str(path), resolve_device(device))
-
         detector = Detector(device, data["width"], data["height"], data["depth"])
+
         detector.model.load_state_dict(data["model_state"])
         detector.optimizer.load_state_dict(data["optimizer_state"])
+
+        detector.loss = data["loss"]
+        detector.iterations = data["iterations"]
 
         return detector
 
@@ -68,6 +71,9 @@ class Detector:
         self.height = height
         self.depth = depth
 
+        self.loss = 1
+        self.iterations = 0
+
         self.criterion = torch.nn.BCEWithLogitsLoss()
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr = 1e-4)
 
@@ -75,11 +81,8 @@ class Detector:
     def train(self, dataset: Dataset, callback: Union[Callable[[int, int, int], bool], None] = None):
         self.model.train()
 
-        iteration = 1
-        start = time.time()
-
         while True:
-            loss_value = 1
+            start = time.time()
 
             for image, mask in dataset:
                 image_tensor = cast(torch.Tensor, transform_image(fit_image(image, self.width, self.height)[0]))
@@ -92,16 +95,15 @@ class Detector:
                 loss.backward()
                 self.optimizer.step()
 
-                loss_value = loss.item()
+                self.loss = loss.item()
+
+            self.iteration += 1
 
             if callback == None:
                 break
             else:
-                if not callback(iteration, loss_value, round(time.time() - start)):
+                if not callback(self.iterations, self.loss, round(time.time() - start)):
                     break
-
-            iteration += 1
-            start = time.time()
 
     # Detect the censored parts of an image.
     def detect(self, image: pil.Image):
@@ -119,6 +121,9 @@ class Detector:
             "width": self.width,
             "height": self.height,
             "depth": self.depth,
+
+            "loss": self.loss,
+            "iterations": self.iterations,
 
             "model_state": self.model.state_dict(),
             "optimizer_state": self.optimizer.state_dict()

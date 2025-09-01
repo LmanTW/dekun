@@ -1,5 +1,5 @@
 from requests import request as send_request
-from flask import Flask, request
+from flask import Flask, Response, request
 from base64 import b64decode
 from random import random
 from pathlib import Path
@@ -50,6 +50,19 @@ def start_editor(dataset_path: Path):
     def image(id: str, page: str):
         response = send_request("GET", IMAGE_HOST + f"/galleries/{id}/{page}")
 
-        return response.content, response.status_code
+        if response.status_code != 200:
+            return response.content, response.status_code
+
+        page_format = Path(page).suffix
+        content_type = ""
+
+        if page_format == ".jpg":
+            content_type = "image/jpeg"
+        elif page_format == ".png":
+            content_type = "image/png"
+        elif page_format == ".webp":
+            content_type = "image/webp"
+
+        return Response(response.content, content_type=content_type)
 
     app.run(host="0.0.0.0", port=8080, debug=True)

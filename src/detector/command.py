@@ -27,14 +27,26 @@ def init_command(path: str, width: int, height: int, depth: int):
 
     Detector("cpu", width, height, depth).save(processed_path)
 
+# Get the info of a detector.
+@click.command("info")
+@click.argument("path", type=click.Path(True))
+def info_command(path: str):
+    data = torch.load(str(Path(path).with_suffix(".pth")), "cpu")
+
+    print(f"Width: {data['width']}")
+    print(f"Height: {data['height']}")
+    print(f"Depth: {data['depth']}")
+    print(f"Loss: {data['loss']}")
+    print(f"Iterations: {data['iterations']}")
+
 # Train a detector.
 @click.command("train")
 @click.argument("path", type=click.Path(True))
 @click.option("-d", "--dataset", type=click.Path(True, file_okay=False), required=1)
-@click.option("-e", "--epochs", type=click.INT)
+@click.option("-i", "--iterations", type=click.INT)
 @click.option("-t", "--threshold", type=click.FLOAT)
 @click.option("-D", "--device", type=click.Choice(["auto", "cpu", "cuda"]), default="auto")
-def train_command(path: str, dataset: str, epochs: int, threshold: float, device: str):
+def train_command(path: str, dataset: str, iterations: int, threshold: float, device: str):
     detector = Detector.load(device, Path(path).with_suffix(".pth"))
 
     duration_history = []
@@ -50,12 +62,12 @@ def train_command(path: str, dataset: str, epochs: int, threshold: float, device
         if len(loss_history) > 5:
             del loss_history[0]
 
-        if epochs != None and iteration < epochs:
+        if iterations != None and iteration < iterations:
             parts = [
                 f"Iteration: {iteration}",
                 f"Loss: {loss:.5f}",
                 f"Duration: {format_duration(duration)}",
-                f"Estimate: {format_duration((epochs - iteration) * (sum(duration_history) / len(duration_history)))}"
+                f"Estimate: {format_duration((iterations - iteration) * (sum(duration_history) / len(duration_history)))}"
             ]
 
             print(" | ".join(f"{part: <20}" for part in parts))
@@ -103,6 +115,7 @@ def dataset_command(path: str):
     start_editor(Path(path))
 
 detector_command.add_command(init_command)
+detector_command.add_command(info_command)
 detector_command.add_command(train_command)
 detector_command.add_command(detect_command)
 detector_command.add_command(dataset_command)
