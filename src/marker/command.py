@@ -40,6 +40,21 @@ def info_command(path: str):
     print(f"Loss: {data['loss']}")
     print(f"Iterations: {data['iterations']}")
 
+# Mark an image.
+@click.command("mark")
+@click.argument("path", type=click.Path(True))
+@click.option("-i", "--image", type=click.Path(True, dir_okay=False), required=1)
+@click.option("-o", "--output", type=click.Path(False, dir_okay=False), default="output.png")
+@click.option("-D", "--device", type=click.Choice(["auto", "cpu", "cuda"]), default="auto")
+def mark_command(path: str, image: str, output: str, device: str):
+    marker = Marker.load(device, Path(path).with_suffix(".pth"))
+
+    output_image = marker.mark(Image.open(Path(image)).convert("RGB"))
+    output_image = (torch.sigmoid(output_image) * 255).byte().cpu().numpy()
+    output_image = Image.fromarray(output_image)
+
+    output_image.save(output)
+
 # Train a marker.
 @click.command("train")
 @click.argument("path", type=click.Path(True))
@@ -104,21 +119,6 @@ def train_command(path: str, dataset: str, iterations: int, threshold: float, de
         marker.train(Dataset(Path(dataset)), callback)
         marker.save(Path(path))
 
-# Detect the censored parts of an image.
-@click.command("detect")
-@click.argument("path", type=click.Path(True))
-@click.option("-i", "--image", type=click.Path(True, dir_okay=False), required=1)
-@click.option("-o", "--output", type=click.Path(False, dir_okay=False), default="output.png")
-@click.option("-D", "--device", type=click.Choice(["auto", "cpu", "cuda"]), default="auto")
-def detect_command(path: str, image: str, output: str, device: str):
-    marker = Marker.load(device, Path(path).with_suffix(".pth"))
-
-    output_image = marker.mark(Image.open(Path(image)).convert("RGB"))
-    output_image = (torch.sigmoid(output_image) * 255).byte().cpu().numpy()
-    output_image = Image.fromarray(output_image)
-
-    output_image.save(output)
-
 # Start the marker dataset editor.
 @click.command("dataset")
 @click.argument("path", type=click.Path(True))
@@ -127,6 +127,6 @@ def dataset_command(path: str):
 
 marker_command.add_command(init_command)
 marker_command.add_command(info_command)
+marker_command.add_command(mark_command)
 marker_command.add_command(train_command)
-marker_command.add_command(detect_command)
 marker_command.add_command(dataset_command)
