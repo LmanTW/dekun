@@ -5,18 +5,18 @@ const ctx = canvas.getContext('2d')
 let gallary = undefined
 
 sause.addEventListener('change', async () => {
-  const pages = await (await fetch (`/nhentai/pages/${sause.value}`)).json()
+  const parts = sause.value.split('/')
+  const pages = await (await fetch (`/nhentai/pages/${parts[0]}`)).json()
 
   if (pages === null) {
     sause.value = ''
-
     gallary = undefined
   } else if (pages !== null) {
     gallary = {
-      id: sause.value,
+      id: parts[0],
 
       pages,
-      index: 1
+      index: (parts.length > 1 && parts[1].length > 0) ? parseInt(parts[1]) - 1 : 0
     }
 
     Control.next()
@@ -168,11 +168,11 @@ class Control {
       image.page = parts[1]
       image.element.src = `/nhentai/image/${parts[0]}/${parts[1]}`
 
+      sause.value = `${gallary.id}/${gallary.index + 1}`
       gallary.index++
 
       if (gallary.index >= gallary.pages.length) {
-        sause.input = ''
-
+        sause.value = ''
         gallary = undefined
       }
     }
@@ -233,7 +233,7 @@ window.addEventListener('mousemove', (event) => {
   }
 })
 
-window.addEventListener('mousedown', () => {
+canvas.addEventListener('mousedown', () => {
   if (image.transform !== undefined) {
     mouse.state = 'line'
   }
@@ -243,7 +243,7 @@ window.addEventListener('mousedown', () => {
   mouse.startY = mouse.imageY
 })
 
-window.addEventListener('mouseup', () => {
+canvas.addEventListener('mouseup', () => {
   mouse.pressed = false
 
   if (image.transform !== undefined) {
