@@ -6,7 +6,7 @@ import torch
 import time
 
 from core.utils import resolve_device
-from detector.dataset import Dataset
+from marker.dataset import Dataset
 from core.unet import UNet
 
 transform_image = transform.Compose([
@@ -42,24 +42,24 @@ def fit_image(image: pil.Image, width: int, height: int):
 
     return new_image, (offset_x, offset_y, new_width, new_height)
 
-# A detector to detect the censored parts of an image.
-class Detector:
+# A marker to detect the censored parts of an image.
+class Marker:
 
-    # Load a detector.
+    # Load a marker.
     @staticmethod
     def load(device: str, path: Path):
         data = torch.load(str(path), resolve_device(device))
-        detector = Detector(device, data["width"], data["height"], data["depth"])
+        marker = Marker(device, data["width"], data["height"], data["depth"])
 
-        detector.model.load_state_dict(data["model_state"])
-        detector.optimizer.load_state_dict(data["optimizer_state"])
+        marker.model.load_state_dict(data["model_state"])
+        marker.optimizer.load_state_dict(data["optimizer_state"])
 
-        detector.loss = data["loss"]
-        detector.iterations = data["iterations"]
+        marker.loss = data["loss"]
+        marker.iterations = data["iterations"]
 
-        return detector
+        return marker
 
-    # Initialize a detector.
+    # Initialize a marker.
     def __init__(self, device: str, width: int, height: int, depth: int = 4):
         if depth < 1:
             raise Exception("The depth must be equal or larger than 1")
@@ -77,7 +77,7 @@ class Detector:
         self.criterion = torch.nn.BCEWithLogitsLoss()
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr = 1e-4)
 
-    # Train the detector.
+    # Train the marker.
     def train(self, dataset: Dataset, callback: Union[Callable[[int, int, int], bool], None] = None):
         self.model.train()
 
@@ -104,8 +104,8 @@ class Detector:
                 if not callback(self.iterations, self.loss, round(time.time() - start)):
                     break
 
-    # Detect the censored parts of an image.
-    def detect(self, image: pil.Image):
+    # Mark an image.
+    def mark(self, image: pil.Image):
         resized_image, transform = fit_image(image, self.width, self.height)
 
         output = self.model(cast(torch.Tensor, transform_image(resized_image)).unsqueeze(0).to(self.device))
@@ -114,7 +114,7 @@ class Detector:
 
         return output
 
-    # Save the detector.
+    # Save the marker.
     def save(self, path: Path):
         torch.save({
             "width": self.width,

@@ -6,7 +6,7 @@ from random import random
 from pathlib import Path
 from math import floor
 
-from detector.dataset import Dataset 
+from marker.dataset import Dataset 
 
 API_HOST = "https://api.nhentai.zip"
 IMAGE_HOST = "https://i.nhentai.zip"

@@ -1,7 +1,7 @@
 import PIL.Image as Image
 from pathlib import Path
 
-# A dataset to train the detector.
+# A dataset to train the marker.
 class Dataset():
 
     # Initialize a dataset.

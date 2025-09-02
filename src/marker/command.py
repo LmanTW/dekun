@@ -5,16 +5,16 @@ from math import ceil
 import click
 import torch
 
-from detector.editor.main import start_editor
-from detector.dataset import Dataset
-from detector.model import Detector
+from marker.editor.main import start_editor
+from marker.dataset import Dataset
+from marker.model import Marker
 
-# The detector command group.
-@click.group("detector")
-def detector_command():
+# The marker command group.
+@click.group("marker")
+def marker_command():
     pass
 
-# Initialize a detector.
+# Initialize a marker.
 @click.command("init")
 @click.argument("path", type=click.Path())
 @click.option("-w", "--width", type=click.INT, default=512)
@@ -26,9 +26,9 @@ def init_command(path: str, width: int, height: int, depth: int):
     if processed_path.exists():
         raise Exception(f"The file already exists: {str(processed_path)}")
 
-    Detector("cpu", width, height, depth).save(processed_path)
+    Marker("cpu", width, height, depth).save(processed_path)
 
-# Get the info of a detector.
+# Get the info of a marker.
 @click.command("info")
 @click.argument("path", type=click.Path(True))
 def info_command(path: str):
@@ -40,7 +40,7 @@ def info_command(path: str):
     print(f"Loss: {data['loss']}")
     print(f"Iterations: {data['iterations']}")
 
-# Train a detector.
+# Train a marker.
 @click.command("train")
 @click.argument("path", type=click.Path(True))
 @click.option("-d", "--dataset", type=click.Path(True, file_okay=False), required=1)
@@ -48,7 +48,7 @@ def info_command(path: str):
 @click.option("-t", "--threshold", type=click.FLOAT)
 @click.option("-D", "--device", type=click.Choice(["auto", "cpu", "cuda"]), default="auto")
 def train_command(path: str, dataset: str, iterations: int, threshold: float, device: str):
-    detector = Detector.load(device, Path(path).with_suffix(".pth"))
+    marker = Marker.load(device, Path(path).with_suffix(".pth"))
 
     duration_history = []
     loss_history = []
@@ -63,7 +63,7 @@ def train_command(path: str, dataset: str, iterations: int, threshold: float, de
         if len(loss_history) > 3:
             del loss_history[0]
 
-        if iterations != None and iteration < iterations:
+        if iterations != None:
             parts = [
                 f"Iteration: {iteration}",
                 f"Loss: {loss:.5f}",
@@ -73,9 +73,10 @@ def train_command(path: str, dataset: str, iterations: int, threshold: float, de
 
             print(" | ".join(f"{part: <20}" for part in parts))
 
-            return True
+            if iteration < iterations:
+                return True
 
-        if threshold != None and loss > threshold:
+        if threshold != None:
             estimate = ceil((loss - threshold) / average_difference(loss_history)) * (sum(duration_history) / len(duration_history)) if len(loss_history) > 1 else 0
 
             parts = [
@@ -87,20 +88,21 @@ def train_command(path: str, dataset: str, iterations: int, threshold: float, de
 
             print(" | ".join(f"{part: <20}" for part in parts))
 
-            return True
+            if loss > threshold:
+                return True
 
         return False
 
-    if (iterations != None and detector.iterations >= iterations) or (threshold != None and detector.loss <= threshold):
+    if (iterations == None or marker.iterations >= iterations) and (threshold == None or marker.loss <= threshold):
         parts = [
-            f"Iteration: {detector.iterations}",
-            f"Loss: {detector.loss:.5f}",
+            f"Iteration: {marker.iterations}",
+            f"Loss: {marker.loss:.5f}",
         ]
 
         print(" | ".join(f"{part: <20}" for part in parts))
     else:
-        detector.train(Dataset(Path(dataset)), callback)
-        detector.save(Path(path))
+        marker.train(Dataset(Path(dataset)), callback)
+        marker.save(Path(path))
 
 # Detect the censored parts of an image.
 @click.command("detect")
@@ -109,22 +111,22 @@ def train_command(path: str, dataset: str, iterations: int, threshold: float, de
 @click.option("-o", "--output", type=click.Path(False, dir_okay=False), default="output.png")
 @click.option("-D", "--device", type=click.Choice(["auto", "cpu", "cuda"]), default="auto")
 def detect_command(path: str, image: str, output: str, device: str):
-    detector = Detector.load(device, Path(path).with_suffix(".pth"))
+    marker = Marker.load(device, Path(path).with_suffix(".pth"))
 
-    output_image = detector.detect(Image.open(Path(image)).convert("RGB"))
+    output_image = marker.mark(Image.open(Path(image)).convert("RGB"))
     output_image = (torch.sigmoid(output_image) * 255).byte().cpu().numpy()
     output_image = Image.fromarray(output_image)
 
     output_image.save(output)
 
-# Start the detector dataset editor.
+# Start the marker dataset editor.
 @click.command("dataset")
 @click.argument("path", type=click.Path(True))
 def dataset_command(path: str):
     start_editor(Path(path))
 
-detector_command.add_command(init_command)
-detector_command.add_command(info_command)
-detector_command.add_command(train_command)
-detector_command.add_command(detect_command)
-detector_command.add_command(dataset_command)
+marker_command.add_command(init_command)
+marker_command.add_command(info_command)
+marker_command.add_command(train_command)
+marker_command.add_command(detect_command)
+marker_command.add_command(dataset_command)
