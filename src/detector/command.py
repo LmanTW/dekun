@@ -91,8 +91,16 @@ def train_command(path: str, dataset: str, iterations: int, threshold: float, de
 
         return False
 
-    detector.train(Dataset(Path(dataset)), callback)
-    detector.save(Path(path))
+    if (iterations != None and detector.iterations >= iterations) or (threshold != None and detector.loss <= threshold):
+        parts = [
+            f"Iteration: {detector.iterations}",
+            f"Loss: {detector.loss:.5f}",
+        ]
+
+        print(" | ".join(f"{part: <20}" for part in parts))
+    else:
+        detector.train(Dataset(Path(dataset)), callback)
+        detector.save(Path(path))
 
 # Detect the censored parts of an image.
 @click.command("detect")

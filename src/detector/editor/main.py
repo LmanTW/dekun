@@ -66,8 +66,10 @@ def start_editor(dataset_path: Path):
 
     @app.route("/remove/<id>", methods=["DELETE"])
     def remove(id):
-        dataset_path.joinpath(f"{image}-mask{dataset.image_map[id]['image']}").unlink()
+        dataset_path.joinpath(f"{id}-image{dataset.image_map[id]['image']}").unlink()
         dataset_path.joinpath(f"{id}-mask{dataset.image_map[id]['mask']}").unlink()
+
+        dataset.load()
 
         return "Success"
 

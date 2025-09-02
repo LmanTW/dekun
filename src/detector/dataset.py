@@ -48,3 +48,5 @@ class Dataset():
                 raise Exception(f"Incomplete dataset entry: {key}")
 
             self.image_list.append(key)
+
+        self.image_list.sort(key=lambda name: -self.directory.joinpath(f"{name}-image{self.image_map[name]['image']}").stat().st_ctime)
