@@ -1,5 +1,27 @@
+const sause = document.getElementById('sause')
 const canvas = document.getElementById('canvas')
 const ctx = canvas.getContext('2d')
+
+let gallary = undefined
+
+sause.addEventListener('change', async () => {
+  const pages = await (await fetch (`/nhentai/pages/${sause.value}`)).json()
+
+  if (pages === null) {
+    sause.value = ''
+
+    gallary = undefined
+  } else if (pages !== null) {
+    gallary = {
+      id: sause.value,
+
+      pages,
+      index: 1
+    }
+
+    Control.next()
+  }
+})
 
 const image = {
   id: 0,
@@ -125,19 +147,35 @@ class Control {
   static async next() {
     image.transform = undefined
 
-    let data
+    if (gallary === undefined) {
+      let data
 
-    while (true) {
-      try {
-        data = await (await fetch('/next')).json()
+      while (true) {
+        try {
+          data = await (await fetch('/next')).json()
 
-        break
-      } catch (_) {}
+          break
+        } catch (_) {}
+      }
+
+      image.id = data.id
+      image.page = data.page
+      image.element.src = `/nhentai/image/${data.media}/${data.page}`
+    } else {
+      const parts = gallary.pages[gallary.index].split('/')
+
+      image.id = gallary.id
+      image.page = parts[1]
+      image.element.src = `/nhentai/image/${parts[0]}/${parts[1]}`
+
+      gallary.index++
+
+      if (gallary.index >= gallary.pages.length) {
+        sause.input = ''
+
+        gallary = undefined
+      }
     }
-
-    image.id = data.id
-    image.page = data.page
-    image.element.src = `/nhentai/${data.media}/${data.page}`
 
     Control.strokes = []
   }

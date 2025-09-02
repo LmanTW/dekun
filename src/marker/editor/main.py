@@ -73,8 +73,21 @@ def start_editor(dataset_path: Path):
 
         return "Success"
 
-    @app.route("/nhentai/<id>/<page>")
-    def nhentai(id: str, page: str):
+    @app.route("/nhentai/pages/<id>")
+    def nhentai_pages(id):
+        gallery_pages = send_request("GET",  API_HOST + f"/pages/{id}").json()
+
+        if type(gallery_pages) == dict:
+            return "null"
+
+        for index, _ in enumerate(gallery_pages):
+            gallery_pages[index] = '/'.join(gallery_pages[index].split('/')[-2:])
+
+        return gallery_pages
+
+
+    @app.route("/nhentai/image/<id>/<page>")
+    def nhentai_image(id: str, page: str):
         response = send_request("GET", IMAGE_HOST + f"/galleries/{id}/{page}")
 
         if response.status_code != 200:
