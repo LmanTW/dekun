@@ -5,6 +5,9 @@ from base64 import b64decode
 from random import random
 from pathlib import Path
 from math import floor
+import json
+
+from werkzeug.datastructures import cache_control
 
 from marker.dataset import Dataset 
 
@@ -33,11 +36,11 @@ def start_editor(dataset_path: Path):
 
     @app.route("/drivers/nHentai/latest")
     def nHentai_latest():
-        return send_request("GET", "https://api.nhentai.zip/latest").text
+        return Response(send_request("GET", "https://api.nhentai.zip/latest").text, content_type="application/json")
 
     @app.route("/drivers/nHentai/pages/<id>")
     def nHentai_pages(id: str):
-        return send_request("GET", f"https://api.nhentai.zip/pages/{id}").text
+        return Response(send_request("GET", f"https://api.nhentai.zip/pages/{id}").text, content_type="application/json")
 
     @app.route("/drivers/nHentai/image/<id>/<page>")
     def nHentai_image(id: str, page: str):
@@ -56,7 +59,11 @@ def start_editor(dataset_path: Path):
         elif page_format == ".webp":
             content_type = "image/webp"
 
-        return Response(response.content, content_type=content_type)
+        response = Response(response.content)
+        response.headers['Content-Type'] = content_type
+        response.headers["Cache-Control"] = "max-age=86400"
+
+        return response
 
     @app.route("/submit", methods=["PUT"])
     def submit():
@@ -65,14 +72,14 @@ def start_editor(dataset_path: Path):
         name = request.args.get('name')
 
         if name == None:
-            return "Failed"
+            return Response("false", content_type="application/json")
 
         dataset_path.joinpath(f"{name}-image.jpg").write_bytes(b64decode(data["image"]))
         dataset_path.joinpath(f"{name}-mask.png").write_bytes(b64decode(data["mask"]))
 
         dataset.add(name, ".jpg", ".png")
 
-        return "Success"
+        return Response("true", content_type="application/json")
 
     @app.route("/remove/<name>", methods=["DELETE"])
     def remove(name):
@@ -82,13 +89,13 @@ def start_editor(dataset_path: Path):
 
             dataset.remove(name)
 
-            return "Success"
+            return Response("true", content_type="application/json")
 
-        return "Failed"
+        return Response("false", content_type="application/json")
 
     @app.route("/list")
     def list():
-        return dataset.image_list
+        return Response(json.dumps(dataset.image_list), content_type="application/json")
 
     @app.route("/image/<name>")
     def image(name):

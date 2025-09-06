@@ -87,8 +87,8 @@ class Image {
 
     this.name = info.name
 
-    source = (info.update) ? info.source : source
-    input_source.value = info.source
+    source = info.value
+    input_source.value = info.display
 
     element.src = info.url
     element.crossOrigin = 'anonymous'
