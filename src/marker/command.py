@@ -120,13 +120,13 @@ def train_command(path: str, dataset: str, iterations: int, threshold: float, de
         marker.save(Path(path))
 
 # Start the marker dataset editor.
-@click.command("dataset")
+@click.command("editor")
 @click.argument("path", type=click.Path(True))
-def dataset_command(path: str):
+def editor_command(path: str):
     start_editor(Path(path))
 
 marker_command.add_command(init_command)
 marker_command.add_command(info_command)
 marker_command.add_command(mark_command)
 marker_command.add_command(train_command)
-marker_command.add_command(dataset_command)
+marker_command.add_command(editor_command)

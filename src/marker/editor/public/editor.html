@@ -5,19 +5,115 @@
     <meta charset="UTF-8">
 
     <title>Dataset Editor</title>
+
+    <link rel="stylesheet" href="./editor.css">
   </head>
 
-  <body style="background-color: black; width: 100dvw; height: 100dvh; margin: 0rem; overflow: hidden">
-    <canvas id="canvas" style="width: 100dvw; height: 100dvh"></canvas>
+  <body style="flex-direction: column; background-color: var(--color-background); width: 100dvw; height: 100dvh; margin: 0rem; overflow: hidden">
+    <div style="flex-shrink: 0; display: flex; align-items: center; background-color: var(--color-container-dark); left: 0rem; top: 0rem; width: 100dvw; height: 3.5rem">
+      <h2 style="text-wrap: nowrap; margin-left: var(--spacing-medium); margin-right: var(--spacing-medium)">Dataset Editor</h2>
+      <button id="button-help" style="margin-right: var(--spacing-medium); cursor: pointer">Help</button>
+      <button id="button-all" style="margin-right: var(--spacing-medium); cursor: pointer">All</button>
 
-    <div style="position: fixed; display: flex; align-items: center; gap: 0.5rem; left: 0.5rem; top: 0.5rem">
-      <p style="color: white; margin: 0rem">Sause Code:</p>
-      <input id="sause" autocomplete="off" style="width: 5rem">
-    <div>
+      <div style="flex: 1"></div>
 
-    <div style="position: fixed; display: flex; align-items: center; gap: 0.5rem; left: 0.5rem; bottom: 0.5rem; width: 99dvw">
-      <p style="flex: 1; color: white; text-wrap: nowrap; margin: 0rem">[Left Click] to draw, [Mouse Whell] or [+, -] to change stoke size, [1, 2] to change stoke type, [Enter] to save, [Space] to skip.</p>
-      <a href="/viewer" style="color: white; text-wrap: nowrap; user-select: none">Dataset Viewer</a>
+      <select id="select-provider" style="margin-right: var(--spacing-small)">
+        <option value="nHentai">nHentai</option>
+      </select>
+
+      <input id="input-source" autocomplete="off" style="width: 7.5rem; margin-right: var(--spacing-medium)">
+    </div>
+
+    <canvas id="canvas-main" oncontextmenu="return false" style="width: 100dvw; height: calc(100dvh - 3.5rem)"></canvas>
+    
+    <div id="container-help" style="position: fixed; display: none; background-color: var(--color-container-dark); border-radius: 0.5rem; left: 0.5rem; top: 4rem; max-height: calc(100dvh - 6.5rem); padding: var(--spacing-medium); overflow-y: auto;">
+      <p style="margin-bottom: var(--spacing-medium)">
+        <span style="background-color: var(--color-container-light); border-radius: 0.25rem; padding: var(--spacing-tiny)">W</span>
+        <span style="background-color: var(--color-container-light); border-radius: 0.25rem; padding: var(--spacing-tiny)">A</span>
+        <span style="background-color: var(--color-container-light); border-radius: 0.25rem; padding: var(--spacing-tiny)">S</span>
+        <span style="background-color: var(--color-container-light); border-radius: 0.25rem; padding: var(--spacing-tiny)">D</span>
+        to move.
+      </p>
+
+      <p style="margin-bottom: var(--spacing-medium)">
+        <span style="background-color: var(--color-container-light); border-radius: 0.25rem; padding: var(--spacing-tiny)">E</span>
+        to zoom in,
+        <span style="background-color: var(--color-container-light); border-radius: 0.25rem; padding: var(--spacing-tiny)">Q</span>
+        to zoom out.
+      </p>
+
+      <p style="margin-bottom: var(--spacing-large)">
+        <span style="background-color: var(--color-container-light); border-radius: 0.25rem; padding: var(--spacing-tiny)">R</span>
+        to reset the camera.
+      </p>
+
+      <p style="margin-bottom: var(--spacing-medium)">
+        <span style="background-color: var(--color-container-light); border-radius: 0.25rem; padding: var(--spacing-tiny)">1</span>
+        <span style="background-color: var(--color-container-light); border-radius: 0.25rem; padding: var(--spacing-tiny)">2</span>
+        <span style="background-color: var(--color-container-light); border-radius: 0.25rem; padding: var(--spacing-tiny)">3</span>
+        to switch stroke type.
+      </p>
+
+      <ul style="padding-left: var(--spacing-large); margin-bottom: var(--spacing-medium)">
+       <li style="margin-bottom: var(--spacing-medium)">
+        <span style="background-color: var(--color-container-light); border-radius: 0.25rem; padding: var(--spacing-tiny)">1</span>
+        Line with sharp cap.
+       </li>
+
+       <li style="margin-bottom: var(--spacing-medium)">
+        <span style="background-color: var(--color-container-light); border-radius: 0.25rem; padding: var(--spacing-tiny)">2</span>
+        Line with round cap.
+       </li>
+
+       <li>
+        <span style="background-color: var(--color-container-light); border-radius: 0.25rem; padding: var(--spacing-tiny)">3</span>
+        Points to make a shape.
+       </li>
+      </ul>
+
+      <p style="margin-bottom: var(--spacing-large)">
+        <span style="background-color: var(--color-container-light); border-radius: 0.25rem; padding: var(--spacing-tiny)">X</span>
+        to delete the last stroke or point.
+      </p>
+
+      <p style="margin-bottom: var(--spacing-medium)">
+        <span style="background-color: var(--color-container-light); border-radius: 0.25rem; padding: var(--spacing-tiny)">Left Click</span>
+        to draw.
+      </p>
+
+      <p style="margin-bottom: var(--spacing-medium)">
+        <span style="background-color: var(--color-container-light); border-radius: 0.25rem; padding: var(--spacing-tiny)">Right Click</span>
+        depends on the stroke type.
+      </p>
+
+      <ul style="padding-left: var(--spacing-large); margin-bottom: var(--spacing-large)">
+       <li style="margin-bottom: var(--spacing-medium)">
+        <span style="background-color: var(--color-container-light); border-radius: 0.25rem; padding: var(--spacing-tiny)">1</span>
+        <span style="background-color: var(--color-container-light); border-radius: 0.25rem; padding: var(--spacing-tiny)">2</span>
+        Continue from the end of the last stroke.
+       </li>
+
+       <li>
+        <span style="background-color: var(--color-container-light); border-radius: 0.25rem; padding: var(--spacing-tiny)">3</span>
+        Complete the shape.
+       </li>
+      </ul>
+      
+      <p>
+        <span style="background-color: var(--color-container-light); border-radius: 0.25rem; padding: var(--spacing-tiny)">Z</span>
+        to skip,
+        <span style="background-color: var(--color-container-light); border-radius: 0.25rem; padding: var(--spacing-tiny)">C</span>
+        to submit the current image.
+      </p>
+    </div>
+
+    <div id="container-all" style="position: fixed; display: none; flex-direction: column; background-color: var(--color-container-dark); border-radius: 0.5rem; right: 0.5rem; top: 4rem; max-height: calc(100dvh - 6.5rem); padding: var(--spacing-medium); overflow-y: auto;">
+      <div style="display: flex">
+        <h5 id="text-total" style="flex: 1; margin-right: var(--spacing-medium);">0 Entries</h5>
+        <button id="button-reload">Reload</button>
+      </div>
+
+      <div id="container-entries" style="display: grid; grid-template-columns: 1fr 1fr; column-gap: var(--spacing-medium)"></div>
     </div>
 
     <script type="module" src="./editor.js"></script>

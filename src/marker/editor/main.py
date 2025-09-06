@@ -17,78 +17,31 @@ def start_editor(dataset_path: Path):
 
     @app.route("/")
     def index():
-        return redirect("/editor", 302)
-
-    @app.route("/editor")
-    def editor_html():
-        return app.send_static_file("editor.html")
+        return app.send_static_file("./editor.html")
 
     @app.route("/editor.js")
     def editor_script():
-        return app.send_static_file("editor.js")
+        return app.send_static_file("./editor.js")
 
-    @app.route("/viewer")
-    def viewer_html():
-        return app.send_static_file("viewer.html")
+    @app.route("/editor.css")
+    def editor_style():
+        return app.send_static_file("./editor.css")
 
-    @app.route("/viewer.js")
-    def viewer_script():
-        return app.send_static_file("viewer.js")
+    @app.route("/drivers/nHentai.js")
+    def nHentai_driver():
+        return app.send_static_file("./drivers/nHentai.js")
 
-    @app.route("/next")
-    def next():
-        while True:
-            latest = send_request("GET",  API_HOST + "/latest").json()
-            random_id = round(random() * latest)
-            gallery_pages = send_request("GET",  API_HOST + f"/pages/{random_id}").json()
-            random_page = floor(random() * len(gallery_pages))
+    @app.route("/drivers/nHentai/latest")
+    def nHentai_latest():
+        return send_request("GET", "https://api.nhentai.zip/latest").text
 
-            if not dataset_path.joinpath(f"{random_id}-{random_page}-image.jpg") or dataset_path.joinpath(f"{random_id}-{random_page}-mask.png"):
-                return {
-                    "id": random_id,
-                    "media": gallery_pages[random_page].split('/')[-2],
-                    "page": gallery_pages[random_page].split('/')[-1]
-                }
+    @app.route("/drivers/nHentai/pages/<id>")
+    def nHentai_pages(id: str):
+        return send_request("GET", f"https://api.nhentai.zip/pages/{id}").text
 
-    @app.route("/save", methods=["PUT"])
-    def save():
-        data = request.get_json()
-
-        id = request.args.get('id')
-        page = request.args.get('page') 
-
-        dataset_path.joinpath(f"{id}-{page}-image.jpg").write_bytes(b64decode(data["original"]))
-        dataset_path.joinpath(f"{id}-{page}-mask.png").write_bytes(b64decode(data["mask"]))
-
-        dataset.load()
-
-        return "Success"
-
-    @app.route("/remove/<id>", methods=["DELETE"])
-    def remove(id):
-        dataset_path.joinpath(f"{id}-image{dataset.image_map[id]['image']}").unlink()
-        dataset_path.joinpath(f"{id}-mask{dataset.image_map[id]['mask']}").unlink()
-
-        dataset.load()
-
-        return "Success"
-
-    @app.route("/nhentai/pages/<id>")
-    def nhentai_pages(id):
-        gallery_pages = send_request("GET",  API_HOST + f"/pages/{id}").json()
-
-        if type(gallery_pages) == dict:
-            return "null"
-
-        for index, _ in enumerate(gallery_pages):
-            gallery_pages[index] = '/'.join(gallery_pages[index].split('/')[-2:])
-
-        return gallery_pages
-
-
-    @app.route("/nhentai/image/<id>/<page>")
-    def nhentai_image(id: str, page: str):
-        response = send_request("GET", IMAGE_HOST + f"/galleries/{id}/{page}")
+    @app.route("/drivers/nHentai/image/<id>/<page>")
+    def nHentai_image(id: str, page: str):
+        response = send_request("GET", f"https://i.nhentai.zip/galleries/{id}/{page}")
 
         if response.status_code != 200:
             return response.content, response.status_code
@@ -105,13 +58,41 @@ def start_editor(dataset_path: Path):
 
         return Response(response.content, content_type=content_type)
 
+    @app.route("/submit", methods=["PUT"])
+    def submit():
+        data = request.get_json()
+
+        name = request.args.get('name')
+
+        if name == None:
+            return "Failed"
+
+        dataset_path.joinpath(f"{name}-image.jpg").write_bytes(b64decode(data["image"]))
+        dataset_path.joinpath(f"{name}-mask.png").write_bytes(b64decode(data["mask"]))
+
+        dataset.add(name, ".jpg", ".png")
+
+        return "Success"
+
+    @app.route("/remove/<name>", methods=["DELETE"])
+    def remove(name):
+        if dataset.has(name):
+            dataset_path.joinpath(f"{name}-image{dataset.image_map[name]['image']}").unlink()
+            dataset_path.joinpath(f"{name}-mask{dataset.image_map[name]['mask']}").unlink()
+
+            dataset.remove(name)
+
+            return "Success"
+
+        return "Failed"
+
     @app.route("/list")
     def list():
         return dataset.image_list
 
-    @app.route("/image/<id>")
-    def image(id):
-        image_format = dataset.image_map[id]["image"]
+    @app.route("/image/<name>")
+    def image(name):
+        image_format = dataset.image_map[name]["image"]
         content_type = ""
 
         if image_format == ".jpg":
@@ -121,11 +102,11 @@ def start_editor(dataset_path: Path):
         elif image_format == ".webp":
             content_type = "image/webp"
 
-        return Response(dataset_path.joinpath(f"{id}-image{dataset.image_map[id]['image']}").read_bytes(), content_type=content_type)
+        return Response(dataset_path.joinpath(f"{name}-image{dataset.image_map[name]['image']}").read_bytes(), content_type=content_type)
 
-    @app.route("/mask/<id>")
-    def mask(id):
-        mask_format = dataset.image_map[id]["mask"]
+    @app.route("/mask/<name>")
+    def mask(name):
+        mask_format = dataset.image_map[name]["mask"]
         content_type = ""
 
         if mask_format == ".jpg":
@@ -135,6 +116,6 @@ def start_editor(dataset_path: Path):
         elif mask_format == ".webp":
             content_type = "image/webp"
 
-        return Response(dataset_path.joinpath(f"{id}-mask{dataset.image_map[id]['mask']}").read_bytes(), content_type=content_type)
+        return Response(dataset_path.joinpath(f"{name}-mask{dataset.image_map[name]['mask']}").read_bytes(), content_type=content_type)
 
     app.run(host="0.0.0.0", port=8080, debug=True)

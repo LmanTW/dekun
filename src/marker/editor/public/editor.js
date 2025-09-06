@@ -1,301 +1,680 @@
-const sause = document.getElementById('sause')
-const canvas = document.getElementById('canvas')
-const ctx = canvas.getContext('2d')
+const container_entries = document.getElementById('container-entries')
+const select_provider = document.getElementById('select-provider')
+const container_help = document.getElementById('container-help')
+const container_all = document.getElementById('container-all')
+const button_reload = document.getElementById('button-reload')
+const input_source = document.getElementById('input-source')
+const button_help = document.getElementById('button-help')
+const button_all = document.getElementById('button-all')
+const text_total = document.getElementById('text-total')
 
-let gallary = undefined
+const drivers = {
+  nHentai: (await import('./drivers/nHentai.js')).default
+}
 
-sause.addEventListener('change', async () => {
-  const parts = sause.value.split('/')
-  const pages = await (await fetch (`/nhentai/pages/${parts[0]}`)).json()
+let source = ''
 
-  if (pages === null) {
-    sause.value = ''
-    gallary = undefined
-  } else if (pages !== null) {
-    gallary = {
-      id: parts[0],
-
-      pages,
-      index: (parts.length > 1 && parts[1].length > 0) ? parseInt(parts[1]) - 1 : 0
-    }
-
-    Control.next()
+select_provider.addEventListener('change', () => {
+  if (Image.element !== null) {
+    Image.next()
   }
 })
 
-const image = {
-  id: 0,
-  page: '',
+input_source.addEventListener('change', () => {
+  if (Image.element !== null) {
+    source = input_source.value
 
-  element: document.createElement('img'),
-  transform: undefined
-}
+    Image.next()
+  }
+})
 
-image.element.crossOrigin = 'anonymous'
+// The current image.
+class Image {
+  static canvas = document.createElement('canvas')
+  static ctx = this.canvas.getContext('2d')
 
-const mouse = {
-  globalX: 0,
-  globalY: 0,
-  imageX: 0,
-  imageY: 0,
+  static name = null
+  static element = null
+  static transform = null
+  static strokes = []
 
-  state: 'none',
-  pressed: false,
+  // Resize the image.
+  static resize() {
+    if (this.element === null) {
+      this.transform = null
 
-  startX: 0,
-  startY: 0
-}
+      return
+    }
 
-function updateImageTransform() {
-  if (image.element.complete) {
-    const canvasAspect = canvas.width / canvas.height
-    const imageAspect = image.element.width / image.element.height
+    const canvasAspect = Editor.canvas.width / Editor.canvas.height
+    const imageAspect = this.element.width / this.element.height
 
     let targetWidth, targetHeight
 
     if (imageAspect > canvasAspect) {
-        targetWidth = canvas.width
-        targetHeight = canvas.width / imageAspect
+        targetWidth = Editor.canvas.width
+        targetHeight = Editor.canvas.width / imageAspect
     } else {
-        targetWidth = canvas.height * imageAspect
-        targetHeight = canvas.height
+        targetWidth = Editor.canvas.height * imageAspect
+        targetHeight = Editor.canvas.height
     }
 
     targetWidth *= 0.9
     targetHeight *= 0.9
 
-    image.transform = {
-      x: (canvas.width - targetWidth) / 2,
-      y: (canvas.height - targetHeight) / 2,
+    this.transform = {
+      x: (Editor.canvas.width - targetWidth) / 2,
+      y: (Editor.canvas.height - targetHeight) / 2,
       width: targetWidth,
       height: targetHeight,
-      widthScale: targetWidth / image.element.width,
-      heightScale: targetHeight / image.element.height
+      widthScale: targetWidth / this.element.width,
+      heightScale: targetHeight / this.element.height
     }
-  } 
-}
-
-window.addEventListener('resize', updateImageTransform)
-image.element.addEventListener('load', updateImageTransform)
-
-// The scene.
-class Scene {
-
-  // Resize the scene.
-  static resize() {
-    const bound = canvas.getBoundingClientRect()
-
-    canvas.width = bound.width * window.devicePixelRatio
-    canvas.height = bound.height * window.devicePixelRatio
   }
 
-  // Render the scene.
-  static render() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-    if (image.transform !== undefined) {
-      ctx.drawImage(image.element, image.transform.x, image.transform.y, image.transform.width, image.transform.height)
-
-      for (const stroke of Control.strokes) {
-        Scene.drawLine('rgb(0,255,0)', stroke.type, stroke.size, stroke.x1, stroke.y1, stroke.x2, stroke.y2)
-      }
-
-      if (mouse.state === 'line') {
-        Scene.drawLine('rgba(0,255,0,0.5)', Control.stroke_type, Control.stroke_size, mouse.startX, mouse.startY, mouse.imageX, mouse.imageY)
-      } else {
-        ctx.fillStyle = 'rgba(255,0,0,0.5)'
-        ctx.arc(mouse.globalX * window.devicePixelRatio, mouse.globalY * window.devicePixelRatio, (image.transform.widthScale + image.transform.heightScale) * (Control.stroke_size / 2), 0, 2 * Math.PI);
-        ctx.fill()
-        ctx.beginPath()
-      }
-    }
-
-    if (Control.save_start !== undefined) {
-      ctx.fillStyle = `rgba(255,255,255,${(performance.now() - Control.save_start) / 300})`
-      ctx.fillRect(0, 0, canvas.width, canvas.height)
-      ctx.beginPath()
-    }
-
-    requestAnimationFrame(Scene.render)
-  } 
-
-  // Draw a line in image space.
-  static drawLine(color, type, size, x1, y1, x2, y2) {
-    ctx.strokeStyle = color
-    ctx.lineCap = type
-    ctx.lineWidth = (image.transform.widthScale + image.transform.heightScale) * size
-    ctx.moveTo(image.transform.x + (x1 * image.transform.widthScale), image.transform.y + y1 * image.transform.heightScale)
-    ctx.lineTo(image.transform.x + (x2 * image.transform.widthScale), image.transform.y + y2 * image.transform.heightScale)
-    ctx.stroke()
-    ctx.beginPath()
-  }
-}
-
-Scene.resize()
-window.addEventListener('load', Scene.render)
-window.addEventListener('resize', Scene.resize)
-
-// The control.
-class Control {
-  static strokes = []
-  static stroke_type = 'butt'
-  static stroke_size = 5
-
-  static save_start = undefined
-
-  // Load the next image.
+  // Switch to the next image.
   static async next() {
-    image.transform = undefined
+    Editor.reset()
+    Control.reset()
 
-    if (gallary === undefined) {
-      let data
+    this.name = null
+    this.element = null
+    this.transform = null
+    this.strokes = []
 
-      while (true) {
-        try {
-          data = await (await fetch('/next')).json()
+    const info = await drivers[select_provider.value].next(source)
+    const element = document.createElement('img')
 
-          break
-        } catch (_) {}
-      }
+    this.name = info.name
 
-      image.id = data.id
-      image.page = data.page
-      image.element.src = `/nhentai/image/${data.media}/${data.page}`
-    } else {
-      const parts = gallary.pages[gallary.index].split('/')
+    source = (info.update) ? info.source : source
+    input_source.value = info.source
 
-      image.id = gallary.id
-      image.page = parts[1]
-      image.element.src = `/nhentai/image/${parts[0]}/${parts[1]}`
+    element.src = info.url
+    element.crossOrigin = 'anonymous'
 
-      sause.value = `${gallary.id}/${gallary.index + 1}`
-      gallary.index++
+    element.addEventListener('load', () => {
+      this.element = element
 
-      if (gallary.index >= gallary.pages.length) {
-        sause.value = ''
-        gallary = undefined
-      }
-    }
-
-    Control.strokes = []
+      this.resize()
+    })
   }
 
-  // Save the image.
-  static async save() {
-    image.transform = undefined
+  // Submit the image.
+  static async submit() {
+    Editor.reset()
+    Control.reset()
 
-    const image_canvas = document.createElement('canvas')
-    const image_ctx = image_canvas.getContext('2d')
+    const name = this.name
+    const element = this.element
+    const strokes = this.strokes
 
-    image_canvas.width = image.element.width
-    image_canvas.height = image.element.height
+    this.name = null
+    this.element = null
+    this.transform = null
+    this.strokes = []
 
-    image_ctx.drawImage(image.element, 0, 0)
+    this.canvas.width = element.width
+    this.canvas.height = element.height
 
-    const original = image_canvas.toDataURL('image/jpeg', 1).substring(23)
+    this.ctx.drawImage(element, 0, 0)
 
-    image_ctx.clearRect(0, 0, image_canvas.width, image_canvas.height)
+    const image = this.canvas.toDataURL('image/jpeg', 1).substring(23)
 
-    for (const stroke of Control.strokes) {
-      image_ctx.strokeStyle = 'rgb(255,255,255)'
-      image_ctx.lineCap = stroke.type
-      image_ctx.lineWidth = stroke.size * 2
-      image_ctx.moveTo(stroke.x1, stroke.y1)
-      image_ctx.lineTo(stroke.x2, stroke.y2)
-      image_ctx.stroke()
-      image_ctx.beginPath()
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
+
+    this.ctx.fillStyle = 'rgb(255,255,255)'
+    this.ctx.strokeStyle = 'rgb(255,255,255)'
+
+    for (const stroke of strokes) {
+      if (stroke.type === 1 || stroke.type === 2) {
+        this.ctx.lineCap = stroke.type
+        this.ctx.lineWidth = (element.width + element.height) * (stroke.size * 0.0025)
+        this.ctx.moveTo(stroke.x1, stroke.y1)
+        this.ctx.lineTo(stroke.x2, stroke.y2)
+        this.ctx.stroke()
+        this.ctx.beginPath()
+      } else if (stroke.type === 3) {
+        for (let i = 0; i < stroke.points.length; i++) {
+          if (i === 0) {
+            this.ctx.moveTo(stroke.points[i].x, stroke.points[i].y)
+          } else {
+            this.ctx.lineTo(stroke.points[i].x, stroke.points[i].y)
+          }
+        }
+
+        this.ctx.lineTo(stroke.points[0].x, stroke.points[0].y)
+        this.ctx.fill()
+        this.ctx.beginPath()
+      }
     }
 
-    const mask = image_canvas.toDataURL('image/png', 1).substring(22)
+    const mask = this.canvas.toDataURL('image/png', 1).substring(22)
 
-    fetch(`/save?id=${image.id}&page=${image.page.split('.')[0]}`, {
+    await fetch(`/submit?name=${name}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ original, mask }),
+      body: JSON.stringify({ image, mask }),
     })
 
-    Control.next()
+    await this.next()
   }
 }
 
-Control.next()
+// The editor.
+class Editor {
+  static canvas = document.getElementById('canvas-main')
+  static ctx = this.canvas.getContext('2d')
 
-window.addEventListener('mousemove', (event) => {
-  mouse.globalX = event.x
-  mouse.globalY = event.y
+  static xOffset = 0
+  static yOffset = 0
 
-  if (image.transform !== undefined) {
-    const widthScale = image.element.width / (image.transform.width / window.devicePixelRatio)
-    const heightScale = image.element.height / (image.transform.height / window.devicePixelRatio)
+  static camera = {
+    x: 0,
+    y: 0,
+    scale: 1,
 
-    mouse.imageX = (event.x - (image.transform.x / window.devicePixelRatio)) * widthScale
-    mouse.imageY = (event.y - (image.transform.y / window.devicePixelRatio)) * heightScale
-  }
-})
-
-canvas.addEventListener('mousedown', () => {
-  if (image.transform !== undefined) {
-    mouse.state = 'line'
+    xSpeed: 0,
+    ySpeed: 0,
+    scaleSpeed: 0
   }
 
-  mouse.pressed = true
-  mouse.startX = mouse.imageX
-  mouse.startY = mouse.imageY
-})
+  // Resize the editor.
+  static resize() {
+    const bound = this.canvas.getBoundingClientRect()
 
-canvas.addEventListener('mouseup', () => {
-  mouse.pressed = false
+    this.canvas.width = bound.width * window.devicePixelRatio
+    this.canvas.height = bound.height * window.devicePixelRatio
 
-  if (image.transform !== undefined) {
-    if (mouse.state === 'line') {
-      Control.strokes.push({
-        x1: mouse.startX,
-        y1: mouse.startY,
-        x2: mouse.imageX,
-        y2: mouse.imageY,
-        type: Control.stroke_type,
-        size: Control.stroke_size
+    this.xOffset = bound.left
+    this.yOffset = bound.top
+
+    Image.resize()
+  }
+
+  // Reset the editor.
+  static reset() {
+    this.camera = {
+      x: 0,
+      y: 0,
+      scale: 1,
+
+      xSpeed: 0,
+      ySpeed: 0,
+      scaleSpeed: 0
+    }
+  }
+
+  // Render the editor
+  static render() {
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
+
+    if (Image.element !== null && Image.transform !== null) {
+      this.ctx.imageSmoothingEnabled = false
+
+      this.ctx.drawImage(
+        Image.element,
+
+        (Image.transform.x - this.camera.x) * this.camera.scale,
+        (Image.transform.y - this.camera.y) * this.camera.scale,
+
+        Image.transform.width * this.camera.scale,
+        Image.transform.height * this.camera.scale
+      )
+    }
+
+    if (Image.transform !== null) {
+      this.ctx.fillStyle = 'rgb(0,255,0)'
+      this.ctx.strokeStyle = 'rgb(0,255,0)'
+
+      for (const stroke of Image.strokes) {
+        if (stroke.type === 1 || stroke.type === 2) {
+          this.ctx.lineCap = (stroke.type === 1) ? 'butt' : 'round'
+          this.ctx.lineWidth = ((Image.transform.width + Image.transform.height) * (stroke.size * 0.0025)) * Editor.camera.scale
+          this.ctx.moveTo(((Image.transform.x + (stroke.x1 * Image.transform.widthScale)) - this.camera.x) * this.camera.scale, ((Image.transform.y + (stroke.y1 * Image.transform.heightScale)) - this.camera.y) * this.camera.scale)
+          this.ctx.lineTo(((Image.transform.x + (stroke.x2 * Image.transform.widthScale)) - this.camera.x) * this.camera.scale, ((Image.transform.y + (stroke.y2 * Image.transform.heightScale)) - this.camera.y) * this.camera.scale)
+          this.ctx.stroke()
+          this.ctx.beginPath()
+        } else if (stroke.type === 3) {
+          for (let i = 0; i < stroke.points.length; i++) {
+            const renderX = ((Image.transform.x + (stroke.points[i].x * Image.transform.widthScale)) - this.camera.x) * this.camera.scale
+            const renderY = ((Image.transform.y + (stroke.points[i].y * Image.transform.heightScale)) - this.camera.y) * this.camera.scale
+
+            if (i === 0) {
+              this.ctx.moveTo(renderX, renderY)
+            } else {
+              this.ctx.lineTo(renderX, renderY)
+            }
+          }
+
+          const renderX = ((Image.transform.x + (stroke.points[0].x * Image.transform.widthScale)) - this.camera.x) * this.camera.scale
+          const renderY = ((Image.transform.y + (stroke.points[0].y * Image.transform.heightScale)) - this.camera.y) * this.camera.scale
+
+          this.ctx.lineTo(renderX, renderY)
+          this.ctx.fill()
+          this.ctx.beginPath()
+        }
+      }
+
+      this.ctx.fillStyle = 'rgba(0,255,0,0.5)'
+      this.ctx.strokeStyle = 'rgba(0,255,0,0.5)'
+
+      if (Control.strokeType === 1 || Control.strokeType === 2) {
+        if (Control.startX === null || Control.startY === null) {
+          this.ctx.fillStyle = 'rgba(255,0,0,0.5)'
+          this.ctx.arc(Control.mouse.editorX, Control.mouse.editorY, ((Image.transform.width + Image.transform.height) * ((Control.strokeSize / 2) * 0.0025)) * Editor.camera.scale, 0, 2 * Math.PI);
+          this.ctx.fill()
+          this.ctx.beginPath() 
+        } else {
+          this.ctx.lineCap = (Control.strokeType === 1) ? 'butt' : 'round'
+          this.ctx.lineWidth = ((Image.transform.width + Image.transform.height) * (Control.strokeSize * 0.0025)) * Editor.camera.scale
+          this.ctx.moveTo(((Image.transform.x + (Control.startX * Image.transform.widthScale)) - this.camera.x) * this.camera.scale, ((Image.transform.y + (Control.startY * Image.transform.heightScale)) - this.camera.y) * this.camera.scale)
+          this.ctx.lineTo(Control.mouse.editorX, Control.mouse.editorY)
+          this.ctx.stroke()
+          this.ctx.beginPath()
+        }
+      } else {
+        for (let i = 0; i < Control.strokePoints.length; i++) {
+          const renderX = ((Image.transform.x + (Control.strokePoints[i].x * Image.transform.widthScale)) - this.camera.x) * this.camera.scale
+          const renderY = ((Image.transform.y + (Control.strokePoints[i].y * Image.transform.heightScale)) - this.camera.y) * this.camera.scale
+
+          if (i === 0) {
+            this.ctx.moveTo(renderX, renderY)
+          } else {
+            this.ctx.lineTo(renderX, renderY)
+          }
+        }
+
+        if (Control.strokePoints.length > 1) {
+          const renderX = ((Image.transform.x + (Control.strokePoints[0].x * Image.transform.widthScale)) - this.camera.x) * this.camera.scale
+          const renderY = ((Image.transform.y + (Control.strokePoints[0].y * Image.transform.heightScale)) - this.camera.y) * this.camera.scale
+
+          this.ctx.lineTo(renderX, renderY)
+        }
+
+        this.ctx.fill()
+        this.ctx.beginPath()
+
+        for (const point of Control.strokePoints) {
+          this.ctx.fillStyle = 'rgba(255,0,0,0.5)'
+          this.ctx.arc(((Image.transform.x + (point.x * Image.transform.widthScale)) - this.camera.x) * this.camera.scale, ((Image.transform.y + (point.y * Image.transform.heightScale)) - this.camera.y) * this.camera.scale, 7.5, 0, 2 * Math.PI);
+          this.ctx.fill()
+          this.ctx.beginPath()
+        }
+      }
+
+      this.ctx.fillStyle = `rgba(255,255,255,${Control.saveConfirm})`
+      this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height)
+    }
+
+    requestAnimationFrame(() => this.render())
+  }
+
+  // Apply camera transform.
+  static applyCameraTransform(x, y) {
+    return {
+      x: (x - this.camera.x) * this.camera.scale,
+      y: (y - this.camera.y) * this.camera.scale
+    }
+  }
+}
+
+Editor.resize()
+window.addEventListener('resize', () => Editor.resize())
+
+// The controller.
+class Control {
+  static mouse = {
+    clicked: false,
+    pressed: false,
+
+    editorX: 0,
+    editorY: 0,
+
+    imageX: 0,
+    imageY: 0
+  }
+
+  static keyboard = {}
+
+  static strokeType = 1
+  static strokeSize = 2
+  static strokePoints = []
+
+  static startX = null
+  static startY = null
+  static moveIndex = null
+
+  static saveConfirm = 0
+
+  // Reset the control.
+  static reset() {
+    Control.strokePoints = []
+    Control.startX = null
+    Control.startY = null
+    Control.moveIndex = null
+  }
+
+  // Update the control.
+  static update() {
+    if (this.keyboard['a']) {
+      Editor.camera.xSpeed = -25
+    } else if (this.keyboard['d']) {
+      Editor.camera.xSpeed = 25
+    }
+
+    if (this.keyboard['w']) {
+      Editor.camera.ySpeed = -25
+    } else if (this.keyboard['s']) {
+      Editor.camera.ySpeed = 25
+    }
+
+    if (this.keyboard['q']) {
+      Editor.camera.scaleSpeed = -0.025
+    } else if (this.keyboard['e']) {
+      Editor.camera.scaleSpeed = 0.025
+    }
+
+    const oldX = Editor.camera.x;
+    const oldY = Editor.camera.y;
+    const oldScale = Editor.camera.scale;
+
+    Editor.camera.scale *= 1 + Editor.camera.scaleSpeed
+    Control.strokeSize *= 1 - Editor.camera.scaleSpeed
+
+    const centerX = oldX + (Control.mouse.editorX / oldScale)
+    const centerY = oldY + (Control.mouse.editorY / oldScale)
+    const scaleChange = Editor.camera.scale / oldScale
+
+    Editor.camera.x = centerX + (oldX - centerX) / scaleChange
+    Editor.camera.y = centerY + (oldY - centerY) / scaleChange
+    Editor.camera.x += Editor.camera.xSpeed / Editor.camera.scale
+    Editor.camera.y += Editor.camera.ySpeed / Editor.camera.scale
+
+    Editor.camera.xSpeed *= 0.8
+    Editor.camera.ySpeed *= 0.8
+    Editor.camera.scaleSpeed *= 0.8
+
+    if (Image.transform !== null) {
+      Control.mouse.imageX = ((Control.mouse.editorX / Editor.camera.scale) + (Editor.camera.x - Image.transform.x)) / Image.transform.widthScale
+      Control.mouse.imageY = ((Control.mouse.editorY / Editor.camera.scale) + (Editor.camera.y - Image.transform.y)) / Image.transform.heightScale
+
+      if (Control.moveIndex !== null) {
+        Control.strokePoints[Control.moveIndex] = {
+          x: Control.mouse.imageX,
+          y: Control.mouse.imageY
+        }
+      }
+    }
+
+    if (this.keyboard['1'] === 1) {
+      this.strokeType = 1
+      this.strokePoints = []
+    } else if (this.keyboard['2'] === 1) {
+      this.strokeType = 2
+      this.strokePoints = []
+    } else if (this.keyboard['3'] === 1) {
+      this.strokeType = 3
+      this.startX = null
+      this.startY = null
+    } else if (this.keyboard['r'] === 1) {
+      Editor.reset()
+    } else if (this.keyboard['z'] === 1) {
+      if (Image.element !== null) {
+        Image.next()
+      }
+    } else if (this.keyboard['x'] === 1) {
+      if (this.strokePoints.length > 0) {
+        this.strokePoints.splice(this.strokePoints.length - 1)
+      } else if (Image.strokes.length > 0) {
+        Image.strokes.splice(Image.strokes.length - 1)
+      }
+    }
+
+    if (Image.element !== null) {
+      if (this.keyboard['c']) {
+        this.saveConfirm += 0.05
+
+        if (this.saveConfirm > 1 && Image.element !== null) {
+          Image.submit()
+
+          this.saveConfirm = 0
+        }
+      } else if (this.saveConfirm > 0) {
+        this.saveConfirm -= 0.025
+      }
+    }
+
+    if (this.mouse.clicked && Control.strokeType === 3) {
+      for (let i = 0; i < Control.strokePoints.length; i++) {
+        const renderX = ((Image.transform.x + (Control.strokePoints[i].x * Image.transform.widthScale)) - Editor.camera.x) * Editor.camera.scale
+        const renderY = ((Image.transform.y + (Control.strokePoints[i].y * Image.transform.heightScale)) - Editor.camera.y) * Editor.camera.scale
+
+        if (Math.hypot(renderX - this.mouse.editorX, renderY - this.mouse.editorY) < 7.5) {
+          this.moveIndex = i
+
+          return 
+        }
+      }
+
+      Control.strokePoints.push({
+        x: this.mouse.imageX,
+        y: this.mouse.imageY
       })
     }
-  } 
 
-  mouse.state = 'none'
+    for (const key of Object.keys(this.keyboard)) {
+      this.keyboard[key] = 2
+    }
+
+    this.mouse.clicked = false
+  }
+}
+
+window.addEventListener('mousemove', (event) => {
+  Control.mouse.editorX = (event.x - Editor.xOffset) * window.devicePixelRatio 
+  Control.mouse.editorY = (event.y - Editor.yOffset) * window.devicePixelRatio
+
+  if (Image.transform !== null) {
+    Control.mouse.imageX = ((Control.mouse.editorX / Editor.camera.scale) + (Editor.camera.x - Image.transform.x)) / Image.transform.widthScale
+    Control.mouse.imageY = ((Control.mouse.editorY / Editor.camera.scale) + (Editor.camera.y - Image.transform.y)) / Image.transform.heightScale
+
+    if (Control.moveIndex !== null) {
+      Control.strokePoints[Control.moveIndex] = {
+        x: Control.mouse.imageX,
+        y: Control.mouse.imageY
+      }
+    }
+  }
+})
+
+window.addEventListener('mousedown', (event) => {
+  if (event.target === Editor.canvas) {
+    if (event.buttons === 1) {
+      Control.mouse.clicked = true
+      Control.mouse.pressed = true
+
+      if (Control.strokeType === 1 || Control.strokeType === 2) {
+        Control.startX = Control.mouse.imageX
+        Control.startY = Control.mouse.imageY
+      }
+    } else if (event.buttons === 2) {
+      event.preventDefault()
+
+      if (Control.strokeType === 1 || Control.strokeType === 2) {
+        const lastStroke = Image.strokes[Image.strokes.length - 1]
+
+        if (lastStroke !== undefined && lastStroke.type === Control.strokeType) {
+          Control.startX = lastStroke.x2
+          Control.startY = lastStroke.y2
+        }
+      } else if (Control.strokePoints.length > 0) {
+        if (Control.strokePoints.length > 2) {
+          Image.strokes.push({
+            type: 3,
+            points: Control.strokePoints
+          })
+        }
+
+        Control.strokePoints = []
+      }
+    }
+  }
+})
+
+window.addEventListener('mouseup', () => {
+  if (event.target === Editor.canvas) {
+    Control.mouse.clicked = false
+    Control.mouse.pressed = false
+
+    if (Image.element !== null && (Control.strokeType === 1 || Control.strokeType === 2) && (Control.startX !== null && Control.startY !== null)) {
+      Image.strokes.push({
+        type: Control.strokeType,
+        size: Control.strokeSize,
+
+        x1: Control.startX,
+        y1: Control.startY,
+        x2: Control.mouse.imageX,
+        y2: Control.mouse.imageY
+      })
+
+      Control.startX = null
+      Control.startY = null
+    }
+
+    Control.moveIndex = null
+  }
 })
 
 window.addEventListener('wheel', (event) => {
-  Control.stroke_size += -event.deltaY / 10
-  Control.stroke_size = Math.max(2, Control.stroke_size)
+  if (event.target === Editor.canvas) {
+    Control.strokeSize += -event.deltaY / (10 * Editor.camera.scale)
+    Control.strokeSize = Math.min(100 / Editor.camera.scale, Math.max(0.5 / Editor.camera.scale, Control.strokeSize))
+  }
 })
 
 window.addEventListener('keydown', (event) => {
-  if (image.transform !== undefined) {
-    if (event.key === '-') {
-      Control.stroke_size = Math.max(2, Control.stroke_size - 1)
-    } else if (event.key === '=') {
-      Control.stroke_size += 1
-    } else if (event.key === '1') {
-      Control.stroke_type = 'butt'
-    } else if (event.key === '2') {
-      Control.stroke_type = 'round'
-    } else if (Control.strokes.length > 0 && (event.key === 'Backspace' || event.key === 'Delete')) {
-      Control.stroke_size = Control.strokes[Control.strokes.length - 1].size
-      Control.strokes.splice(Control.strokes.length - 1, 1)
-    } else if (Control.save_start === undefined && event.key === 'Enter') {
-      Control.save_start = performance.now()
-    } else if (event.key === ' ') {
-      Control.next()
-    }
-  } 
-})
-
-window.addEventListener('keyup', (event) => {
-  if (image.transform !== undefined) {
-    if (Control.save_start !== undefined && event.key === 'Enter') {
-      if (performance.now() - Control.save_start > 300) {
-        Control.save()
-      }
-
-      Control.save_start = undefined
+  if (event.target === document.body) {
+    if (Control.keyboard[event.key] === undefined) {
+      Control.keyboard[event.key] = 1
     }
   }
 })
+
+window.addEventListener('keyup', (event) => {
+  if (event.target === document.body) {
+    delete Control.keyboard[event.key]
+  }
+})
+
+Image.next()
+Editor.render()
+
+setInterval(() => Control.update(), 1000 / 60)
+
+// Create an element.
+function createElement(tagName, attributes, children) {
+  const element = document.createElement(tagName)
+
+  if (attributes !== undefined) {
+    for (const name of Object.keys(attributes)) {
+      if (name !== 'textContent' && name !== 'innerHTML' && attributes[name] !== false) {
+        element.setAttribute(name, attributes[name].toString())
+      }
+    }
+
+    if (attributes.textContent !== undefined) element.textContent = attributes.textContent.toString()
+    if (attributes.innerHTML !== undefined) element.innerHTML = attributes.innerHTML.toString()
+  }
+
+  if (children !== undefined) {
+    for (const child of children) {
+      if (child instanceof Element) element.appendChild(child)
+    }
+  }
+
+  return element
+}
+
+let entries = null
+let index = 0
+let loading = 0
+
+// Load more images.
+function loadImages(amount) {
+  for (let i = 0; i < amount && index < entries.length; i++) {
+    const name = entries[index]
+
+    const element = container_entries.appendChild(createElement('div', { style: 'position: relative; width: min(50dvw, 25rem); margin-top: var(--spacing-medium)' }, [
+      createElement('img', { id: 'image-image', src: `/image/${name}`, style: 'width: 100%' }),
+      createElement('img', { id: 'image-mask', src: `/mask/${name}`, style: 'position: absolute; left: 0rem; top: 0rem; width: 100%; filter: invert(46%) sepia(88%) saturate(3060%) hue-rotate(87deg) brightness(126%) contrast(119%); cursor: pointer' }),
+      createElement('button', { id: 'button-remove', textContent: 'Remove', style: 'position: absolute; right: 0.5rem; bottom: 0.5rem; margin: 0rem; cursor: pointer; user-select: none' })
+    ]))
+
+    const image_image = element.querySelector('#image-image')
+    const image_mask = element.querySelector('#image-mask')
+    const button_remove = element.querySelector('#button-remove')
+
+    loading += 2
+
+    image_image.addEventListener('load', () => {
+      loading -= 1
+    })
+
+    image_mask.addEventListener('load', () => {
+      loading -= 1
+    })
+
+    image_mask.addEventListener('click', () => {
+      mask.style.opacity = (mask.style.opacity === '1') ? '0' : '1'
+    })
+
+    button_remove.addEventListener('click', async () => {
+      await fetch(`/remove/${name}`, {
+        method: 'DELETE'
+      })
+
+      entries.splice(entries.indexOf(name), 1)
+      element.remove()
+
+      text_total.textContent = `${entries.length} Entries`
+    })
+
+    index++
+  }
+}
+
+button_help.addEventListener('click', () => {
+  Editor.canvas.style.opacity = (container_help.style.display === 'none') ? '0.5' : '1'
+  container_help.style.display = (container_help.style.display === 'none') ? 'block' : 'none'
+})
+
+button_all.addEventListener('click', async () => {
+  Editor.canvas.style.opacity = (container_all.style.display === 'none') ? '0.5' : '1'
+  container_all.style.display = (container_all.style.display === 'none') ? 'flex' : 'none'
+
+  if (entries === null) {
+    entries = await (await fetch('/list')).json()
+
+    text_total.textContent = `${entries.length} Entries`
+  }
+})
+
+button_reload.addEventListener('click', async () => {
+    entries = await (await fetch('/list')).json()
+    index = 0
+
+    while (container_entries.firstChild) {
+      container_entries.removeChild(container_entries.lastChild);
+    }
+
+    text_total.textContent = `${entries.length} Entries`
+
+    loadImages(10)
+})
+
+setInterval(() => {
+  if ((entries !== null && loading === 0) && Math.round(container_all.scrollTop + container_all.clientHeight) >= container_all.scrollHeight - (container_all.scrollHeight / 10)) {
+    loadImages(10)
+  }
+}, 100)

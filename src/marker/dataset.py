@@ -50,3 +50,27 @@ class Dataset():
             self.image_list.append(key)
 
         self.image_list.sort(key=lambda name: -self.directory.joinpath(f"{name}-image{self.image_map[name]['image']}").stat().st_ctime)
+
+    # Check if an entry exists.
+    def has(self, name: str):
+        return name in self.image_map
+
+    # Add an entry.
+    def add(self, name: str, image_suffix: str, mask_suffix: str):
+        if name in self.image_map:
+            self.image_list.append(name)
+
+        self.image_map[name] = {
+            "image": image_suffix,
+            "mask": mask_suffix
+        }
+
+        self.image_list.sort(key=lambda name: -self.directory.joinpath(f"{name}-image{self.image_map[name]['image']}").stat().st_ctime)
+
+
+    # Remove an entry.
+    def remove(self, name: str):
+        if name in self.image_map:
+            self.image_list.remove(name)
+            del self.image_map[name]
+
