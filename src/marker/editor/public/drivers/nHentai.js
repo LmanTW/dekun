@@ -48,7 +48,7 @@ export default class {
           const urlParts = this.current.pages[this.current.index].split('/') 
 
           return {
-            name: `${this.current.id}-${this.current.index + 1}`,
+            name: `nHentai-${this.current.id}-${this.current.index + 1}`,
             url: `/drivers/nHentai/image/${urlParts.slice(4, 6).join('/')}`,
 
             display: `${this.current.id}/${this.current.index + 1}`,
@@ -56,7 +56,6 @@ export default class {
           }
         }
       } catch (error) {
-        console.log(error)
         this.current = null
       }
     } else {
@@ -80,7 +79,7 @@ export default class {
             const urlParts = galleryPages[pageIndex].split('/')
 
             return {
-              name: `${galleryID}-${pageIndex + 1}`,
+              name: `nHentai-${galleryID}-${pageIndex + 1}`,
               url: `/drivers/nHentai/image/${urlParts.slice(4, 6).join('/')}`,
 
               display: `${galleryID}/${pageIndex + 1}`,
@@ -118,7 +117,7 @@ export default class {
               fetch(`/drivers/nHentai/image/${urlParts.slice(4, 6).join('/')}`)
 
               this.queue.push({
-                name: `${galleryID}-${pageIndex + 1}`,
+                name: `nHentai-${galleryID}-${pageIndex + 1}`,
                 url: `/drivers/nHentai/image/${urlParts.slice(4, 6).join('/')}`,
 
                 display: `${galleryID}/${pageIndex + 1}`,
@@ -135,4 +134,3 @@ export default class {
     setTimeout(() => this.checkQueue(), 100)
   }
 }
-

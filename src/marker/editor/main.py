@@ -65,6 +65,41 @@ def start_editor(dataset_path: Path):
 
         return response
 
+    @app.route("/drivers/pixiv.js")
+    def pixiv_driver():
+        return app.send_static_file("./drivers/pixiv.js")
+
+    @app.route("/drivers/pixiv/discovery")
+    def pixiv_discovery():
+        return Response(send_request("GET", f"https://www.pixiv.net/ajax/illust/discovery?mode=all").text, content_type="application/json")
+
+    @app.route("/drivers/pixiv/pages/<id>")
+    def pixiv_pages(id):
+        return Response(send_request("GET", f"https://www.pixiv.net/ajax/illust/{id}/pages").text, content_type="application/json")
+
+    @app.route("/drivers/pixiv/image/<id>/<page>")
+    def pixiv_image(id: str, page: str):
+        response = send_request("GET", f"https://i.pixiv.cat/img-original/img/{id.replace('-', '/')}/{page}")
+
+        if response.status_code != 200:
+            return response.content, response.status_code
+
+        page_format = Path(page).suffix
+        content_type = ""
+
+        if page_format == ".jpg":
+            content_type = "image/jpeg"
+        elif page_format == ".png":
+            content_type = "image/png"
+        elif page_format == ".webp":
+            content_type = "image/webp"
+
+        response = Response(response.content)
+        response.headers['Content-Type'] = content_type
+        response.headers["Cache-Control"] = "max-age=86400"
+
+        return response
+
     @app.route("/submit", methods=["PUT"])
     def submit():
         data = request.get_json()

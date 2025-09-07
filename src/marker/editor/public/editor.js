@@ -9,6 +9,7 @@ const button_all = document.getElementById('button-all')
 const text_total = document.getElementById('text-total')
 
 const drivers = {
+  pixiv: (await import('./drivers/pixiv.js')).default,
   nHentai: (await import('./drivers/nHentai.js')).default
 }
 
