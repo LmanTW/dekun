@@ -57,7 +57,7 @@ class Dataset():
 
     # Add an entry.
     def add(self, name: str, image_suffix: str, mask_suffix: str):
-        if name in self.image_map:
+        if name not in self.image_map:
             self.image_list.append(name)
 
         self.image_map[name] = {

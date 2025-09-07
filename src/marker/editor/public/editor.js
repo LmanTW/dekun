@@ -358,21 +358,21 @@ class Control {
   // Update the control.
   static update() {
     if (this.keyboard['a']) {
-      Editor.camera.xSpeed = -25
+      Editor.camera.xSpeed = -50
     } else if (this.keyboard['d']) {
-      Editor.camera.xSpeed = 25
+      Editor.camera.xSpeed = 50
     }
 
     if (this.keyboard['w']) {
-      Editor.camera.ySpeed = -25
+      Editor.camera.ySpeed = -50
     } else if (this.keyboard['s']) {
-      Editor.camera.ySpeed = 25
+      Editor.camera.ySpeed = 50
     }
 
     if (this.keyboard['q']) {
-      Editor.camera.scaleSpeed = -0.025
+      Editor.camera.scaleSpeed = -0.05
     } else if (this.keyboard['e']) {
-      Editor.camera.scaleSpeed = 0.025
+      Editor.camera.scaleSpeed = 0.05
     }
 
     const oldX = Editor.camera.x;
@@ -380,7 +380,6 @@ class Control {
     const oldScale = Editor.camera.scale;
 
     Editor.camera.scale *= 1 + Editor.camera.scaleSpeed
-    Control.strokeSize *= 1 - Editor.camera.scaleSpeed
 
     const centerX = oldX + (Control.mouse.editorX / oldScale)
     const centerY = oldY + (Control.mouse.editorY / oldScale)
@@ -407,7 +406,9 @@ class Control {
       }
     }
 
-    if (this.keyboard['1'] === 1) {
+    if (this.keyboard['Escape'] === 1) {
+      this.reset()
+    } else if (this.keyboard['1'] === 1) {
       this.strokeType = 1
       this.strokePoints = []
     } else if (this.keyboard['2'] === 1) {
@@ -417,6 +418,12 @@ class Control {
       this.strokeType = 3
       this.startX = null
       this.startY = null
+    } else if (this.keyboard['-'] === 1) {
+      Control.strokeSize -= 1
+      Control.strokeSize = Math.min(100 / Editor.camera.scale, Math.max(0.5 / Editor.camera.scale, Control.strokeSize))
+    } else if (this.keyboard['='] === 1) {
+      Control.strokeSize += 1
+      Control.strokeSize = Math.min(100 / Editor.camera.scale, Math.max(0.5 / Editor.camera.scale, Control.strokeSize))
     } else if (this.keyboard['r'] === 1) {
       Editor.reset()
     } else if (this.keyboard['z'] === 1) {
