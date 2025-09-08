@@ -1,18 +1,10 @@
-from os import DirEntry
 from requests import request as send_request
-from flask import Flask, Response, request, redirect
+from flask import Flask, Response, request
 from base64 import b64decode
-from random import random
 from pathlib import Path
-from math import floor
 import json
 
-from werkzeug.datastructures import cache_control
-
 from marker.dataset import Dataset 
-
-API_HOST = "https://api.nhentai.zip"
-IMAGE_HOST = "https://i.nhentai.zip"
 
 def start_editor(dataset_path: Path):
     app = Flask(__name__, static_folder="public")

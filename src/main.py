@@ -1,5 +1,6 @@
 import click
 
+from generator.command import generator_command
 from marker.command import marker_command
 
 # The root command group.
@@ -8,6 +9,7 @@ def root_command():
     pass
 
 root_command.add_command(marker_command)
+root_command.add_command(generator_command)
 
 if __name__ == "__main__":
     root_command()

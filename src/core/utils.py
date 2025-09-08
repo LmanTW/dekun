@@ -1,3 +1,5 @@
+import torchvision.transforms as transform
+import PIL.Image as pil
 import torch
 
 # Resolve a device.
@@ -16,6 +18,39 @@ def resolve_device(device):
         return "cuda"
     else:
         raise Exception(f"Unknown device: {device}")
+
+# Fit an image into a specified size.
+def fit_image(image: pil.Image, width: int, height: int):
+    container_aspect = width / height
+    image_aspect = image.size[0] / image.size[1]
+
+    new_width = 0
+    new_height = 0
+
+    if image_aspect > container_aspect:
+        new_width = width
+        new_height = round(width / image_aspect)
+    else:
+        new_width = round(height * image_aspect)
+        new_height = height
+
+    image = image.resize((new_width, new_height))
+    offset_x = (width - new_width) // 2
+    offset_y = (height - new_height) // 2
+
+    new_image = pil.new(image.mode, (width, height), tuple([0] * len(image.mode)))
+    new_image.paste(image, (offset_x, offset_y))
+
+    return new_image, (offset_x, offset_y, new_width, new_height)
+
+transform_image = transform.Compose([
+    transform.ToTensor(),
+    transform.Normalize(mean = [0.5] * 3, std = [0.5] * 3)
+])
+
+transform_mask = transform.Compose([
+    transform.ToTensor()
+])
 
 # Format a duration.
 def format_duration(seconds: float):

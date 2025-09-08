@@ -129,7 +129,7 @@ class Image {
 
     for (const stroke of strokes) {
       if (stroke.type === 1 || stroke.type === 2) {
-        this.ctx.lineCap = stroke.type
+        this.ctx.lineCap = (stroke.type === 1) ? 'butt' : 'round'
         this.ctx.lineWidth = (element.width + element.height) * (stroke.size * 0.0025)
         this.ctx.moveTo(stroke.x1, stroke.y1)
         this.ctx.lineTo(stroke.x2, stroke.y2)
@@ -614,8 +614,8 @@ function loadImages(amount) {
     const name = entries[index]
 
     const element = container_entries.appendChild(createElement('div', { style: 'position: relative; width: min(50dvw, 25rem); margin-top: var(--spacing-medium)' }, [
-      createElement('img', { id: 'image-image', src: `/image/${name}`, style: 'width: 100%' }),
-      createElement('img', { id: 'image-mask', src: `/mask/${name}`, style: 'position: absolute; left: 0rem; top: 0rem; width: 100%; filter: invert(46%) sepia(88%) saturate(3060%) hue-rotate(87deg) brightness(126%) contrast(119%); cursor: pointer' }),
+      createElement('img', { id: 'image-image', src: `/image/${name}`, style: 'content-visibility: auto; width: 100%' }),
+      createElement('img', { id: 'image-mask', src: `/mask/${name}`, style: 'position: absolute; content-visibility: auto; left: 0rem; top: 0rem; width: 100%; filter: invert(46%) sepia(88%) saturate(3060%) hue-rotate(87deg) brightness(126%) contrast(119%); cursor: pointer' }),
       createElement('button', { id: 'button-remove', textContent: 'Remove', style: 'position: absolute; right: 0.5rem; bottom: 0.5rem; margin: 0rem; cursor: pointer; user-select: none' })
     ]))
 
@@ -634,7 +634,7 @@ function loadImages(amount) {
     })
 
     image_mask.addEventListener('click', () => {
-      mask.style.opacity = (mask.style.opacity === '1') ? '0' : '1'
+      image_mask.style.opacity = (image_mask.style.opacity === '1') ? '0' : '1'
     })
 
     button_remove.addEventListener('click', async () => {

@@ -1,55 +1,39 @@
-import torchvision.transforms as transform
 from typing import Union, Callable, cast
 from pathlib import Path
 import PIL.Image as pil
 import torch
 import time
 
-from core.utils import resolve_device
+from core.utils import resolve_device, fit_image, transform_image, transform_mask
 from marker.dataset import Dataset
 from core.unet import UNet
 
-transform_image = transform.Compose([
-    transform.ToTensor(),
-    transform.Normalize(mean = [0.5] * 3, std = [0.5] * 3)
-])
+class DiceLoss(torch.nn.Module):
 
-transform_mask = transform.Compose([
-    transform.ToTensor()
-])
+    # Initialize a dice loss criterion.
+    def __init__(self, smooth: float = 1e-6):
+        super(DiceLoss, self).__init__()
 
-# Fit an image into a specified size.
-def fit_image(image: pil.Image, width: int, height: int):
-    container_aspect = width / height
-    image_aspect = image.size[0] / image.size[1]
+        self.smooth = smooth
 
-    new_width = 0
-    new_height = 0
+    # Forward the dice loss criterion.
+    def forward(self, prediction: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        prediction = torch.sigmoid(prediction)
+        prediction = prediction.contiguous().view(-1)
 
-    if image_aspect > container_aspect:
-        new_width = width
-        new_height = round(width / image_aspect)
-    else:
-        new_width = round(height * image_aspect)
-        new_height = height
+        target = target.contiguous().view(-1)
+        intersection = (prediction * target).sum()
 
-    image = image.resize((new_width, new_height))
-    offset_x = (width - new_width) // 2
-    offset_y = (height - new_height) // 2
+        return 1 - ((2.0 * intersection + self.smooth) / (prediction.sum() + target.sum() + self.smooth))
 
-    new_image = pil.new(image.mode, (width, height), tuple([0] * len(image.mode)))
-    new_image.paste(image, (offset_x, offset_y))
-
-    return new_image, (offset_x, offset_y, new_width, new_height)
-
-# A marker to detect the censored parts of an image.
+# A marker to mark a certain parts of an image.
 class Marker:
 
     # Load a marker.
     @staticmethod
     def load(device: str, path: Path):
         data = torch.load(str(path), resolve_device(device))
-        marker = Marker(device, data["width"], data["height"], data["depth"])
+        marker = Marker(device, data["width"], data["height"])
 
         marker.model.load_state_dict(data["model_state"])
         marker.optimizer.load_state_dict(data["optimizer_state"])
@@ -60,16 +44,12 @@ class Marker:
         return marker
 
     # Initialize a marker.
-    def __init__(self, device: str, width: int, height: int, depth: int = 4):
-        if depth < 1:
-            raise Exception("The depth must be equal or larger than 1")
-
+    def __init__(self, device: str, width: int, height: int):
         self.device = torch.device(resolve_device(device))
-        self.model = UNet(3, 1, depth).to(self.device)
+        self.model = UNet(3, 1, 4).to(self.device)
 
         self.width = width
         self.height = height
-        self.depth = depth
 
         self.loss = 1
         self.iterations = 0
@@ -88,8 +68,8 @@ class Marker:
                 image_tensor = cast(torch.Tensor, transform_image(fit_image(image, self.width, self.height)[0]))
                 mask_tensor = cast(torch.Tensor, transform_mask(fit_image(mask, self.width, self.height)[0]))
 
-                predictions = self.model(image_tensor.unsqueeze(0).to(self.device))
-                loss = self.criterion(predictions, mask_tensor.unsqueeze(0).to(self.device))
+                prediction = self.model(image_tensor.unsqueeze(0).to(self.device))
+                loss = self.criterion(prediction, mask_tensor.unsqueeze(0).to(self.device))
 
                 self.optimizer.zero_grad()
                 loss.backward()
@@ -106,11 +86,14 @@ class Marker:
 
     # Mark an image.
     def mark(self, image: pil.Image):
-        resized_image, transform = fit_image(image, self.width, self.height)
+        self.model.eval()
 
-        output = self.model(cast(torch.Tensor, transform_image(resized_image)).unsqueeze(0).to(self.device))
-        output = output[:, :, transform[1]:transform[1] + transform[3], transform[0]:transform[0] + transform[2]]
-        output = torch.nn.functional.interpolate(output, size=(image.height, image.width)).squeeze(0).squeeze(0)
+        with torch.no_grad():
+            resized_image, transform = fit_image(image, self.width, self.height)
+
+            output = self.model(cast(torch.Tensor, transform_image(resized_image)).unsqueeze(0).to(self.device))
+            output = output[:, :, transform[1]:transform[1] + transform[3], transform[0]:transform[0] + transform[2]]
+            output = torch.nn.functional.interpolate(output, size=(image.height, image.width)).squeeze(0).squeeze(0)
 
         return output
 
@@ -119,7 +102,6 @@ class Marker:
         torch.save({
             "width": self.width,
             "height": self.height,
-            "depth": self.depth,
 
             "loss": self.loss,
             "iterations": self.iterations,
