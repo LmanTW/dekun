@@ -8,25 +8,6 @@ from dekun.core.utils import resolve_device, fit_image, transform_image, transfo
 from dekun.marker.dataset import Dataset
 from dekun.core.unet import UNet
 
-# The dice loss criterion.
-class DiceLoss(torch.nn.Module):
-
-    # Initialize a dice loss criterion.
-    def __init__(self, smooth: float = 1e-6):
-        super(DiceLoss, self).__init__()
-
-        self.smooth = smooth
-
-    # Forward the dice loss criterion.
-    def forward(self, prediction: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-        prediction = torch.sigmoid(prediction)
-        prediction = prediction.contiguous().view(-1)
-
-        target = target.contiguous().view(-1)
-        intersection = (prediction * target).sum()
-
-        return 1 - ((2.0 * intersection + self.smooth) / (prediction.sum() + target.sum() + self.smooth))
-
 # A marker to mark a certain parts of an image.
 class Marker:
 
@@ -55,8 +36,7 @@ class Marker:
         self.loss = 1
         self.iterations = 0
 
-        self.bce_criterion = torch.nn.BCEWithLogitsLoss()
-        self.dice_criterion = DiceLoss()
+        self.criterion = torch.nn.BCEWithLogitsLoss()
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr = 1e-4)
 
     # Train the marker.
@@ -67,14 +47,11 @@ class Marker:
             start = time.time()
 
             for image, mask in dataset:
-                image_tensor = cast(torch.Tensor, transform_image(fit_image(image, self.width, self.height)[0])).to(self.device)
-                mask_tensor = cast(torch.Tensor, transform_mask(fit_image(mask, self.width, self.height)[0])).to(self.device)
+                image_tensor = cast(torch.Tensor, transform_image(fit_image(image, self.width, self.height)[0]))
+                mask_tensor = cast(torch.Tensor, transform_mask(fit_image(mask, self.width, self.height)[0]))
 
-                prediction = self.model(image_tensor.unsqueeze(0))
-                bce_loss = self.bce_criterion(prediction, mask_tensor.unsqueeze(0))
-                dice_loss = self.dice_criterion(prediction, mask_tensor.unsqueeze(0))
-
-                loss = (bce_loss * 0.5) + (dice_loss * 0.5)
+                prediction = self.model(image_tensor.unsqueeze(0).to(self.device))
+                loss = self.criterion(prediction, mask_tensor.unsqueeze(0))
 
                 self.optimizer.zero_grad()
                 loss.backward()
