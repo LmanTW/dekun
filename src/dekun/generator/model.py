@@ -4,9 +4,9 @@ import PIL.Image as pil
 import torch
 import time
 
-from core.utils import resolve_device, fit_image, transform_image, transform_mask
-from generator.dataset import Dataset
-from core.unet import UNet
+from dekun.core.utils import resolve_device, fit_image, transform_image, transform_mask
+from dekun.generator.dataset import Dataset
+from dekun.core.unet import UNet
 
 # A generate to generates a certain parts of an image.
 class Generator:

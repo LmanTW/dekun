@@ -1,7 +1,7 @@
 import click
 
-from generator.command import generator_command
-from marker.command import marker_command
+from dekun.generator.command import generator_command
+from dekun.marker.command import marker_command
 
 # The root command group.
 @click.group()

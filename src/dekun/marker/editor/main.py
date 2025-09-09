@@ -4,7 +4,7 @@ from base64 import b64decode
 from pathlib import Path
 import json
 
-from marker.dataset import Dataset 
+from dekun.marker.dataset import Dataset 
 
 def start_editor(dataset_path: Path):
     app = Flask(__name__, static_folder="public")

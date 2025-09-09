@@ -4,9 +4,9 @@ import PIL.Image as pil
 import torch
 import time
 
-from core.utils import resolve_device, fit_image, transform_image, transform_mask
-from marker.dataset import Dataset
-from core.unet import UNet
+from dekun.core.utils import resolve_device, fit_image, transform_image, transform_mask
+from dekun.marker.dataset import Dataset
+from dekun.core.unet import UNet
 
 class DiceLoss(torch.nn.Module):
 

@@ -1,13 +1,13 @@
-from core.utils import format_duration, average_difference
 import PIL.Image as Image
 from pathlib import Path
 from math import ceil
 import click
 import torch
 
-from marker.editor.main import start_editor
-from marker.dataset import Dataset
-from marker.model import Marker
+from dekun.core.utils import format_duration, average_difference
+from dekun.marker.editor.main import start_editor
+from dekun.marker.dataset import Dataset
+from dekun.marker.model import Marker
 
 # The marker command group.
 @click.group("marker")

@@ -2,8 +2,8 @@ from pathlib import Path
 import click
 import torch
 
-from generator.model import Generator
-from generator.dataset import Dataset
+from dekun.generator.model import Generator
+from dekun.generator.dataset import Dataset
 
 # The generator command group.
 @click.group("generator")
