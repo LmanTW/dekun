@@ -46,10 +46,10 @@ class Generator:
         while True:
             start = time.time()
 
-            for image, mask, target in dataset:
+            for image, mask, combined in dataset:
                 image_tensor = cast(torch.Tensor, transform_image(fit_image(image, self.width, self.height)[0]))
                 mask_tensor = cast(torch.Tensor, transform_mask(fit_image(mask, self.width, self.height)[0]))
-                target_tensor = cast(torch.Tensor, transform_image(fit_image(target, self.width, self.height)[0]))
+                target_tensor = cast(torch.Tensor, transform_image(fit_image(combined, self.width, self.height)[0]))
 
                 prediction = self.model(torch.cat((image_tensor.unsqueeze(0).to(self.device), mask_tensor.unsqueeze(0).to(self.device)), dim=1))
                 loss = self.criterion(prediction, target_tensor.unsqueeze(0).to(self.device))
