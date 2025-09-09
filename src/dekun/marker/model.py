@@ -8,6 +8,7 @@ from dekun.core.utils import resolve_device, fit_image, transform_image, transfo
 from dekun.marker.dataset import Dataset
 from dekun.core.unet import UNet
 
+# The dice loss criterion.
 class DiceLoss(torch.nn.Module):
 
     # Initialize a dice loss criterion.
@@ -54,7 +55,8 @@ class Marker:
         self.loss = 1
         self.iterations = 0
 
-        self.criterion = torch.nn.BCEWithLogitsLoss()
+        self.bce_criterion = torch.nn.BCEWithLogitsLoss()
+        self.dice_criterion = DiceLoss()
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr = 1e-4)
 
     # Train the marker.
@@ -69,7 +71,10 @@ class Marker:
                 mask_tensor = cast(torch.Tensor, transform_mask(fit_image(mask, self.width, self.height)[0]))
 
                 prediction = self.model(image_tensor.unsqueeze(0).to(self.device))
-                loss = self.criterion(prediction, mask_tensor.unsqueeze(0).to(self.device))
+                bce_loss = self.bce_criterion(prediction, mask_tensor.unsqueeze(0))
+                dice_loss = self.dice_criterion(prediction, mask_tensor.unsqueeze(0))
+
+                loss = (bce_loss * 0.5) + (dice_loss * 0.5)
 
                 self.optimizer.zero_grad()
                 loss.backward()

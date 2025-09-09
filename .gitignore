@@ -3,9 +3,6 @@ __pycache__/
 .venv
 uv.lock
 
-model
-dataset
-
 .DS_Store
 
 *.pth
