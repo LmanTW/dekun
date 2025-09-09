@@ -11,6 +11,13 @@ dependencies = [
     "torchvision>=0.23.0",
 ]
 
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project.scripts]
+dekun = "dekun.main"
+
 [tool.pyright]
 venvPath = "."
 venv = ".venv"
