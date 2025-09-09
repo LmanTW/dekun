@@ -35,7 +35,6 @@ def info_command(path: str):
 
     print(f"Width: {data['width']}")
     print(f"Height: {data['height']}")
-    print(f"Depth: {data['depth']}")
     print(f"Loss: {data['loss']}")
     print(f"Iterations: {data['iterations']}")
 
