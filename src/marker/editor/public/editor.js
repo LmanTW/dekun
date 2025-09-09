@@ -1,12 +1,26 @@
+const container_settings = document.getElementById('container-settings')
 const container_entries = document.getElementById('container-entries')
+const input_resolution = document.getElementById('input-resolution')
 const select_provider = document.getElementById('select-provider')
+const button_settings = document.getElementById('button-settings')
+const text_resolution = document.getElementById('text-resolution')
 const container_help = document.getElementById('container-help')
 const container_all = document.getElementById('container-all')
 const button_reload = document.getElementById('button-reload')
 const input_source = document.getElementById('input-source')
 const button_help = document.getElementById('button-help')
+const input_speed = document.getElementById('input-speed')
 const button_all = document.getElementById('button-all')
+const text_speed = document.getElementById('text-speed')
 const text_total = document.getElementById('text-total')
+
+const settings = {
+  resolution: parseFloat(input_resolution.value),
+  controlSpeed: parseFloat(input_speed.value)
+}
+
+text_resolution.textContent = input_resolution.value
+text_speed.textContent = input_speed.value
 
 const drivers = {
   pixiv: (await import('./drivers/pixiv.js')).default,
@@ -184,8 +198,8 @@ class Editor {
   static resize() {
     const bound = this.canvas.getBoundingClientRect()
 
-    this.canvas.width = bound.width * window.devicePixelRatio
-    this.canvas.height = bound.height * window.devicePixelRatio
+    this.canvas.width = bound.width * settings.resolution
+    this.canvas.height = bound.height * settings.resolution
 
     this.xOffset = bound.left
     this.yOffset = bound.top
@@ -359,21 +373,21 @@ class Control {
   // Update the control.
   static update() {
     if (this.keyboard['a']) {
-      Editor.camera.xSpeed = -50
+      Editor.camera.xSpeed = -50 * settings.controlSpeed
     } else if (this.keyboard['d']) {
-      Editor.camera.xSpeed = 50
+      Editor.camera.xSpeed = 50 * settings.controlSpeed
     }
 
     if (this.keyboard['w']) {
-      Editor.camera.ySpeed = -50
+      Editor.camera.ySpeed = -50 * settings.controlSpeed
     } else if (this.keyboard['s']) {
-      Editor.camera.ySpeed = 50
+      Editor.camera.ySpeed = 50 * settings.controlSpeed
     }
 
     if (this.keyboard['q']) {
-      Editor.camera.scaleSpeed = -0.05
+      Editor.camera.scaleSpeed = -0.05 * settings.controlSpeed
     } else if (this.keyboard['e']) {
-      Editor.camera.scaleSpeed = 0.05
+      Editor.camera.scaleSpeed = 0.05 * settings.controlSpeed
     }
 
     const oldX = Editor.camera.x;
@@ -480,8 +494,8 @@ class Control {
 }
 
 window.addEventListener('mousemove', (event) => {
-  Control.mouse.editorX = (event.x - Editor.xOffset) * window.devicePixelRatio 
-  Control.mouse.editorY = (event.y - Editor.yOffset) * window.devicePixelRatio
+  Control.mouse.editorX = (event.x - Editor.xOffset) * settings.resolution 
+  Control.mouse.editorY = (event.y - Editor.yOffset) * settings.resolution
 
   if (Image.transform !== null) {
     Control.mouse.imageX = ((Control.mouse.editorX / Editor.camera.scale) + (Editor.camera.x - Image.transform.x)) / Image.transform.widthScale
@@ -655,6 +669,24 @@ function loadImages(amount) {
 button_help.addEventListener('click', () => {
   Editor.canvas.style.opacity = (container_help.style.display === 'none') ? '0.5' : '1'
   container_help.style.display = (container_help.style.display === 'none') ? 'block' : 'none'
+})
+
+button_settings.addEventListener('click', () => {
+  Editor.canvas.style.opacity = (container_settings.style.display === 'none') ? '0.5' : '1'
+  container_settings.style.display = (container_settings.style.display === 'none') ? 'block' : 'none'
+})
+
+input_resolution.addEventListener('input', () => {
+  settings.resolution = parseFloat(input_resolution.value)
+  text_resolution.textContent = input_resolution.value
+
+  Editor.reset()
+  Editor.resize()
+})
+
+input_speed.addEventListener('input', () => {
+  settings.controlSpeed = parseFloat(input_speed.value)
+  text_speed.textContent = input_speed.value
 })
 
 button_all.addEventListener('click', async () => {

@@ -13,6 +13,7 @@
     <div style="flex-shrink: 0; display: flex; align-items: center; background-color: var(--color-container-dark); left: 0rem; top: 0rem; width: 100dvw; height: 3.5rem">
       <h2 style="text-wrap: nowrap; margin-left: var(--spacing-medium); margin-right: var(--spacing-medium)">Marker Dataset Editor</h2>
       <button id="button-help" style="margin-right: var(--spacing-medium); cursor: pointer">Help</button>
+      <button id="button-settings" style="margin-right: var(--spacing-medium); cursor: pointer">Settings</button>
       <button id="button-all" style="margin-right: var(--spacing-medium); cursor: pointer">All</button>
 
       <div style="flex: 1"></div>
@@ -115,9 +116,23 @@
       </p>
     </div>
 
-    <div id="container-all" style="position: fixed; display: none; flex-direction: column; background-color: var(--color-container-dark); border-radius: 0.5rem; right: 0.5rem; top: 4rem; max-height: calc(100dvh - 6.5rem); padding: var(--spacing-medium); overflow-y: auto;">
+    <div id="container-settings" style="position: fixed; display: none; flex-direction: column; background-color: var(--color-container-dark); border-radius: 0.5rem; left: 0.5rem; top: 4rem; max-height: calc(100dvh - 6.5rem); padding: var(--spacing-medium); overflow-y: auto">
+      <div style="display: flex; align-items: center; gap: var(--spacing-small); margin-bottom: var(--spacing-small)">
+        <p>Resolution:</p>
+        <input id="input-resolution" type="range" step="0.1" min="0.5" max="2" value="1">
+        <p id="text-resolution">1</p>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: var(--spacing-small)">
+        <p>Control Speed:</p>
+        <input id="input-speed" type="range" step="0.1" min="0.1" max="2" value="1">
+        <p id="text-speed">1</p>
+      </div>
+    </div>
+
+    <div id="container-all" style="position: fixed; display: none; flex-direction: column; background-color: var(--color-container-dark); border-radius: 0.5rem; right: 0.5rem; top: 4rem; max-height: calc(100dvh - 6.5rem); padding: var(--spacing-medium); overflow-y: auto">
       <div style="display: flex">
-        <h5 id="text-total" style="flex: 1; margin-right: var(--spacing-medium);">0 Entries</h5>
+        <h5 id="text-total" style="flex: 1; margin-right: var(--spacing-medium)">0 Entries</h5>
         <button id="button-reload">Reload</button>
       </div>
 

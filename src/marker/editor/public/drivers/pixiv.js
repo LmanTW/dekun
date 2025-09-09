@@ -47,7 +47,7 @@ export default class {
           const urlParts = this.current.pages[this.current.index].urls.original.split('/') 
 
           return {
-            name: `nHentai-${this.current.id}-${this.current.index + 1}`,
+            name: `pixiv-${this.current.id}-${this.current.index + 1}`,
             url: `/drivers/pixiv/image/${urlParts.slice(5, 11).join('-')}/${urlParts[11]}`,
 
             display: `${this.current.id}/${this.current.index + 1}`,
