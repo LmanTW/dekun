@@ -47,12 +47,12 @@ class Generator:
             start = time.time()
 
             for image, mask, combined in dataset:
-                image_tensor = cast(torch.Tensor, transform_image(fit_image(image, self.width, self.height)[0]))
-                mask_tensor = cast(torch.Tensor, transform_mask(fit_image(mask, self.width, self.height)[0]))
-                target_tensor = cast(torch.Tensor, transform_image(fit_image(combined, self.width, self.height)[0]))
+                image_tensor = cast(torch.Tensor, transform_image(fit_image(image, self.width, self.height)[0])).unsqueeze(0).to(self.device)
+                mask_tensor = cast(torch.Tensor, transform_mask(fit_image(mask, self.width, self.height)[0])).unsqueeze(0).to(self.device)
+                combined_tensor = cast(torch.Tensor, transform_image(fit_image(combined, self.width, self.height)[0])).unsqueeze(0).to(self.device)
 
-                prediction = self.model(torch.cat((image_tensor.unsqueeze(0).to(self.device), mask_tensor.unsqueeze(0).to(self.device)), dim=1))
-                loss = self.criterion(prediction, target_tensor.unsqueeze(0).to(self.device))
+                prediction = self.model(torch.cat((image_tensor, mask_tensor), dim=1))
+                loss = self.criterion(prediction, combined_tensor)
 
                 self.optimizer.zero_grad()
                 loss.backward()
@@ -75,17 +75,17 @@ class Generator:
             resized_image, transform = fit_image(image, self.width, self.height)
             resized_mask = fit_image(mask, self.width, self.height)
 
-            image_tensor = cast(torch.Tensor, transform_image(resized_image))
-            mask_tensor = cast(torch.Tensor, transform_mask(resized_mask)) 
+            image_tensor = cast(torch.Tensor, transform_image(resized_image)).unsqueeze(0).to(self.device)
+            mask_tensor = cast(torch.Tensor, transform_mask(resized_mask)).unsqueeze(0).to(self.device)
 
-            output = self.model(torch.cat((image_tensor.unsqueeze(0).to(self.device), mask_tensor.unsqueeze(0).to(self.device)), dim=1))
+            output = self.model(torch.cat((image_tensor, mask_tensor), dim=1))
             output = output[:, :, transform[1]:transform[1] + transform[3], transform[0]:transform[0] + transform[2]]
             output = torch.nn.functional.interpolate(output, size=(image.height, image.width)).squeeze(0)
 
             original_tensor = cast(torch.Tensor, transform_image(image)).unsqueeze(0).to(self.device)
             original_tensor = torch.nn.functional.interpolate(original_tensor, size=(image.height, image.width)).squeeze(0)
 
-            output = original_tensor * (1 - mask_tensor.squeeze(0)) + output * mask_tensor.squeeze(0)
+            output = original_tensor * (1 - mask_tensor) + output * mask_tensor
 
         return output
 
