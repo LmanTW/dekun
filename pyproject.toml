@@ -12,7 +12,7 @@ dependencies = [
 ]
 
 [project.scripts]
-dekun = "src.main:root_comamnd"
+dekun = "src.main:root_command"
 
 [tool.pyright]
 venvPath = "."
