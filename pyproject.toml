@@ -11,9 +11,16 @@ dependencies = [
     "torchvision>=0.23.0",
 ]
 
+[build-system]
+requires = ["setuptools>=65", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project.scripts]
 dekun = "src.main:root_command"
 
 [tool.pyright]
 venvPath = "."
 venv = ".venv"
+
+[tool.setuptools.packages.find]
+where = ["src"]
