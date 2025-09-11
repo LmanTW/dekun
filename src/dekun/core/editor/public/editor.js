@@ -8,6 +8,7 @@ const container_help = document.getElementById('container-help')
 const text_duplicate = document.getElementById('text-duplicate')
 const container_all = document.getElementById('container-all')
 const button_reload = document.getElementById('button-reload')
+const input_random = document.getElementById('input-random')
 const input_source = document.getElementById('input-source')
 const button_help = document.getElementById('button-help')
 const input_speed = document.getElementById('input-speed')
@@ -380,15 +381,15 @@ class Control {
   // Update the control.
   static update() {
     if (this.keyboard['a']) {
-      Editor.camera.xSpeed = -50 * settings.controlSpeed
+      Editor.camera.xSpeed = -35 * settings.controlSpeed
     } else if (this.keyboard['d']) {
-      Editor.camera.xSpeed = 50 * settings.controlSpeed
+      Editor.camera.xSpeed = 35 * settings.controlSpeed
     }
 
     if (this.keyboard['w']) {
-      Editor.camera.ySpeed = -50 * settings.controlSpeed
+      Editor.camera.ySpeed = -35 * settings.controlSpeed
     } else if (this.keyboard['s']) {
-      Editor.camera.ySpeed = 50 * settings.controlSpeed
+      Editor.camera.ySpeed = 35 * settings.controlSpeed
     }
 
     if (this.keyboard['q']) {

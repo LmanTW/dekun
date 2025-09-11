@@ -6,7 +6,7 @@ import json
 
 from dekun.core.dataset import Dataset 
 
-def start_editor(dataset_path: Path):
+def start_editor(port: int, dataset_path: Path):
     app = Flask(__name__, static_folder="public")
     dataset = Dataset(dataset_path)
 
@@ -156,4 +156,4 @@ def start_editor(dataset_path: Path):
 
         return Response(dataset_path.joinpath(f"{name}-mask{dataset.image_map[name]['mask']}").read_bytes(), content_type=content_type)
 
-    app.run(host="0.0.0.0", port=8080, debug=True)
+    app.run(host="0.0.0.0", port=port, debug=True)

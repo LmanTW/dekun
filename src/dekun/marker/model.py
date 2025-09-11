@@ -47,10 +47,10 @@ class Marker:
             start = time.time()
 
             for image, mask in dataset:
-                image_tensor = cast(torch.Tensor, transform_image(fit_image(image, self.width, self.height)[0]))
-                mask_tensor = cast(torch.Tensor, transform_mask(fit_image(mask, self.width, self.height)[0]))
+                image_tensor = cast(torch.Tensor, transform_image(fit_image(image, self.width, self.height)[0])).to(self.device)
+                mask_tensor = cast(torch.Tensor, transform_mask(fit_image(mask, self.width, self.height)[0])).to(self.device)
 
-                prediction = self.model(image_tensor.unsqueeze(0).to(self.device))
+                prediction = self.model(image_tensor.unsqueeze(0))
                 loss = self.criterion(prediction, mask_tensor.unsqueeze(0))
 
                 self.optimizer.zero_grad()

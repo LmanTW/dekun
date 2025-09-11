@@ -118,6 +118,11 @@
     </div>
 
     <div id="container-settings" style="position: fixed; display: none; flex-direction: column; background-color: var(--color-container-dark); border-radius: 0.5rem; left: 0.5rem; top: 4rem; max-height: calc(100dvh - 6.5rem); padding: var(--spacing-medium); overflow-y: auto">
+      <div style="display: flex; align-items: center; gap: var(--spacing-small); margin-bottom: var(--spacing-big)">
+        <p>Random Stroke (Disable Manual):</p>
+        <input id="input-random" type="checkbox">
+      </div>
+
       <div style="display: flex; align-items: center; gap: var(--spacing-small); margin-bottom: var(--spacing-small)">
         <p>Resolution:</p>
         <input id="input-resolution" type="range" step="0.1" min="0.5" max="2" value="1">
