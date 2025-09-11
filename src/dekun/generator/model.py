@@ -20,7 +20,7 @@ def merge_mask(index: int, image: pil.Image, mask: pil.Image):
     image_array = numpy.array(image)
     binary_mask = numpy.array(mask) > 0
 
-    color = COLORS[len(COLORS) % index]
+    color = COLORS[index % (len(COLORS) - 1)]
 
     colored_mask = numpy.zeros_like(image_array)
     colored_mask[:, :, 0] = color[0]
@@ -52,7 +52,7 @@ class Generator:
     # Initialize a generator.
     def __init__(self, device: str, width: int, height: int):
         self.device = torch.device(resolve_device(device))
-        self.model = UNet(3, 3, 4).to(self.device)
+        self.model = UNet(4, 3, 4).to(self.device)
 
         self.width = width
         self.height = height
