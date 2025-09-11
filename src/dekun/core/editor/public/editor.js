@@ -5,6 +5,7 @@ const select_provider = document.getElementById('select-provider')
 const button_settings = document.getElementById('button-settings')
 const text_resolution = document.getElementById('text-resolution')
 const container_help = document.getElementById('container-help')
+const text_duplicate = document.getElementById('text-duplicate')
 const container_all = document.getElementById('container-all')
 const button_reload = document.getElementById('button-reload')
 const input_source = document.getElementById('input-source')
@@ -89,6 +90,8 @@ class Image {
 
   // Switch to the next image.
   static async next() {
+    text_duplicate.style.display = 'none'
+
     Editor.reset()
     Control.reset()
 
@@ -108,15 +111,19 @@ class Image {
     element.src = info.url
     element.crossOrigin = 'anonymous'
 
-    element.addEventListener('load', () => {
+    element.addEventListener('load', async () => {
       this.element = element
 
       this.resize()
+
+      text_duplicate.style.display = (await (await fetch(`/check/${info.name}`)).json()) ? 'block' : 'none'
     })
   }
 
   // Submit the image.
   static async submit() {
+    text_duplicate.style.display = 'none'
+
     Editor.reset()
     Control.reset()
 

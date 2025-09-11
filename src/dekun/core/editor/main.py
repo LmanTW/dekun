@@ -120,7 +120,11 @@ def start_editor(dataset_path: Path):
 
         return Response("false", content_type="application/json")
 
-    @app.route("/list")
+    @app.route("/check/<name>")
+    def check(name):
+        return Response(json.dumps(dataset.has(name)), content_type="application/json")
+
+    @app.route("/list", methods=["GET"])
     def list():
         return Response(json.dumps(dataset.image_list), content_type="application/json")
 
