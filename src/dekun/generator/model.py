@@ -60,7 +60,7 @@ class Generator:
         self.loss = 1
         self.iterations = 0
 
-        self.criterion = torch.nn.BCEWithLogitsLoss()
+        self.criterion = torch.nn.MSELoss()
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr = 1e-4)
 
     # Train the generator.
@@ -86,7 +86,6 @@ class Generator:
                 self.optimizer.step()
                 self.loss = loss.item()
                 
-
             self.iterations += 1
 
             if callback == None:
