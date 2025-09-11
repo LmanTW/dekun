@@ -1,12 +1,36 @@
 from typing import Union, Callable, cast
 from pathlib import Path
 import PIL.Image as pil
+import numpy as numpy
 import torch
 import time
 
 from dekun.core.utils import resolve_device, fit_image, transform_image, transform_mask
-from dekun.generator.dataset import Dataset
+from dekun.core.dataset import Dataset
 from dekun.core.unet import UNet
+
+COLORS = [
+    (255, 255, 255),
+    (125, 125, 125),
+    (0, 0, 0)
+]
+
+# Merge a mask with another image.
+def merge_mask(index: int, image: pil.Image, mask: pil.Image):
+    image_array = numpy.array(image)
+    binary_mask = numpy.array(mask) > 0
+
+    color = COLORS[len(COLORS) % index]
+
+    colored_mask = numpy.zeros_like(image_array)
+    colored_mask[:, :, 0] = color[0]
+    colored_mask[:, :, 1] = color[1]
+    colored_mask[:, :, 2] = color[2]
+
+    combined = numpy.copy(image_array)
+    combined[binary_mask] = colored_mask[binary_mask]
+
+    return pil.fromarray(combined)
 
 # A generate to generates a certain parts of an image.
 class Generator:
@@ -46,10 +70,13 @@ class Generator:
         while True:
             start = time.time()
 
-            for image, mask, combined in dataset:
-                image_tensor = cast(torch.Tensor, transform_image(fit_image(image, self.width, self.height)[0])).unsqueeze(0).to(self.device)
-                mask_tensor = cast(torch.Tensor, transform_mask(fit_image(mask, self.width, self.height)[0])).unsqueeze(0).to(self.device)
-                combined_tensor = cast(torch.Tensor, transform_image(fit_image(combined, self.width, self.height)[0])).unsqueeze(0).to(self.device)
+            for index, entry in enumerate(dataset):
+                resized_image = fit_image(entry[0], self.width, self.height)[0]
+                resized_mask = fit_image(entry[1], self.width, self.height)[0]
+
+                image_tensor = cast(torch.Tensor, transform_image(resized_image)).unsqueeze(0).to(self.device)
+                mask_tensor = cast(torch.Tensor, transform_mask(resized_mask)).unsqueeze(0).to(self.device)
+                combined_tensor = cast(torch.Tensor, transform_image(merge_mask(index, resized_image, resized_mask))).unsqueeze(0).to(self.device)
 
                 prediction = self.model(torch.cat((image_tensor, mask_tensor), dim=1))
                 loss = self.criterion(prediction, combined_tensor)
@@ -58,6 +85,7 @@ class Generator:
                 loss.backward()
                 self.optimizer.step()
                 self.loss = loss.item()
+                
 
             self.iterations += 1
 

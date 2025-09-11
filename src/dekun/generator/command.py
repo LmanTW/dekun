@@ -3,7 +3,7 @@ import click
 import torch
 
 from dekun.generator.model import Generator
-from dekun.generator.dataset import Dataset
+from dekun.core.dataset import Dataset
 
 # The generator command group.
 @click.group("generator")
@@ -33,5 +33,3 @@ def info_command(path: str):
     print(f"Height: {data['height']}")
     print(f"Loss: {data['loss']}")
     print(f"Iterations: {data['iterations']}")
-
-

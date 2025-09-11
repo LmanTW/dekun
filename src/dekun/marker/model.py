@@ -5,7 +5,7 @@ import torch
 import time
 
 from dekun.core.utils import resolve_device, fit_image, transform_image, transform_mask
-from dekun.marker.dataset import Dataset
+from dekun.core.dataset import Dataset
 from dekun.core.unet import UNet
 
 # A marker to mark a certain parts of an image.

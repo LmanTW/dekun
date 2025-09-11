@@ -5,8 +5,7 @@ import click
 import torch
 
 from dekun.core.utils import format_duration, average_difference
-from dekun.marker.editor.main import start_editor
-from dekun.marker.dataset import Dataset
+from dekun.core.dataset import Dataset
 from dekun.marker.model import Marker
 
 # The marker command group.
@@ -117,14 +116,7 @@ def train_command(path: str, dataset: str, iterations: int, threshold: float, de
         marker.train(Dataset(Path(dataset)), callback)
         marker.save(Path(path))
 
-# Start the marker dataset editor.
-@click.command("editor")
-@click.argument("path", type=click.Path(True))
-def editor_command(path: str):
-    start_editor(Path(path))
-
 marker_command.add_command(init_command)
 marker_command.add_command(info_command)
 marker_command.add_command(mark_command)
 marker_command.add_command(train_command)
-marker_command.add_command(editor_command)
