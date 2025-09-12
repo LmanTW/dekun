@@ -45,6 +45,30 @@ input_source.addEventListener('change', () => {
   }
 })
 
+// Create an element.
+function createElement(tagName, attributes, children) {
+  const element = document.createElement(tagName)
+
+  if (attributes !== undefined) {
+    for (const name of Object.keys(attributes)) {
+      if (name !== 'textContent' && name !== 'innerHTML' && attributes[name] !== false) {
+        element.setAttribute(name, attributes[name].toString())
+      }
+    }
+
+    if (attributes.textContent !== undefined) element.textContent = attributes.textContent.toString()
+    if (attributes.innerHTML !== undefined) element.innerHTML = attributes.innerHTML.toString()
+  }
+
+  if (children !== undefined) {
+    for (const child of children) {
+      if (child instanceof Element) element.appendChild(child)
+    }
+  }
+
+  return element
+}
+
 // The current image.
 class Image {
   static canvas = document.createElement('canvas')
@@ -89,6 +113,45 @@ class Image {
     }
   }
 
+  // Generate random strokes.
+  static async random() {
+    this.strokes = []
+
+    for (let i = 0; i < (this.element.width + this.element.height) / 100; i++) {
+      const type = Math.random()
+
+      if (type > 0.1) {
+        const startX = Math.random() * this.element.width
+        const startY = Math.random() * this.element.height
+        const distance = Math.random() * ((this.element.width + this.element.width) / 2)
+        const direction = (Math.random() * 360) * (Math.PI / 180)
+
+        this.strokes.push({
+          type: (Math.random() > 0.75) ? 2 : 1,
+          size: Math.max(0.1, Math.random()) * ((this.element.width + this.element.height) / 250),
+
+          x1: startX,
+          y1: startY,
+          x2: startX + (distance * Math.cos(direction)),
+          y2: startY + (distance * Math.sin(direction))
+        })
+      } else {
+        const startX = Math.random() * this.element.width
+        const startY = Math.random() * this.element.height
+
+        this.strokes.push({
+          type: 2,
+          size: Math.max(0.5, Math.random()) * ((this.element.width + this.element.height) / 100),
+
+          x1: startX,
+          y1: startY,
+          x2: startX,
+          y2: startY
+        })        
+      }
+    }
+  }
+
   // Switch to the next image.
   static async next() {
     text_duplicate.style.display = 'none'
@@ -116,6 +179,10 @@ class Image {
       this.element = element
 
       this.resize()
+
+      if (input_random.checked) {
+        this.random()
+      }
 
       text_duplicate.style.display = (await (await fetch(`/check/${info.name}`)).json()) ? 'block' : 'none'
     })
@@ -247,8 +314,8 @@ class Editor {
     }
 
     if (Image.transform !== null) {
-      this.ctx.fillStyle = 'rgb(0,255,0)'
-      this.ctx.strokeStyle = 'rgb(0,255,0)'
+      this.ctx.fillStyle = `rgba(0,255,0,${Control.strokeOpacity})`
+      this.ctx.strokeStyle = `rgba(0,255,0,${Control.strokeOpacity})`
 
       for (const stroke of Image.strokes) {
         if (stroke.type === 1 || stroke.type === 2) {
@@ -279,52 +346,54 @@ class Editor {
         }
       }
 
-      this.ctx.fillStyle = 'rgba(0,255,0,0.5)'
-      this.ctx.strokeStyle = 'rgba(0,255,0,0.5)'
+      if (!input_random.checked) {
+        this.ctx.fillStyle = 'rgba(0,255,0,0.5)'
+        this.ctx.strokeStyle = 'rgba(0,255,0,0.5)'
 
-      if (Control.strokeType === 1 || Control.strokeType === 2) {
-        if (Control.startX === null || Control.startY === null) {
-          this.ctx.fillStyle = 'rgba(255,0,0,0.5)'
-          this.ctx.arc(Control.mouse.editorX, Control.mouse.editorY, ((Image.transform.width + Image.transform.height) * ((Control.strokeSize / 2) * 0.0025)) * Editor.camera.scale, 0, 2 * Math.PI);
-          this.ctx.fill()
-          this.ctx.beginPath() 
-        } else {
-          this.ctx.lineCap = (Control.strokeType === 1) ? 'butt' : 'round'
-          this.ctx.lineWidth = ((Image.transform.width + Image.transform.height) * (Control.strokeSize * 0.0025)) * Editor.camera.scale
-          this.ctx.moveTo(((Image.transform.x + (Control.startX * Image.transform.widthScale)) - this.camera.x) * this.camera.scale, ((Image.transform.y + (Control.startY * Image.transform.heightScale)) - this.camera.y) * this.camera.scale)
-          this.ctx.lineTo(Control.mouse.editorX, Control.mouse.editorY)
-          this.ctx.stroke()
-          this.ctx.beginPath()
-        }
-      } else {
-        for (let i = 0; i < Control.strokePoints.length; i++) {
-          const renderX = ((Image.transform.x + (Control.strokePoints[i].x * Image.transform.widthScale)) - this.camera.x) * this.camera.scale
-          const renderY = ((Image.transform.y + (Control.strokePoints[i].y * Image.transform.heightScale)) - this.camera.y) * this.camera.scale
-
-          if (i === 0) {
-            this.ctx.moveTo(renderX, renderY)
+        if (Control.strokeType === 1 || Control.strokeType === 2) {
+          if (Control.startX === null || Control.startY === null) {
+            this.ctx.fillStyle = 'rgba(255,0,0,0.5)'
+            this.ctx.arc(Control.mouse.editorX, Control.mouse.editorY, ((Image.transform.width + Image.transform.height) * ((Control.strokeSize / 2) * 0.0025)) * Editor.camera.scale, 0, 2 * Math.PI);
+            this.ctx.fill()
+            this.ctx.beginPath() 
           } else {
+            this.ctx.lineCap = (Control.strokeType === 1) ? 'butt' : 'round'
+            this.ctx.lineWidth = ((Image.transform.width + Image.transform.height) * (Control.strokeSize * 0.0025)) * Editor.camera.scale
+            this.ctx.moveTo(((Image.transform.x + (Control.startX * Image.transform.widthScale)) - this.camera.x) * this.camera.scale, ((Image.transform.y + (Control.startY * Image.transform.heightScale)) - this.camera.y) * this.camera.scale)
+            this.ctx.lineTo(Control.mouse.editorX, Control.mouse.editorY)
+            this.ctx.stroke()
+            this.ctx.beginPath()
+          }
+        } else {
+          for (let i = 0; i < Control.strokePoints.length; i++) {
+            const renderX = ((Image.transform.x + (Control.strokePoints[i].x * Image.transform.widthScale)) - this.camera.x) * this.camera.scale
+            const renderY = ((Image.transform.y + (Control.strokePoints[i].y * Image.transform.heightScale)) - this.camera.y) * this.camera.scale
+
+            if (i === 0) {
+              this.ctx.moveTo(renderX, renderY)
+            } else {
+              this.ctx.lineTo(renderX, renderY)
+            }
+          }
+
+          if (Control.strokePoints.length > 1) {
+            const renderX = ((Image.transform.x + (Control.strokePoints[0].x * Image.transform.widthScale)) - this.camera.x) * this.camera.scale
+            const renderY = ((Image.transform.y + (Control.strokePoints[0].y * Image.transform.heightScale)) - this.camera.y) * this.camera.scale
+
             this.ctx.lineTo(renderX, renderY)
           }
-        }
 
-        if (Control.strokePoints.length > 1) {
-          const renderX = ((Image.transform.x + (Control.strokePoints[0].x * Image.transform.widthScale)) - this.camera.x) * this.camera.scale
-          const renderY = ((Image.transform.y + (Control.strokePoints[0].y * Image.transform.heightScale)) - this.camera.y) * this.camera.scale
-
-          this.ctx.lineTo(renderX, renderY)
-        }
-
-        this.ctx.fill()
-        this.ctx.beginPath()
-
-        for (const point of Control.strokePoints) {
-          this.ctx.fillStyle = 'rgba(255,0,0,0.5)'
-          this.ctx.arc(((Image.transform.x + (point.x * Image.transform.widthScale)) - this.camera.x) * this.camera.scale, ((Image.transform.y + (point.y * Image.transform.heightScale)) - this.camera.y) * this.camera.scale, 7.5, 0, 2 * Math.PI);
           this.ctx.fill()
           this.ctx.beginPath()
+
+          for (const point of Control.strokePoints) {
+            this.ctx.fillStyle = 'rgba(255,0,0,0.5)'
+            this.ctx.arc(((Image.transform.x + (point.x * Image.transform.widthScale)) - this.camera.x) * this.camera.scale, ((Image.transform.y + (point.y * Image.transform.heightScale)) - this.camera.y) * this.camera.scale, 7.5, 0, 2 * Math.PI);
+            this.ctx.fill()
+            this.ctx.beginPath()
+          }
         }
-      }
+      } 
 
       this.ctx.fillStyle = `rgba(255,255,255,${Control.saveConfirm})`
       this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height)
@@ -368,6 +437,7 @@ class Control {
   static startY = null
   static moveIndex = null
 
+  static strokeOpacity = 1
   static saveConfirm = 0
 
   // Reset the control.
@@ -449,6 +519,12 @@ class Control {
       Control.strokeSize = Math.min(100 / Editor.camera.scale, Math.max(0.5 / Editor.camera.scale, Control.strokeSize))
     } else if (this.keyboard['r'] === 1) {
       Editor.reset()
+    } else if (this.keyboard['f'] === 1) {
+      this.strokeOpacity -= 0.5
+
+      if (this.strokeOpacity < 0) {
+        this.strokeOpacity = 1
+      }
     } else if (this.keyboard['z'] === 1) {
       if (Image.element !== null) {
         Image.next()
@@ -493,11 +569,114 @@ class Control {
       })
     }
 
+    this.mouse.clicked = false
+
     for (const key of Object.keys(this.keyboard)) {
       this.keyboard[key] = 2
     }
+  }
+}
 
-    this.mouse.clicked = false
+// The entries.
+class Entries {
+  static entries = null
+  static loading = 0
+
+  static topIndex = 0
+  static bottomIndex = 0
+
+  // Load the entries.
+  static async load() { 
+    this.entries = await (await fetch('/list')).json()
+
+    text_total.textContent = `${this.entries.length} Entries`
+  }
+
+  // Reload the entries.
+  static async reload() {
+    this.entries = await (await fetch('/list')).json()
+    this.topIndex = 0
+    this.bottomIndex = 0
+
+    while (container_entries.firstChild) {
+      container_entries.removeChild(container_entries.lastChild)
+    }
+
+    text_total.textContent = `${this.entries.length} Entries`
+  }
+
+  // Load entries at the top.
+  static loadTop(amount) {
+    if (Math.abs(this.topIndex - this.bottomIndex) > 20) {
+      for (let i = 0; i < amount; i++) {
+        container_entries.removeChild(container_entries.lastChild)
+
+        this.bottomIndex--
+      }
+    }
+
+    for (let i = 0; i < amount && this.topIndex > 0; i++) {
+      container_entries.insertBefore(this.createEntryElement(this.entries[this.topIndex]), container_entries.firstChild)
+
+      this.topIndex--
+    }    
+  }
+
+  // Load entries at the bottom.
+  static loadBottom(amount) {
+    if (Math.abs(this.topIndex - this.bottomIndex) > 20) {
+      for (let i = 0; i < amount; i++) {
+        container_entries.removeChild(container_entries.firstChild)
+
+        this.topIndex++
+      }
+    }
+
+    for (let i = 0; i < amount && this.bottomIndex < this.entries.length; i++) {
+      container_entries.appendChild(this.createEntryElement(this.entries[this.bottomIndex]))
+
+      this.bottomIndex++
+    }
+  }
+
+  // Create an entry element.
+  static createEntryElement(name) {
+    const element = createElement('div', { style: 'position: relative; width: min(50dvw, 25rem); margin-top: var(--spacing-medium)' }, [
+      createElement('img', { id: 'image-image', src: `/image/${name}`, style: 'content-visibility: auto; width: 100%' }),
+      createElement('img', { id: 'image-mask', src: `/mask/${name}`, style: 'position: absolute; content-visibility: auto; left: 0rem; top: 0rem; width: 100%; filter: invert(46%) sepia(88%) saturate(3060%) hue-rotate(87deg) brightness(126%) contrast(119%); cursor: pointer' }),
+      createElement('button', { id: 'button-remove', textContent: 'Remove', style: 'position: absolute; right: 0.5rem; bottom: 0.5rem; margin: 0rem; cursor: pointer; user-select: none' })
+    ])
+
+    const image_image = element.querySelector('#image-image')
+    const image_mask = element.querySelector('#image-mask')
+    const button_remove = element.querySelector('#button-remove')
+
+    this.loading += 2
+
+    image_image.addEventListener('load', () => {
+      this.loading -= 1
+    })
+
+    image_mask.addEventListener('load', () => {
+      this.loading -= 1
+    })
+
+    image_mask.addEventListener('click', () => {
+      image_mask.style.opacity = (image_mask.style.opacity === '1') ? '0' : '1'
+    })
+
+    button_remove.addEventListener('click', async () => {
+      await fetch(`/remove/${name}`, {
+        method: 'DELETE'
+      })
+
+      entries.splice(entries.indexOf(name), 1)
+      element.remove()
+
+      text_total.textContent = `${entries.length} Entries`
+    })
+
+    return element
   }
 }
 
@@ -520,6 +699,12 @@ window.addEventListener('mousemove', (event) => {
 
 window.addEventListener('mousedown', (event) => {
   if (event.target === Editor.canvas) {
+    Editor.canvas.style.opacity = '1'
+
+    container_help.style.display = 'none'
+    container_settings.style.display = 'none'
+    container_all.style.display = 'none'
+
     if (event.buttons === 1) {
       Control.mouse.clicked = true
       Control.mouse.pressed = true
@@ -539,7 +724,7 @@ window.addEventListener('mousedown', (event) => {
           Control.startY = lastStroke.y2
         }
       } else if (Control.strokePoints.length > 0) {
-        if (Control.strokePoints.length > 2) {
+        if (!input_random.checked && Control.strokePoints.length > 2) {
           Image.strokes.push({
             type: 3,
             points: Control.strokePoints
@@ -558,15 +743,17 @@ window.addEventListener('mouseup', () => {
     Control.mouse.pressed = false
 
     if (Image.element !== null && (Control.strokeType === 1 || Control.strokeType === 2) && (Control.startX !== null && Control.startY !== null)) {
-      Image.strokes.push({
-        type: Control.strokeType,
-        size: Control.strokeSize,
+      if (!input_random.checked) {
+        Image.strokes.push({
+          type: Control.strokeType,
+          size: Control.strokeSize,
 
-        x1: Control.startX,
-        y1: Control.startY,
-        x2: Control.mouse.imageX,
-        y2: Control.mouse.imageY
-      })
+          x1: Control.startX,
+          y1: Control.startY,
+          x2: Control.mouse.imageX,
+          y2: Control.mouse.imageY
+        })
+      } 
 
       Control.startX = null
       Control.startY = null
@@ -602,86 +789,51 @@ Editor.render()
 
 setInterval(() => Control.update(), 1000 / 60)
 
-// Create an element.
-function createElement(tagName, attributes, children) {
-  const element = document.createElement(tagName)
-
-  if (attributes !== undefined) {
-    for (const name of Object.keys(attributes)) {
-      if (name !== 'textContent' && name !== 'innerHTML' && attributes[name] !== false) {
-        element.setAttribute(name, attributes[name].toString())
-      }
-    }
-
-    if (attributes.textContent !== undefined) element.textContent = attributes.textContent.toString()
-    if (attributes.innerHTML !== undefined) element.innerHTML = attributes.innerHTML.toString()
-  }
-
-  if (children !== undefined) {
-    for (const child of children) {
-      if (child instanceof Element) element.appendChild(child)
-    }
-  }
-
-  return element
-}
-
-let entries = null
-let index = 0
-let loading = 0
-
-// Load more images.
-function loadImages(amount) {
-  for (let i = 0; i < amount && index < entries.length; i++) {
-    const name = entries[index]
-
-    const element = container_entries.appendChild(createElement('div', { style: 'position: relative; width: min(50dvw, 25rem); margin-top: var(--spacing-medium)' }, [
-      createElement('img', { id: 'image-image', src: `/image/${name}`, style: 'content-visibility: auto; width: 100%' }),
-      createElement('img', { id: 'image-mask', src: `/mask/${name}`, style: 'position: absolute; content-visibility: auto; left: 0rem; top: 0rem; width: 100%; filter: invert(46%) sepia(88%) saturate(3060%) hue-rotate(87deg) brightness(126%) contrast(119%); cursor: pointer' }),
-      createElement('button', { id: 'button-remove', textContent: 'Remove', style: 'position: absolute; right: 0.5rem; bottom: 0.5rem; margin: 0rem; cursor: pointer; user-select: none' })
-    ]))
-
-    const image_image = element.querySelector('#image-image')
-    const image_mask = element.querySelector('#image-mask')
-    const button_remove = element.querySelector('#button-remove')
-
-    loading += 2
-
-    image_image.addEventListener('load', () => {
-      loading -= 1
-    })
-
-    image_mask.addEventListener('load', () => {
-      loading -= 1
-    })
-
-    image_mask.addEventListener('click', () => {
-      image_mask.style.opacity = (image_mask.style.opacity === '1') ? '0' : '1'
-    })
-
-    button_remove.addEventListener('click', async () => {
-      await fetch(`/remove/${name}`, {
-        method: 'DELETE'
-      })
-
-      entries.splice(entries.indexOf(name), 1)
-      element.remove()
-
-      text_total.textContent = `${entries.length} Entries`
-    })
-
-    index++
-  }
-}
-
 button_help.addEventListener('click', () => {
-  Editor.canvas.style.opacity = (container_help.style.display === 'none') ? '0.5' : '1'
+  Editor.canvas.style.opacity = (container_help.style.display === 'none') ? '0.25' : '1'
   container_help.style.display = (container_help.style.display === 'none') ? 'block' : 'none'
+
+  if (container_help.style.display === 'block') {
+    container_settings.style.display = 'none'
+    container_all.style.display = 'none'
+  }
 })
 
 button_settings.addEventListener('click', () => {
-  Editor.canvas.style.opacity = (container_settings.style.display === 'none') ? '0.5' : '1'
+  Editor.canvas.style.opacity = (container_settings.style.display === 'none') ? '0.25' : '1'
   container_settings.style.display = (container_settings.style.display === 'none') ? 'block' : 'none'
+
+  if (container_settings.style.display === 'block') {
+    container_help.style.display = 'none'
+    container_all.style.display = 'none'
+  }
+})
+
+button_all.addEventListener('click', async () => {
+  Editor.canvas.style.opacity = (container_all.style.display === 'none') ? '0.25' : '1'
+  container_all.style.display = (container_all.style.display === 'none') ? 'flex' : 'none'
+
+  if (container_all.style.display === 'flex') {
+    container_help.style.display = 'none'
+    container_settings.style.display = 'none'
+  }
+
+  if (Entries.entries === null) {
+    await Entries.load()
+
+    Entries.loadBottom(10)
+  }
+})
+
+input_random.addEventListener('change', () => {
+  if (input_random.checked) {
+    if (Image.element !== undefined) {
+      Image.random()
+    }
+  } else {
+    Image.strokes = []
+    Control.reset()
+  }
 })
 
 input_resolution.addEventListener('input', () => {
@@ -697,32 +849,20 @@ input_speed.addEventListener('input', () => {
   text_speed.textContent = input_speed.value
 })
 
-button_all.addEventListener('click', async () => {
-  Editor.canvas.style.opacity = (container_all.style.display === 'none') ? '0.5' : '1'
-  container_all.style.display = (container_all.style.display === 'none') ? 'flex' : 'none'
+button_reload.addEventListener('click', async () => {
+  if (Entries.loading === 0) {
+    await Entries.reload()
 
-  if (entries === null) {
-    entries = await (await fetch('/list')).json()
-
-    text_total.textContent = `${entries.length} Entries`
+    Entries.loadBottom(10)
   }
 })
 
-button_reload.addEventListener('click', async () => {
-    entries = await (await fetch('/list')).json()
-    index = 0
-
-    while (container_entries.firstChild) {
-      container_entries.removeChild(container_entries.lastChild);
-    }
-
-    text_total.textContent = `${entries.length} Entries`
-
-    loadImages(10)
-})
-
 setInterval(() => {
-  if ((entries !== null && loading === 0) && Math.round(container_all.scrollTop + container_all.clientHeight) >= container_all.scrollHeight - (container_all.scrollHeight / 10)) {
-    loadImages(10)
+  if (Entries.entries !== null && Entries.loading === 0) {
+    if (container_all.scrollTop < container_all.scrollHeight / 10) {
+      Entries.loadTop(10)
+    } else if (Math.round(container_all.scrollTop + container_all.clientHeight) >= container_all.scrollHeight - (container_all.scrollHeight / 10)) {
+      Entries.loadBottom(10)
+    }
   }
 }, 100)

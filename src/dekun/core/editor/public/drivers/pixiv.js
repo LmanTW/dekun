@@ -97,7 +97,8 @@ export default class {
       if (this.current === null) {
         while (true) {
           try {
-            const illustration = (await (await fetch('/drivers/pixiv/discovery')).json()).body.illusts[0]
+            const illustrations = (await (await fetch('/drivers/pixiv/discovery')).json()).body.illusts
+            const illustration = illustrations[Math.floor(Math.random() * illustrations.length)]
             const illustrationPages = (await (await fetch(`/drivers/pixiv/pages/${illustration.id}`)).json()).body
             const pageIndex = Math.floor(Math.random() * illustration.pageCount)
             const urlParts = illustrationPages[pageIndex].urls.original.split('/')
