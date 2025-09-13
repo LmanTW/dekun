@@ -577,8 +577,8 @@ class Control {
   }
 }
 
-// The entries.
-class Entries {
+// The viewer.
+class Viewer {
   static entries = null
   static loading = 0
 
@@ -670,10 +670,13 @@ class Entries {
         method: 'DELETE'
       })
 
-      entries.splice(entries.indexOf(name), 1)
       element.remove()
 
-      text_total.textContent = `${entries.length} Entries`
+      this.entries.splice(this.entries.indexOf(name), 1)
+      this.topIndex = Math.min(this.entries.length - 1, this.topIndex)
+      this.bottomIndex = Math.min(this.entries.length - 1, this.bottomIndex)
+
+      text_total.textContent = `${this.entries.length} Entries`
     })
 
     return element
@@ -818,10 +821,10 @@ button_all.addEventListener('click', async () => {
     container_settings.style.display = 'none'
   }
 
-  if (Entries.entries === null) {
-    await Entries.load()
+  if (Viewer.entries === null) {
+    await Viewer.load()
 
-    Entries.loadBottom(10)
+    Viewer.loadBottom(10)
   }
 })
 
@@ -850,19 +853,19 @@ input_speed.addEventListener('input', () => {
 })
 
 button_reload.addEventListener('click', async () => {
-  if (Entries.loading === 0) {
-    await Entries.reload()
+  if (Viewer.loading === 0) {
+    await Viewer.reload()
 
-    Entries.loadBottom(10)
+    Viewer.loadBottom(10)
   }
 })
 
 setInterval(() => {
-  if (Entries.entries !== null && Entries.loading === 0) {
-    if (container_all.scrollTop < container_all.scrollHeight / 10) {
-      Entries.loadTop(10)
-    } else if (Math.round(container_all.scrollTop + container_all.clientHeight) >= container_all.scrollHeight - (container_all.scrollHeight / 10)) {
-      Entries.loadBottom(10)
+  if (Viewer.entries !== null && Viewer.loading === 0) {
+    if (container_all.scrollTop < window.innerHeight / 5) {
+      Viewer.loadTop(10)
+    } else if (Math.round(container_all.scrollTop + container_all.clientHeight) >= container_all.scrollHeight - (window.innerHeight / 5)) {
+      Viewer.loadBottom(10)
     }
   }
 }, 100)

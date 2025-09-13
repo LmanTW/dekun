@@ -33,18 +33,19 @@ class Marker:
         self.width = width
         self.height = height
 
-        self.loss = 1
+        self.loss = 1.0
         self.iterations = 0
 
         self.criterion = torch.nn.BCEWithLogitsLoss()
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr = 1e-4)
 
     # Train the marker.
-    def train(self, dataset: Dataset, callback: Union[Callable[[int, int, int], bool], None] = None):
+    def train(self, dataset: Dataset, callback: Union[Callable[[int, float, int], bool], None] = None):
         self.model.train()
 
         while True:
             start = time.time()
+            average = []
 
             for image, mask in dataset:
                 image_tensor = cast(torch.Tensor, transform_image(fit_image(image, self.width, self.height)[0])).to(self.device)
@@ -56,8 +57,10 @@ class Marker:
                 self.optimizer.zero_grad()
                 loss.backward()
                 self.optimizer.step()
-                self.loss = loss.item()
 
+                average.append(loss.item())
+
+            self.loss = sum(average) / len(average)
             self.iterations += 1
 
             if callback == None:
