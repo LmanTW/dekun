@@ -3,6 +3,7 @@ from pathlib import Path
 from math import ceil
 import click
 import torch
+import numpy
 
 from dekun.core.utils import format_duration, average_difference
 from dekun.generator.model import Generator
@@ -36,6 +37,24 @@ def info_command(path: str):
     print(f"Height: {data['height']}")
     print(f"Loss: {data['loss']}")
     print(f"Iterations: {data['iterations']}")
+
+# Generate an image.
+@click.command("generate")
+@click.argument("path", type=click.Path(True))
+@click.option("-i", "--image", type=click.Path(True, dir_okay=False), required=1)
+@click.option("-m", "--mask", type=click.Path(True, dir_okay=False), required=1)
+@click.option("-o", "--output", type=click.Path(False, dir_okay=False), default="output.png")
+@click.option("-d", "--device", type=click.Choice(["auto", "cpu", "cuda"]), default="auto")
+def generate_command(path: str, image: str, mask: str, output: str, device: str):
+    generator = Generator.load(device, Path(path).with_suffix(".pth"))
+
+    output_image = generator.generate(Image.open(Path(image)).convert("RGB"), Image.open(Path(mask)).convert("L"))
+    output_image = (torch.sigmoid(output_image) * 255).byte().cpu().numpy()
+    output_image = numpy.transpose(output_image, (1, 2, 0))
+    output_image = Image.fromarray(output_image.astype(numpy.uint8))
+
+    output_image.save(output)
+
 
 # Train a generator.
 @click.command("train")
@@ -103,4 +122,5 @@ def train_command(path: str, dataset: str, iterations: int, threshold: float, de
 
 generator_command.add_command(init_command)
 generator_command.add_command(info_command)
+generator_command.add_command(generate_command)
 generator_command.add_command(train_command)

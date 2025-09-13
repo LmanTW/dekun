@@ -42,7 +42,7 @@ def info_command(path: str):
 @click.argument("path", type=click.Path(True))
 @click.option("-i", "--image", type=click.Path(True, dir_okay=False), required=1)
 @click.option("-o", "--output", type=click.Path(False, dir_okay=False), default="output.png")
-@click.option("-D", "--device", type=click.Choice(["auto", "cpu", "cuda"]), default="auto")
+@click.option("-d", "--device", type=click.Choice(["auto", "cpu", "cuda"]), default="auto")
 def mark_command(path: str, image: str, output: str, device: str):
     marker = Marker.load(device, Path(path).with_suffix(".pth"))
 

@@ -14,7 +14,7 @@ Use the following format when writing a commit message:
 ```
 
 > [!NOTE]
-> The issue is optional, only inclue this when the commit resolves an issue.
+> The issue part is optional, only inclue this when the commit resolves an issue.
 
 Use the following rules to determine the type of your commit:
 
