@@ -1,5 +1,5 @@
-import PIL.Image as Image
 from pathlib import Path
+import PIL.Image as pil
 from math import ceil
 import click
 import torch
@@ -46,10 +46,9 @@ def info_command(path: str):
 def mark_command(path: str, image: str, output: str, device: str):
     marker = Marker.load(device, Path(path).with_suffix(".pth"))
 
-    output_image = marker.mark(Image.open(Path(image)).convert("RGB"))
-    output_image = (output_image - output_image.min()) / (output_image.max() - output_image.min())
+    output_image = marker.mark(pil.open(Path(image)).convert("RGB"))
     output_image = (output_image * 255).byte().cpu().numpy()
-    output_image = Image.fromarray(output_image)
+    output_image = pil.fromarray(output_image)
 
     output_image.save(output)
 

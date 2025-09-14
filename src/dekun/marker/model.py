@@ -4,7 +4,7 @@ import PIL.Image as pil
 import torch
 import time
 
-from dekun.core.utils import resolve_device, fit_image, transform_image, transform_mask
+from dekun.core.utils import resolve_device, transform_image, fit_tensor 
 from dekun.core.dataset import Dataset
 from dekun.core.unet import UNet
 
@@ -41,18 +41,23 @@ class Marker:
 
     # Train the marker.
     def train(self, dataset: Dataset, callback: Union[Callable[[int, float, int], bool], None] = None):
+        entries = []
+
+        for image, mask in dataset:
+            entries.append([
+                fit_tensor(transform_image(image, "RGB").to(self.device), self.width, self.height)[0].unsqueeze(0),
+                fit_tensor(transform_image(mask, "L").to(self.device), self.width, self.height)[0].unsqueeze(0)
+            ])
+
         self.model.train()
 
         while True:
             start = time.time()
             average = []
 
-            for image, mask in dataset:
-                image_tensor = cast(torch.Tensor, transform_image(fit_image(image, self.width, self.height)[0])).to(self.device)
-                mask_tensor = cast(torch.Tensor, transform_mask(fit_image(mask, self.width, self.height)[0])).to(self.device)
-
-                prediction = self.model(image_tensor.unsqueeze(0))
-                loss = self.criterion(prediction, mask_tensor.unsqueeze(0))
+            for entry in entries:
+                prediction = self.model(entry[0])
+                loss = self.criterion(prediction, entry[1])
 
                 self.optimizer.zero_grad()
                 loss.backward()
@@ -70,17 +75,18 @@ class Marker:
                     break
 
     # Mark an image.
-    def mark(self, image: pil.Image):
+    def mark(self, image: Union[torch.Tensor, pil.Image]):
         self.model.eval()
 
         with torch.no_grad():
-            resized_image, transform = fit_image(image, self.width, self.height)
+            image_tensor = cast(torch.Tensor, image if isinstance(image, torch.Tensor) else transform_image(image, "RGB"))
+            resized_tensor, transform = fit_tensor(image_tensor, self.width, self.height)
 
-            output = self.model(cast(torch.Tensor, transform_image(resized_image)).unsqueeze(0).to(self.device))
+            output = self.model(resized_tensor.to(self.device).unsqueeze(0))
             output = output[:, :, transform[1]:transform[1] + transform[3], transform[0]:transform[0] + transform[2]]
-            output = torch.nn.functional.interpolate(output, size=(image.height, image.width)).squeeze(0).squeeze(0)
+            output = torch.nn.functional.interpolate(output, size=(image_tensor.shape[1], image_tensor.shape[2])).squeeze(0).squeeze()
 
-        return output
+            return torch.sigmoid(output)
 
     # Save the marker.
     def save(self, path: Path):

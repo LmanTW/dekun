@@ -1,7 +1,7 @@
 from pathlib import Path
 import click
 
-from dekun.generator.command import generator_command
+from dekun.inpainter.command import inpainter_command
 from dekun.marker.command import marker_command
 from dekun.core.editor.main import start_editor
 
@@ -18,7 +18,7 @@ def editor_command(port: int, dataset: str):
     start_editor(port, Path(dataset))
 
 root_command.add_command(marker_command)
-root_command.add_command(generator_command)
+root_command.add_command(inpainter_command)
 root_command.add_command(editor_command)
 
 if __name__ == "__main__":

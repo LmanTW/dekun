@@ -6,15 +6,15 @@ import torch
 import numpy
 
 from dekun.core.utils import format_duration, average_difference
-from dekun.generator.model import Generator
+from dekun.inpainter.model import Inpainter
 from dekun.core.dataset import Dataset
 
-# The generator command group.
-@click.group("generator")
-def generator_command():
+# The inpainter command group.
+@click.group("inpainter")
+def inpainter_command():
     pass
 
-# Initialize a generator.
+# Initialize a inpainter.
 @click.command("init")
 @click.argument("path", type=click.Path())
 @click.option("-w", "--width", type=click.INT, default=512)
@@ -25,9 +25,9 @@ def init_command(path: str, width: int, height: int):
     if processed_path.exists():
         raise Exception(f"The file already exists: {str(processed_path)}")
 
-    Generator("cpu", width, height).save(processed_path)
+    Inpainter("cpu", width, height).save(processed_path)
 
-# Get the info of a generator.
+# Get the info of a inpainter.
 @click.command("info")
 @click.argument("path", type=click.Path(True))
 def info_command(path: str):
@@ -38,17 +38,17 @@ def info_command(path: str):
     print(f"Loss: {data['loss']}")
     print(f"Iterations: {data['iterations']}")
 
-# Generate an image.
+# Inpaint an image.
 @click.command("generate")
 @click.argument("path", type=click.Path(True))
 @click.option("-i", "--image", type=click.Path(True, dir_okay=False), required=1)
 @click.option("-m", "--mask", type=click.Path(True, dir_okay=False), required=1)
 @click.option("-o", "--output", type=click.Path(False, dir_okay=False), default="output.jpg")
 @click.option("-d", "--device", type=click.Choice(["auto", "cpu", "cuda"]), default="auto")
-def generate_command(path: str, image: str, mask: str, output: str, device: str):
-    generator = Generator.load(device, Path(path).with_suffix(".pth"))
+def inpaint_command(path: str, image: str, mask: str, output: str, device: str):
+    inpainter = Inpainter.load(device, Path(path).with_suffix(".pth"))
 
-    output_image = generator.generate(Image.open(Path(image)).convert("RGB"), Image.open(Path(mask)).convert("L"))
+    output_image = inpainter.inpaint(Image.open(Path(image)).convert("RGB"), Image.open(Path(mask)).convert("L"))
     output_image = (output_image - output_image.min()) / (output_image.max() - output_image.min())
     output_image = (output_image * 255).byte().cpu().numpy()
     output_image = numpy.transpose(output_image, (1, 2, 0))
@@ -65,7 +65,7 @@ def generate_command(path: str, image: str, mask: str, output: str, device: str)
 @click.option("-t", "--threshold", type=click.FLOAT)
 @click.option("-D", "--device", type=click.Choice(["auto", "cpu", "cuda"]), default="auto")
 def train_command(path: str, dataset: str, iterations: int, threshold: float, device: str):
-    marker = Generator.load(device, Path(path).with_suffix(".pth"))
+    inpainter = Inpainter.load(device, Path(path).with_suffix(".pth"))
 
     duration_history = []
     loss_history = []
@@ -110,18 +110,18 @@ def train_command(path: str, dataset: str, iterations: int, threshold: float, de
 
         return False
 
-    if (iterations == None or marker.iterations >= iterations) and (threshold == None or marker.loss <= threshold):
+    if (iterations == None or inpainter.iterations >= iterations) and (threshold == None or inpainter.loss <= threshold):
         parts = [
-            f"Iteration: {marker.iterations}",
-            f"Loss: {marker.loss:.5f}",
+            f"Iteration: {inpainter.iterations}",
+            f"Loss: {inpainter.loss:.5f}"
         ]
 
         print(" | ".join(f"{part: <20}" for part in parts))
     else:
-        marker.train(Dataset(Path(dataset)), callback)
-        marker.save(Path(path))
+        inpainter.train(Dataset(Path(dataset)), callback)
+        inpainter.save(Path(path))
 
-generator_command.add_command(init_command)
-generator_command.add_command(info_command)
-generator_command.add_command(generate_command)
-generator_command.add_command(train_command)
+inpainter_command.add_command(init_command)
+inpainter_command.add_command(info_command)
+inpainter_command.add_command(inpaint_command)
+inpainter_command.add_command(train_command)

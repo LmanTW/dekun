@@ -1,5 +1,6 @@
 import torchvision.transforms as transform
 import PIL.Image as pil
+from typing import cast
 import torch
 
 # Resolve a device.
@@ -17,40 +18,52 @@ def resolve_device(device):
 
         return "cuda"
     else:
-        raise Exception(f"Unknown device: {device}")
+        raise ValueError(f"Unsupported device: {device}")
 
-# Fit an image into a specified size.
-def fit_image(image: pil.Image, width: int, height: int):
-    container_aspect = width / height
-    image_aspect = image.size[0] / image.size[1]
+# Transform an image to a tensor.
+def transform_image(image: pil.Image, mode: str):
+    image = image.convert(mode)
 
-    new_width = 0
-    new_height = 0
-
-    if image_aspect > container_aspect:
-        new_width = width
-        new_height = round(width / image_aspect)
+    if mode == "RGB":
+        mean = [0.5, 0.5, 0.5]
+        std = [0.5, 0.5, 0.5]
+    elif mode == "L":
+        mean = [0.5]
+        std = [0.5]
     else:
-        new_width = round(height * image_aspect)
+        raise ValueError("Unsupported mode: {mode}")
+
+    pipeline = transform.Compose([
+        transform.ToTensor(),
+        transform.Normalize(mean=mean, std=std)
+    ])
+
+    return cast(torch.Tensor, pipeline(image))
+
+# Fit a tensor into a specified size.
+def fit_tensor(tensor: torch.Tensor, width: int, height: int):
+    if len(tensor.shape) != 3:
+        raise ValueError("Unsupported tensor shape: {tensor.shape}")
+
+    container_aspect = width / height
+    tensor_aspect = tensor.shape[2] / tensor.shape[1] 
+
+    if tensor_aspect > container_aspect:
+        new_width = width
+        new_height = round(width / tensor_aspect)
+    else:
+        new_width = round(height * tensor_aspect)
         new_height = height
 
-    image = image.resize((new_width, new_height))
     offset_x = (width - new_width) // 2
     offset_y = (height - new_height) // 2
 
-    new_image = pil.new(image.mode, (width, height), tuple([0] * len(image.mode)))
-    new_image.paste(image, (offset_x, offset_y))
+    resized_tensor = torch.nn.functional.interpolate(tensor.unsqueeze(0), size=(new_height, new_width), mode="bilinear", align_corners=False).squeeze(0)
 
-    return new_image, (offset_x, offset_y, new_width, new_height)
+    new_tensor = torch.zeros((tensor.shape[0], height, width), dtype=tensor.dtype, device=tensor.device)
+    new_tensor[..., offset_y:offset_y + new_height, offset_x:offset_x + new_width] = resized_tensor
 
-transform_image = transform.Compose([
-    transform.ToTensor(),
-    transform.Normalize(mean = [0.5] * 3, std = [0.5] * 3)
-])
-
-transform_mask = transform.Compose([
-    transform.ToTensor()
-])
+    return new_tensor, (offset_x, offset_y, new_width, new_height)
 
 # Format a duration.
 def format_duration(seconds: float):
@@ -77,7 +90,7 @@ def format_duration(seconds: float):
     return " ".join(parts)
 
 # Calculate the average difference between items in an array.
-def average_difference(array: list[float]):
+def average_difference(array: list[float]) -> float:
     if len(array) < 2:
         return 0.0
 
