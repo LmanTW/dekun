@@ -43,13 +43,14 @@ def info_command(path: str):
 @click.argument("path", type=click.Path(True))
 @click.option("-i", "--image", type=click.Path(True, dir_okay=False), required=1)
 @click.option("-m", "--mask", type=click.Path(True, dir_okay=False), required=1)
-@click.option("-o", "--output", type=click.Path(False, dir_okay=False), default="output.png")
+@click.option("-o", "--output", type=click.Path(False, dir_okay=False), default="output.jpg")
 @click.option("-d", "--device", type=click.Choice(["auto", "cpu", "cuda"]), default="auto")
 def generate_command(path: str, image: str, mask: str, output: str, device: str):
     generator = Generator.load(device, Path(path).with_suffix(".pth"))
 
     output_image = generator.generate(Image.open(Path(image)).convert("RGB"), Image.open(Path(mask)).convert("L"))
-    output_image = (torch.sigmoid(output_image) * 255).byte().cpu().numpy()
+    output_image = (output_image - output_image.min()) / (output_image.max() - output_image.min())
+    output_image = (output_image * 255).byte().cpu().numpy()
     output_image = numpy.transpose(output_image, (1, 2, 0))
     output_image = Image.fromarray(output_image.astype(numpy.uint8))
 

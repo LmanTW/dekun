@@ -109,8 +109,7 @@ class Generator:
             mask_tensor = cast(torch.Tensor, transform_mask(resized_mask)).unsqueeze(0).to(self.device)
 
             output = self.model(torch.cat((image_tensor, mask_tensor), dim=1))
-            output = image_tensor * (1 - mask_tensor) + output * mask_tensor
-
+            output = (image_tensor * (1 - mask_tensor)) + (output * mask_tensor)
             output = output[:, :, transform[1]:transform[1] + transform[3], transform[0]:transform[0] + transform[2]]
             output = torch.nn.functional.interpolate(output, size=(image.height, image.width)).squeeze(0)
 
