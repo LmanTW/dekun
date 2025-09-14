@@ -79,8 +79,8 @@ class Generator:
                 mask_tensor = cast(torch.Tensor, transform_mask(resized_mask)).unsqueeze(0).to(self.device)
                 combined_tensor = cast(torch.Tensor, transform_image(merge_mask(index, resized_image, resized_mask))).unsqueeze(0).to(self.device)
 
-                prediction = self.model(torch.cat((image_tensor, mask_tensor), dim=1))
-                loss = self.criterion(prediction, combined_tensor)
+                prediction = self.model(torch.cat((combined_tensor, mask_tensor), dim=1))
+                loss = self.criterion(prediction, image_tensor)
 
                 self.optimizer.zero_grad()
                 loss.backward()
@@ -103,19 +103,16 @@ class Generator:
 
         with torch.no_grad():
             resized_image, transform = fit_image(image, self.width, self.height)
-            resized_mask = fit_image(mask, self.width, self.height)
+            resized_mask = fit_image(mask, self.width, self.height)[0]
 
             image_tensor = cast(torch.Tensor, transform_image(resized_image)).unsqueeze(0).to(self.device)
             mask_tensor = cast(torch.Tensor, transform_mask(resized_mask)).unsqueeze(0).to(self.device)
 
             output = self.model(torch.cat((image_tensor, mask_tensor), dim=1))
+            output = image_tensor * (1 - mask_tensor) + output * mask_tensor
+
             output = output[:, :, transform[1]:transform[1] + transform[3], transform[0]:transform[0] + transform[2]]
             output = torch.nn.functional.interpolate(output, size=(image.height, image.width)).squeeze(0)
-
-            original_tensor = cast(torch.Tensor, transform_image(image)).unsqueeze(0).to(self.device)
-            original_tensor = torch.nn.functional.interpolate(original_tensor, size=(image.height, image.width)).squeeze(0)
-
-            output = original_tensor * (1 - mask_tensor) + output * mask_tensor
 
         return output
 
