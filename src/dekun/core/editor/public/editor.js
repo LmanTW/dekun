@@ -164,7 +164,7 @@ class Image {
     this.transform = null
     this.strokes = []
 
-    const info = await drivers[select_provider.value].next(source)
+    const info = await drivers[select_provider.value].next(source, 1)
     const element = document.createElement('img')
 
     this.name = info.name

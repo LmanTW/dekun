@@ -5,15 +5,15 @@ export default class {
   static queue = null
 
   // Get the next image.
-  static async next(source) {
+  static async next(source, attempt) {
     if (this.queue === null) {
       await this.checkQueue()
     }
 
-    if (source.length > 0) {
-      const parts = source.split('/')
+    try {
+      if (source.length > 0) {
+        const parts = source.split('/')
 
-      try {
         if (this.current === null || this.current.id !== parts[0]) {
           this.current = {
             id: parts[0],
@@ -55,39 +55,43 @@ export default class {
             value: `${this.current.id}/${this.current.index + 1}`
           }
         }
-      } catch (error) {
-        this.current = null
-      }
-    } else {
-      if (this.queue.length > 0) {
-        const current = this.queue[0]
-
-        this.queue.splice(0, 1)
-
-        return current
       } else {
-        try {
-          if (this.latest === null) {
-            this.latest = await (await fetch('/api/drivers/nHentai/latest')).json()
-          }
+        if (this.queue.length > 0) {
+          const current = this.queue[0]
 
-          const galleryID = Math.round(Math.random() * this.latest)
-          const galleryPages = await (await fetch(`/api/drivers/nHentai/pages/${galleryID}`)).json()
-    
-          if (Array.isArray(galleryPages)) {
-            const pageIndex = Math.floor(Math.random() * galleryPages.length)
-            const urlParts = galleryPages[pageIndex].split('/')
+          this.queue.splice(0, 1)
 
-            return {
-              name: `nHentai-${galleryID}-${pageIndex + 1}`,
-              url: `/api/drivers/nHentai/image/${urlParts.slice(4, 6).join('/')}`,
-
-              display: `${galleryID}/${pageIndex + 1}`,
-              value: ''
+          return current
+        } else {
+          try {
+            if (this.latest === null) {
+              this.latest = await (await fetch('/api/drivers/nHentai/latest')).json()
             }
-          }
-        } catch (_) {}
-      } 
+
+            const galleryID = Math.round(Math.random() * this.latest)
+            const galleryPages = await (await fetch(`/api/drivers/nHentai/pages/${galleryID}`)).json()
+    
+            if (Array.isArray(galleryPages)) {
+              const pageIndex = Math.floor(Math.random() * galleryPages.length)
+              const urlParts = galleryPages[pageIndex].split('/')
+
+              return {
+                name: `nHentai-${galleryID}-${pageIndex + 1}`,
+                url: `/api/drivers/nHentai/image/${urlParts.slice(4, 6).join('/')}`,
+
+                display: `${galleryID}/${pageIndex + 1}`,
+                value: ''
+              }
+            }
+          } catch (_) {}
+        } 
+      }
+    } catch (error) {
+      this.current = null
+
+      if (attempt > 5) {
+        throw error
+      }
     }
 
     return await this.next('')
@@ -101,6 +105,8 @@ export default class {
 
     if (this.queue.length < 5) {
       if (this.current === null) {
+        let attempt = 1
+
         while (true) {
           try {
             if (this.latest === null) {
@@ -126,7 +132,13 @@ export default class {
 
               break
             }
-          } catch (_) {}
+          } catch (error) {
+            if (attempt > 5) {
+              throw error
+            }
+          }
+
+          attempt++
         }
       }
     }
