@@ -25,18 +25,14 @@ def transform_image(image: pil.Image, mode: str):
     image = image.convert(mode)
 
     if mode == "RGB":
-        mean = [0.5, 0.5, 0.5]
-        std = [0.5, 0.5, 0.5]
+        pipeline = transform.Compose([
+            transform.ToTensor(),
+            # transform.Normalize(mean = [0.5, 0.5, 0.5], std = [0.5, 0.5, 0.5])
+        ])
     elif mode == "L":
-        mean = [0.5]
-        std = [0.5]
+        pipeline = transform.Compose([transform.ToTensor()])
     else:
         raise ValueError(f"Unsupported mode: {mode}")
-
-    pipeline = transform.Compose([
-        transform.ToTensor(),
-        transform.Normalize(mean=mean, std=std)
-    ])
 
     return cast(torch.Tensor, pipeline(image))
 
@@ -58,7 +54,7 @@ def fit_tensor(tensor: torch.Tensor, width: int, height: int):
     offset_x = (width - new_width) // 2
     offset_y = (height - new_height) // 2
 
-    resized_tensor = torch.nn.functional.interpolate(tensor.unsqueeze(0), size=(new_height, new_width), mode="bilinear", align_corners=False).squeeze(0)
+    resized_tensor = torch.nn.functional.interpolate(tensor.unsqueeze(0), size = (new_height, new_width), mode = "bilinear", align_corners = False).squeeze(0)
 
     new_tensor = torch.zeros((tensor.shape[0], height, width), dtype=tensor.dtype, device=tensor.device)
     new_tensor[..., offset_y:offset_y + new_height, offset_x:offset_x + new_width] = resized_tensor

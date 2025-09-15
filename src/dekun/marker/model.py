@@ -6,6 +6,7 @@ import time
 
 from dekun.core.utils import resolve_device, transform_image, fit_tensor 
 from dekun.core.dataset import Dataset
+from dekun.marker.loader import Loader
 from dekun.core.unet import UNet
 
 # A marker to mark a certain parts of an image.
@@ -40,38 +41,30 @@ class Marker:
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr = 1e-4)
 
     # Train the marker.
-    def train(self, dataset: Dataset, callback: Union[Callable[[int, float, int], bool], None] = None):
-        entries = []
-
-        for image, mask in dataset:
-            entries.append([
-                fit_tensor(transform_image(image, "RGB").to(self.device), self.width, self.height)[0].unsqueeze(0),
-                fit_tensor(transform_image(mask, "L").to(self.device), self.width, self.height)[0].unsqueeze(0)
-            ])
-
+    def train(self, dataset: Dataset, cache: str = "none", callback: Union[Callable[[int, float, int], bool], None] = None):
         self.model.train()
 
-        while True:
-            start = time.time()
-            average = []
+        with Loader(dataset, self.width, self.height, cache, self.device) as loader:
+            while True:
+                start = time.time()
+                average = []
 
-            for entry in entries:
-                prediction = self.model(entry[0])
-                loss = self.criterion(prediction, entry[1])
+                def train_callback(image: torch.Tensor, mask: torch.Tensor):
+                    prediction = self.model(image)
+                    loss = self.criterion(prediction, mask)
 
-                self.optimizer.zero_grad()
-                loss.backward()
-                self.optimizer.step()
+                    self.optimizer.zero_grad()
+                    loss.backward()
+                    self.optimizer.step()
 
-                average.append(loss.item())
+                    average.append(loss.item())
 
-            self.loss = sum(average) / len(average)
-            self.iterations += 1
+                loader.loop(train_callback)
 
-            if callback == None:
-                break
-            else:
-                if not callback(self.iterations, self.loss, round(time.time() - start)):
+                self.loss = sum(average) / len(average)
+                self.iterations += 1
+
+                if callback == None or not callback(self.iterations, self.loss, round(time.time() - start)):
                     break
 
     # Mark an image.

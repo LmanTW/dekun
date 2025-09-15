@@ -1,3 +1,4 @@
+from functools import cache
 from pathlib import Path
 import PIL.Image as pil
 from math import ceil
@@ -15,9 +16,9 @@ def marker_command():
 
 # Initialize a marker.
 @click.command("init")
-@click.argument("path", type=click.Path())
-@click.option("-w", "--width", type=click.INT, default=512)
-@click.option("-h", "--height", type=click.INT, default=512)
+@click.argument("path", type = click.Path())
+@click.option("-w", "--width", type = click.INT, default = 512)
+@click.option("-h", "--height", type = click.INT, default = 512)
 def init_command(path: str, width: int, height: int):
     processed_path = Path(path).with_suffix(".pth")
 
@@ -28,7 +29,7 @@ def init_command(path: str, width: int, height: int):
 
 # Get the info of a marker.
 @click.command("info")
-@click.argument("path", type=click.Path(True))
+@click.argument("path", type = click.Path(True))
 def info_command(path: str):
     data = torch.load(str(Path(path).with_suffix(".pth")), "cpu")
 
@@ -40,9 +41,9 @@ def info_command(path: str):
 # Mark an image.
 @click.command("mark")
 @click.argument("path", type=click.Path(True))
-@click.option("-i", "--image", type=click.Path(True, dir_okay=False), required=1)
-@click.option("-o", "--output", type=click.Path(False, dir_okay=False), default="output.jpg")
-@click.option("-d", "--device", type=click.Choice(["auto", "cpu", "cuda"]), default="auto")
+@click.option("-i", "--image", type=click.Path(True, dir_okay = False), required = 1)
+@click.option("-o", "--output", type=click.Path(False, dir_okay = False), default = "output.jpg")
+@click.option("-D", "--device", type=click.Choice(["auto", "cpu", "cuda"]), default = "auto")
 def mark_command(path: str, image: str, output: str, device: str):
     marker = Marker.load(device, Path(path).with_suffix(".pth"))
 
@@ -54,12 +55,13 @@ def mark_command(path: str, image: str, output: str, device: str):
 
 # Train a marker.
 @click.command("train")
-@click.argument("path", type=click.Path(True))
-@click.option("-d", "--dataset", type=click.Path(True, file_okay=False), required=1)
-@click.option("-i", "--iterations", type=click.INT)
-@click.option("-t", "--threshold", type=click.FLOAT)
-@click.option("-D", "--device", type=click.Choice(["auto", "cpu", "cuda"]), default="auto")
-def train_command(path: str, dataset: str, iterations: int, threshold: float, device: str):
+@click.argument("path", type = click.Path(True))
+@click.option("-d", "--dataset", type = click.Path(True, file_okay = False), required = 1)
+@click.option("-i", "--iterations", type = click.INT)
+@click.option("-t", "--threshold", type = click.FLOAT)
+@click.option("-c", "--cache", type = click.Choice(["none", "disk", "memory"]), default = "none")
+@click.option("-D", "--device", type = click.Choice(["auto", "cpu", "cuda"]), default = "auto")
+def train_command(path: str, dataset: str, iterations: int, threshold: float, cache: str, device: str):
     marker = Marker.load(device, Path(path).with_suffix(".pth"))
 
     duration_history = []
@@ -113,7 +115,7 @@ def train_command(path: str, dataset: str, iterations: int, threshold: float, de
 
         print(" | ".join(f"{part: <20}" for part in parts))
     else:
-        marker.train(Dataset(Path(dataset)), callback)
+        marker.train(Dataset(Path(dataset)), cache, callback)
         marker.save(Path(path))
 
 marker_command.add_command(init_command)

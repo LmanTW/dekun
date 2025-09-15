@@ -1,82 +1,113 @@
-import PIL.Image as Image
+from typing import Union, cast
 from pathlib import Path
 
 # A dataset for training.
 class Dataset():
 
     # Initialize a dataset.
-    def __init__(self, directory: Path):
+    def __init__(self, directory: Path, sort: str = "name"):
         self.directory = directory
-
-        self.load()
-
-    # Get the size of the dataset.
-    def __len__(self):
-        return len(self.image_list)
-
-    
-    # Iterate through the dataset. 
-    def __iter__(self):
-        for index in range(0, len(self.image_list)):
-            yield self[index]
-
-
-    # Get an entry in the dataset as two images.
-    def __getitem__(self, index):
-        name = self.image_list[index]
-
-        image = Image.open(self.directory.joinpath(f"{name}-image{self.image_map[name]['image']}")).convert("RGB")
-        mask = Image.open(self.directory.joinpath(f"{name}-mask{self.image_map[name]['mask']}")).convert("L")
-
-        return image, mask
+        self.sort = sort
 
     # Load the dataset.
     def load(self):
-        self.image_map = {}
-        self.image_list = []
+        if not self.directory.exists():
+            raise Exception(f"The path does not exists: {str(self.directory)}")
+        if not self.directory.is_dir():
+            raise Exception(f"The path is not a directory: {str(self.directory)}")
+
+        self.entry_map = {}
+        self.entry_list = []
 
         for path in self.directory.iterdir():
             if "-image" in path.stem:
                 name = path.stem.replace("-image", "", 1)
 
-                if name not in self.image_map:
-                    self.image_map[name] = {}
+                if name not in self.entry_map:
+                    self.entry_map[name] = Entry(name, self)
 
-                self.image_map[name]["image"] = path.suffix
+                self.entry_map[name].image_path = path
             elif "-mask" in path.stem:
                 name = path.stem.replace("-mask", "", 1)
 
-                if name not in self.image_map:
-                    self.image_map[name] = {}
+                if name not in self.entry_map:
+                    self.entry_map[name] = Entry(name, self)
 
-                self.image_map[name]["mask"] = path.suffix
+                self.entry_map[name].mask_path = path
 
-        for key, value in self.image_map.items():
-            if "image" not in value or "mask" not in value:
-                raise Exception(f"Incomplete dataset entry: {key}")
+        for name, entry in self.entry_map.items():
+            if entry.image_path == None or entry.mask_path == None:
+                raise Exception(f"Incomplete dataset entry: {name}")
 
-            self.image_list.append(key)
+            self.entry_list.append(name)
 
-        self.image_list.sort(key=lambda name: -self.directory.joinpath(f"{name}-image{self.image_map[name]['image']}").stat().st_ctime)
+        if self.sort == "name":
+            self.entry_list = sorted(self.entry_list)
+        elif self.sort == "date":
+            self.entry_list.sort(key=lambda name: -self.directory.joinpath(self.entry_map[name].image_path).stat().st_ctime)
+        elif self.sort == "size":
+            self.entry_list.sort(key=lambda name: -self.directory.joinpath(self.entry_map[name].image_path).stat().st_size)
+        else:
+            raise ValueError(f"Unsupported sort type: {self.sort} (name|date|size)")
 
     # Check if an entry exists.
     def has(self, name: str):
-        return name in self.image_map
+        return name in self.entry_map
+
+    # Get an entry.
+    def get(self, name: str):
+        if (name not in self.entry_map):
+            raise Exception(f"Entry not found: {name}")
+
+        return self.entry_map[name]
+
+    # Get the size of the dataset.
+    def size(self):
+        return len(self.entry_list)
+
+    # List the entries.
+    def list(self):
+        return self.entry_list
 
     # Add an entry.
-    def add(self, name: str, image_suffix: str, mask_suffix: str):
-        if name not in self.image_map:
-            self.image_list.append(name)
+    def add(self, name: str, image_path: Path, mask_path: Path):
+        self.entry_map[name] = Entry(name, self, image_path, mask_path)
 
-        self.image_map[name] = {
-            "image": image_suffix,
-            "mask": mask_suffix
-        }
+        if (name not in self.entry_map):
+            self.entry_list.append(name)
 
-        self.image_list.sort(key=lambda name: -self.directory.joinpath(f"{name}-image{self.image_map[name]['image']}").stat().st_ctime)
+        if self.sort == "name":
+            self.entry_list = sorted(self.entry_list)
+        elif self.sort == "date":
+            self.entry_list.sort(key=lambda name: -self.directory.joinpath(self.entry_map[name].image_path).stat().st_ctime)
+        elif self.sort == "size":
+            self.entry_list.sort(key=lambda name: -self.directory.joinpath(self.entry_map[name].image_path).stat().st_size)
+        else:
+            raise ValueError(f"Unsupported sort type: {self.sort} (name|date|size)")
 
     # Remove an entry.
     def remove(self, name: str):
-        if name in self.image_map:
-            self.image_list.remove(name)
-            del self.image_map[name]
+        if (name not in self.entry_map):
+            raise Exception(f"Entry not found: {name}") 
+
+        del self.entry_map[name]
+        self.entry_list.remove(name)
+
+# A dataset entry.
+class Entry:
+
+    # Initialize an entry
+    def __init__(self, name: str, dataset: Dataset, image_path: Union[None, Path] = None, mask_path: Union[None, Path] = None):
+        self.name = name
+        self.dataset = dataset
+
+        self.image_path = image_path
+        self.mask_path = mask_path
+
+    # Check if the entry exists.
+    def exists(self):
+        return cast(Path, self.image_path).exists() and cast(Path, self.mask_path).exists()
+
+    # Remove the entry.
+    def remove(self):
+        self.dataset.remove(self.name)
