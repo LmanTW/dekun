@@ -101,7 +101,7 @@ class Inpainter:
                     break
 
     # Inpaint an image.
-    def inpaint(self, image: pil.Image, mask: pil.Image):
+    def inpaint(self, image: Union[torch.Tensor, pil.Image], mask: Union[torch.Tensor, pil.Image]):
         self.model.eval()
 
         with torch.no_grad():
@@ -111,12 +111,18 @@ class Inpainter:
             resized_image, transform = fit_tensor(image_tensor, self.width, self.height)
             resized_mask = fit_tensor(mask_tensor, self.width, self.height)[0]
 
-            output = self.model(torch.cat((resized_image, resized_mask), dim=1))
-            output = (image_tensor * (1 - resized_mask)) + (output * resized_mask)
-            output = output[:, :, transform[1]:transform[1] + transform[3], transform[0]:transform[0] + transform[2]]
-            output = torch.nn.functional.interpolate(output, size=(image.height, image.width)).squeeze(0)
+            print(self.model(torch.cat((resized_image.unsqueeze(0), resized_mask.unsqueeze(0)), dim=1)).min())
+            print(self.model(torch.cat((resized_image.unsqueeze(0), resized_mask.unsqueeze(0)), dim=1)).max())
 
-        return output
+            binary_mask = (resized_mask > 0.5).float()
+
+            output = self.model(torch.cat((resized_image.unsqueeze(0), resized_mask.unsqueeze(0)), dim=1))
+            output = (output - output.min()) / (output.max() - output.min())
+            output = (resized_image * (1 - binary_mask)) + (output * binary_mask)
+            output = output[:, :, transform[1]:transform[1] + transform[3], transform[0]:transform[0] + transform[2]]
+            output = torch.nn.functional.interpolate(output, size=(image_tensor.shape[1], image_tensor.shape[2])).squeeze(0)
+
+            return output
 
     # Save the inpainter.
     def save(self, path: Path):

@@ -31,7 +31,7 @@ def transform_image(image: pil.Image, mode: str):
         mean = [0.5]
         std = [0.5]
     else:
-        raise ValueError("Unsupported mode: {mode}")
+        raise ValueError(f"Unsupported mode: {mode}")
 
     pipeline = transform.Compose([
         transform.ToTensor(),
@@ -43,7 +43,7 @@ def transform_image(image: pil.Image, mode: str):
 # Fit a tensor into a specified size.
 def fit_tensor(tensor: torch.Tensor, width: int, height: int):
     if len(tensor.shape) != 3:
-        raise ValueError("Unsupported tensor shape: {tensor.shape}")
+        raise ValueError(f"Unsupported tensor shape: {tensor.shape}")
 
     container_aspect = width / height
     tensor_aspect = tensor.shape[2] / tensor.shape[1] 

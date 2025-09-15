@@ -46,7 +46,7 @@ def info_command(path: str):
 def mark_command(path: str, image: str, output: str, device: str):
     marker = Marker.load(device, Path(path).with_suffix(".pth"))
 
-    output_image = marker.mark(pil.open(Path(image)).convert("RGB"))
+    output_image = marker.mark(pil.open(Path(image)))
     output_image = (output_image * 255).byte().cpu().numpy()
     output_image = pil.fromarray(output_image)
 

@@ -1,4 +1,4 @@
-import PIL.Image as Image
+import PIL.Image as pil
 from pathlib import Path
 from math import ceil
 import click
@@ -39,7 +39,7 @@ def info_command(path: str):
     print(f"Iterations: {data['iterations']}")
 
 # Inpaint an image.
-@click.command("generate")
+@click.command("inpaint")
 @click.argument("path", type=click.Path(True))
 @click.option("-i", "--image", type=click.Path(True, dir_okay=False), required=1)
 @click.option("-m", "--mask", type=click.Path(True, dir_okay=False), required=1)
@@ -48,11 +48,11 @@ def info_command(path: str):
 def inpaint_command(path: str, image: str, mask: str, output: str, device: str):
     inpainter = Inpainter.load(device, Path(path).with_suffix(".pth"))
 
-    output_image = inpainter.inpaint(Image.open(Path(image)).convert("RGB"), Image.open(Path(mask)).convert("L"))
+    output_image = inpainter.inpaint(pil.open(Path(image)), pil.open(Path(mask)))
     output_image = (output_image - output_image.min()) / (output_image.max() - output_image.min())
     output_image = (output_image * 255).byte().cpu().numpy()
     output_image = numpy.transpose(output_image, (1, 2, 0))
-    output_image = Image.fromarray(output_image.astype(numpy.uint8))
+    output_image = pil.fromarray(output_image.astype(numpy.uint8))
 
     output_image.save(output)
 
