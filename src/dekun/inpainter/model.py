@@ -29,6 +29,11 @@ class Inpainter:
 
     # Initialize a inpainter.
     def __init__(self, device: str, width: int, height: int):
+        if width < 1:
+            raise ValueError(f"Invalid width: {width}")
+        if height < 1:
+            raise ValueError(f"Invalid height: {height}")
+
         self.device = torch.device(resolve_device(device))
         self.model = UNet(4, 3, 4).to(self.device)
 

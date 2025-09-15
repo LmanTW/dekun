@@ -23,7 +23,7 @@ class Loader(object):
 
     # Initialize a marker dataset loader.
     def __init__(self, dataset: Dataset, width: int, height: int, cache: str, device: torch.device):
-        self.dataset = dataset.load()
+        self.dataset = dataset
         self.entries = []
 
         self.width = width

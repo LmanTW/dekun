@@ -3,10 +3,11 @@ name = "dekun"
 version = "0.1.0"
 requires-python = ">=3.13"
 dependencies = [
-    "click==8.2.1",
-    "flask==3.1.2",
+    "click==8.2.0",
+    "hypercorn==0.17.0",
     "pillow==11.3.0",
     "requests==2.32.5",
+    "starlette==0.48.0",
     "torch==2.8.0",
     "torchvision==0.23.0",
 ]

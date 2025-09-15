@@ -8,6 +8,11 @@ class ConvolutionalBlock(nn.Module):
     def __init__(self, in_channels: int, out_channels: int):
         super(ConvolutionalBlock, self).__init__()
 
+        if in_channels < 1:
+            raise ValueError(f"Invalid input channels: {in_channels}")
+        if out_channels < 1:
+            raise ValueError(f"Invalid output channels: {out_channels}")
+
         self.block = nn.Sequential(
             nn.Conv2d(in_channels, out_channels, kernel_size = 3, padding = 1),
             nn.BatchNorm2d(out_channels),
@@ -28,6 +33,13 @@ class UNet(nn.Module):
     def __init__(self, in_channels: int, out_channels: int, depth: int = 4):
         super(UNet, self).__init__()
 
+        if in_channels < 1:
+            raise ValueError(f"Invalid input channels: {in_channels}")
+        if out_channels < 1:
+            raise ValueError(f"Invalid output channels: {out_channels}")
+        if depth < 1:
+            raise ValueError(f"Invalid depth: {depth}")
+
         self.encoders = nn.ModuleList()
         self.pools = nn.ModuleList()
 
@@ -45,7 +57,7 @@ class UNet(nn.Module):
         for layer in reversed(range(1, depth + 1)):
             channels = 2 ** (layer + 5)
 
-            self.decoders.append(nn.ConvTranspose2d(in_channels, channels, kernel_size=2, stride=2))
+            self.decoders.append(nn.ConvTranspose2d(in_channels, channels, kernel_size = 2, stride = 2))
             self.decoder_blocks.append(ConvolutionalBlock(channels * 2, channels))
 
             in_channels = channels

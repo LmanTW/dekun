@@ -45,7 +45,7 @@ class Loader(object):
 
     # Initialize a inpainter dataset loader.
     def __init__(self, dataset: Dataset, width: int, height: int, cache: str, device: torch.device):
-        self.dataset = dataset.load()
+        self.dataset = dataset
         self.entries = []
 
         self.width = width
@@ -93,7 +93,7 @@ class Loader(object):
         return self
 
     # Exit the dataset loader.
-    def __exit__(self, exc_type, exc_value, exc_traceback):
+    def __exit__(self, *_):
         if self.cache == "disk":
             rmtree(str(self.temporary))
 

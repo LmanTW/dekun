@@ -9,6 +9,8 @@ class Dataset():
         self.directory = directory
         self.sort = sort
 
+        self.load()
+
     # Load the dataset.
     def load(self):
         if not self.directory.exists():
@@ -44,9 +46,9 @@ class Dataset():
         if self.sort == "name":
             self.entry_list = sorted(self.entry_list)
         elif self.sort == "date":
-            self.entry_list.sort(key=lambda name: -self.directory.joinpath(self.entry_map[name].image_path).stat().st_ctime)
+            self.entry_list.sort(key=lambda name: -self.entry_map[name].image_path.stat().st_ctime)
         elif self.sort == "size":
-            self.entry_list.sort(key=lambda name: -self.directory.joinpath(self.entry_map[name].image_path).stat().st_size)
+            self.entry_list.sort(key=lambda name: -self.entry_map[name].image_path.stat().st_size)
         else:
             raise ValueError(f"Unsupported sort type: {self.sort} (name|date|size)")
 
@@ -73,15 +75,15 @@ class Dataset():
     def add(self, name: str, image_path: Path, mask_path: Path):
         self.entry_map[name] = Entry(name, self, image_path, mask_path)
 
-        if (name not in self.entry_map):
+        if name not in self.entry_map:
             self.entry_list.append(name)
 
         if self.sort == "name":
             self.entry_list = sorted(self.entry_list)
         elif self.sort == "date":
-            self.entry_list.sort(key=lambda name: -self.directory.joinpath(self.entry_map[name].image_path).stat().st_ctime)
+            self.entry_list.sort(key=lambda name: -self.entry_map[name].image_path.stat().st_ctime)
         elif self.sort == "size":
-            self.entry_list.sort(key=lambda name: -self.directory.joinpath(self.entry_map[name].image_path).stat().st_size)
+            self.entry_list.sort(key=lambda name: -self.entry_map[name].image_path.stat().st_size)
         else:
             raise ValueError(f"Unsupported sort type: {self.sort} (name|date|size)")
 

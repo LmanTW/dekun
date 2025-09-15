@@ -17,7 +17,7 @@ export default class {
         if (this.current === null || this.current.id !== parts[0]) {
           this.current = {
             id: parts[0],
-            pages: await (await fetch(`/drivers/nHentai/pages/${parts[0]}`)).json(),
+            pages: await (await fetch(`/api/drivers/nHentai/pages/${parts[0]}`)).json(),
 
             index: (parts.length > 1) ? parseInt(parts[1]) - 1 : 0,
             cacheIndex: (parts.length > 1) ? parseInt(parts[1]) - 1 : 0
@@ -35,7 +35,7 @@ export default class {
         while (this.current.cacheIndex < Math.min(this.current.index + 5, this.current.pages.length)) {
           const urlParts = this.current.pages[this.current.cacheIndex].split('/')
 
-          fetch(`/drivers/nHentai/image/${urlParts.slice(4, 6).join('/')}`)
+          fetch(`/resource/nHentai/${urlParts.slice(4, 6).join('/')}`)
 
           this.current.cacheIndex++
         }
@@ -49,7 +49,7 @@ export default class {
 
           return {
             name: `nHentai-${this.current.id}-${this.current.index + 1}`,
-            url: `/drivers/nHentai/image/${urlParts.slice(4, 6).join('/')}`,
+            url: `/resource/nHentai/${urlParts.slice(4, 6).join('/')}`,
 
             display: `${this.current.id}/${this.current.index + 1}`,
             value: `${this.current.id}/${this.current.index + 1}`
@@ -68,11 +68,11 @@ export default class {
       } else {
         try {
           if (this.latest === null) {
-            this.latest = await (await fetch('/drivers/nHentai/latest')).json()
+            this.latest = await (await fetch('/api/drivers/nHentai/latest')).json()
           }
 
           const galleryID = Math.round(Math.random() * this.latest)
-          const galleryPages = await (await fetch(`/drivers/nHentai/pages/${galleryID}`)).json()
+          const galleryPages = await (await fetch(`/api/drivers/nHentai/pages/${galleryID}`)).json()
     
           if (Array.isArray(galleryPages)) {
             const pageIndex = Math.floor(Math.random() * galleryPages.length)
@@ -80,7 +80,7 @@ export default class {
 
             return {
               name: `nHentai-${galleryID}-${pageIndex + 1}`,
-              url: `/drivers/nHentai/image/${urlParts.slice(4, 6).join('/')}`,
+              url: `/api/drivers/nHentai/image/${urlParts.slice(4, 6).join('/')}`,
 
               display: `${galleryID}/${pageIndex + 1}`,
               value: ''
@@ -104,21 +104,21 @@ export default class {
         while (true) {
           try {
             if (this.latest === null) {
-              this.latest = await (await fetch('/drivers/nHentai/latest')).json()
+              this.latest = await (await fetch('/api/drivers/nHentai/latest')).json()
             }
 
             const galleryID = Math.round(Math.random() * this.latest)
-            const galleryPages = await (await fetch(`/drivers/nHentai/pages/${galleryID}`)).json()
+            const galleryPages = await (await fetch(`/api/drivers/nHentai/pages/${galleryID}`)).json()
     
             if (Array.isArray(galleryPages)) {
               const pageIndex = Math.floor(Math.random() * galleryPages.length)
               const urlParts = galleryPages[pageIndex].split('/')
 
-              fetch(`/drivers/nHentai/image/${urlParts.slice(4, 6).join('/')}`)
+              fetch(`/resource/nHentai/${urlParts.slice(4, 6).join('/')}`)
 
               this.queue.push({
                 name: `nHentai-${galleryID}-${pageIndex + 1}`,
-                url: `/drivers/nHentai/image/${urlParts.slice(4, 6).join('/')}`,
+                url: `/resource/nHentai/${urlParts.slice(4, 6).join('/')}`,
 
                 display: `${galleryID}/${pageIndex + 1}`,
                 value: ''

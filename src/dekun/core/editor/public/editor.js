@@ -184,7 +184,7 @@ class Image {
         this.random()
       }
 
-      text_duplicate.style.display = (await (await fetch(`/check/${info.name}`)).json()) ? 'block' : 'none'
+      text_duplicate.style.display = (await (await fetch(`/api/check/${info.name}`)).json()) ? 'block' : 'none'
     })
   }
 
@@ -241,7 +241,7 @@ class Image {
 
     const mask = this.canvas.toDataURL('image/png', 1).substring(22)
 
-    await fetch(`/submit?name=${name}`, {
+    await fetch(`/api/submit/${name}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ image, mask }),
@@ -587,14 +587,14 @@ class Viewer {
 
   // Load the entries.
   static async load() { 
-    this.entries = await (await fetch('/list')).json()
+    this.entries = await (await fetch('/api/list')).json()
 
     text_total.textContent = `${this.entries.length} Entries`
   }
 
   // Reload the entries.
   static async reload() {
-    this.entries = await (await fetch('/list')).json()
+    this.entries = await (await fetch('/api/list')).json()
     this.topIndex = 0
     this.bottomIndex = 0
 
@@ -642,8 +642,8 @@ class Viewer {
   // Create an entry element.
   static createEntryElement(name) {
     const element = createElement('div', { style: 'position: relative; width: min(50dvw, 25rem); margin-top: var(--spacing-medium)' }, [
-      createElement('img', { id: 'image-image', src: `/image/${name}`, style: 'content-visibility: auto; width: 100%' }),
-      createElement('img', { id: 'image-mask', src: `/mask/${name}`, style: 'position: absolute; content-visibility: auto; left: 0rem; top: 0rem; width: 100%; filter: invert(46%) sepia(88%) saturate(3060%) hue-rotate(87deg) brightness(126%) contrast(119%); cursor: pointer' }),
+      createElement('img', { id: 'image-image', src: `/resource/image/${name}`, style: 'content-visibility: auto; width: 100%' }),
+      createElement('img', { id: 'image-mask', src: `/resource/mask/${name}`, style: 'position: absolute; content-visibility: auto; left: 0rem; top: 0rem; width: 100%; filter: invert(46%) sepia(88%) saturate(3060%) hue-rotate(87deg) brightness(126%) contrast(119%); cursor: pointer' }),
       createElement('button', { id: 'button-remove', textContent: 'Remove', style: 'position: absolute; right: 0.5rem; bottom: 0.5rem; margin: 0rem; cursor: pointer; user-select: none' })
     ])
 
