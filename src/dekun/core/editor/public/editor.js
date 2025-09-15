@@ -666,7 +666,7 @@ class Viewer {
     })
 
     button_remove.addEventListener('click', async () => {
-      await fetch(`/remove/${name}`, {
+      await fetch(`/api/remove/${name}`, {
         method: 'DELETE'
       })
 

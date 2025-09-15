@@ -10,6 +10,7 @@ from base64 import b64decode
 from pathlib import Path
 from typing import cast
 import asyncio
+import uvloop
 
 from dekun.core.dataset import Dataset
 
@@ -138,4 +139,5 @@ def start_editor(port: int, dataset_path: Path):
     config = Config()
     config.bind = [f"0.0.0.0:{str(port)}"]
 
+    uvloop.install()
     asyncio.run(serve(app, config)) # type: ignore

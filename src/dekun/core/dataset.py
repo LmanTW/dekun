@@ -73,10 +73,10 @@ class Dataset():
 
     # Add an entry.
     def add(self, name: str, image_path: Path, mask_path: Path):
-        self.entry_map[name] = Entry(name, self, image_path, mask_path)
-
         if name not in self.entry_map:
             self.entry_list.append(name)
+
+        self.entry_map[name] = Entry(name, self, image_path, mask_path)
 
         if self.sort == "name":
             self.entry_list = sorted(self.entry_list)
