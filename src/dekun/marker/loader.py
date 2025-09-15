@@ -45,7 +45,7 @@ class Loader(object):
             while True:
                 chunk = []
 
-                while (len(chunk) < 100) and (self.chunks * 100) + len(chunk) < len(self.entries):
+                while (len(chunk) < 100) and (self.chunks * 100) + len(chunk) < len(self.entries): 
                     chunk.append(load_entry(self.entries[(self.chunks * 100) + len(chunk)], self.width, self.height, self.device))
 
                 torch.save(chunk, str(self.temporary.joinpath(f"chunk-{self.chunks + 1}.pth")))
@@ -54,6 +54,8 @@ class Loader(object):
                     break
 
                 self.chunks += 1
+
+                del chunk
         elif cache == "memory":
             self.processed_entries = []
 

@@ -1,11 +1,12 @@
 from typing import Callable
 from pathlib import Path
+from shutil import rmtree
 import PIL.Image as pil
 import tempfile
-import shutil
 import torch
+import gc
 
-from dekun.core.utils import resolve_device, transform_image, fit_tensor 
+from dekun.core.utils import transform_image, fit_tensor 
 from dekun.core.dataset import Dataset, Entry
 
 COLORS = [
@@ -71,11 +72,13 @@ class Loader(object):
                     chunk.append(load_entry(index, self.entries[index], self.width, self.height, self.device))
 
                 torch.save(chunk, str(self.temporary.joinpath(f"chunk-{self.chunks + 1}.pth")))
+                gc.collect()
 
                 if (self.chunks * 100) + len(chunk) >= len(self.entries):
                     break
 
                 self.chunks += 1
+
         elif cache == "memory":
             self.processed_entries = []
 
@@ -92,7 +95,9 @@ class Loader(object):
     # Exit the dataset loader.
     def __exit__(self, exc_type, exc_value, exc_traceback):
         if self.cache == "disk":
-            shutil.rmtree(str(self.temporary))
+            rmtree(str(self.temporary))
+
+        gc.collect()
 
     # Loop through the dataset.
     def loop(self, callback: Callable[[torch.Tensor, torch.Tensor, torch.Tensor], None]):
@@ -103,6 +108,8 @@ class Loader(object):
             for i in range(0, self.chunks):
                 for entry in torch.load(str(self.temporary.joinpath(f"chunk-{i + 1}.pth")), self.device):
                     callback(entry[0], entry[1], entry[2])
+
+                gc.collect()
         elif self.cache == "memory":
             for entry in self.processed_entries:
                 callback(entry[0], entry[1], entry[2])
