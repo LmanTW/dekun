@@ -12,8 +12,8 @@ def root_command():
 
 # Start the dataset editor.
 @click.command("editor")
-@click.argument("port", type = click.INT, default = "8080")
-@click.option("-d", "--dataset", type = click.Path(True, file_okay = False), required = 1)
+@click.argument("port", type=click.INT, default="8080")
+@click.option("-d", "--dataset", type=click.Path(True, file_okay=False), required=1)
 def editor_command(port: int, dataset: str):
     start_editor(port, Path(dataset))
 

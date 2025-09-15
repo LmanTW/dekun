@@ -16,11 +16,11 @@ def inpainter_command():
 
 # Initialize a inpainter.
 @click.command("init")
-@click.argument("path", type = click.Path())
-@click.option("-w", "--width", type = click.INT, default = 512)
-@click.option("-h", "--height", type = click.INT, default = 512)
+@click.argument("path", type=click.Path())
+@click.option("-w", "--width", type=click.INT, default=512)
+@click.option("-h", "--height", type=click.INT, default=512)
 def init_command(path: str, width: int, height: int):
-    processed_path = Path(path).with_suffix(".pth")
+    processed_path=Path(path).with_suffix(".pth")
 
     if processed_path.exists():
         raise Exception(f"The file already exists: {str(processed_path)}")
@@ -29,9 +29,9 @@ def init_command(path: str, width: int, height: int):
 
 # Get the info of a inpainter.
 @click.command("info")
-@click.argument("path", type = click.Path(True))
+@click.argument("path", type=click.Path(True))
 def info_command(path: str):
-    data = torch.load(str(Path(path).with_suffix(".pth")), "cpu")
+    data=torch.load(str(Path(path).with_suffix(".pth")), "cpu")
 
     print(f"Width: {data['width']}")
     print(f"Height: {data['height']}")
@@ -40,11 +40,11 @@ def info_command(path: str):
 
 # Inpaint an image.
 @click.command("inpaint")
-@click.argument("path", type = click.Path(True))
-@click.option("-i", "--image", type = click.Path(True, dir_okay = False), required = 1)
-@click.option("-m", "--mask", type = click.Path(True, dir_okay = False), required = 1)
-@click.option("-o", "--output", type = click.Path(False, dir_okay = False), default = "output.jpg")
-@click.option("-D", "--device", type = click.Choice(["auto", "cpu", "cuda"]), default = "auto")
+@click.argument("path", type=click.Path(True))
+@click.option("-i", "--image", type=click.Path(True, dir_okay=False), required=1)
+@click.option("-m", "--mask", type=click.Path(True, dir_okay=False), required=1)
+@click.option("-o", "--output", type=click.Path(False, dir_okay=False), default="output.jpg")
+@click.option("-D", "--device", type=click.Choice(["auto", "cpu", "cuda"]), default="auto")
 def inpaint_command(path: str, image: str, mask: str, output: str, device: str):
     inpainter = Inpainter.load(device, Path(path).with_suffix(".pth"))
 
@@ -59,12 +59,12 @@ def inpaint_command(path: str, image: str, mask: str, output: str, device: str):
 
 # Train a generator.
 @click.command("train")
-@click.argument("path", type = click.Path(True))
-@click.option("-d", "--dataset", type = click.Path(True, file_okay=False), required = 1)
-@click.option("-i", "--iterations", type = click.INT)
-@click.option("-t", "--threshold", type = click.FLOAT)
-@click.option("-c", "--cache", type = click.Choice(["none", "disk", "memory"]), default = "none")
-@click.option("-D", "--device", type = click.Choice(["auto", "cpu", "cuda"]), default = "auto")
+@click.argument("path", type=click.Path(True))
+@click.option("-d", "--dataset", type=click.Path(True, file_okay=False), required=1)
+@click.option("-i", "--iterations", type=click.INT)
+@click.option("-t", "--threshold", type=click.FLOAT)
+@click.option("-c", "--cache", type=click.Choice(["none", "disk", "memory"]), default="none")
+@click.option("-D", "--device", type=click.Choice(["auto", "cpu", "cuda"]), default="auto")
 def train_command(path: str, dataset: str, iterations: int, threshold: float, cache: str, device: str):
     inpainter = Inpainter.load(device, Path(path).with_suffix(".pth"))
 

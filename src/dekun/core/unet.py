@@ -14,10 +14,10 @@ class ConvolutionalBlock(nn.Module):
             raise ValueError(f"Invalid output channels: {out_channels}")
 
         self.block = nn.Sequential(
-            nn.Conv2d(in_channels, out_channels, kernel_size = 3, padding = 1),
+            nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1),
             nn.BatchNorm2d(out_channels),
             nn.ReLU(inplace=True),
-            nn.Conv2d(out_channels, out_channels, kernel_size = 3, padding = 1),
+            nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1),
             nn.BatchNorm2d(out_channels),
             nn.ReLU(inplace=True),
         )
@@ -45,7 +45,7 @@ class UNet(nn.Module):
 
         for layer in range(1, depth + 1):
             self.encoders.append(ConvolutionalBlock(in_channels, 2 ** (layer + 5)))
-            self.pools.append(nn.MaxPool2d(kernel_size = 2, stride = 2))
+            self.pools.append(nn.MaxPool2d(kernel_size=2, stride=2))
             in_channels = 2 ** (layer + 5)
 
         self.bottleneck = ConvolutionalBlock(in_channels, in_channels * 2)
@@ -57,7 +57,7 @@ class UNet(nn.Module):
         for layer in reversed(range(1, depth + 1)):
             channels = 2 ** (layer + 5)
 
-            self.decoders.append(nn.ConvTranspose2d(in_channels, channels, kernel_size = 2, stride = 2))
+            self.decoders.append(nn.ConvTranspose2d(in_channels, channels, kernel_size=2, stride=2))
             self.decoder_blocks.append(ConvolutionalBlock(channels * 2, channels))
 
             in_channels = channels
@@ -82,7 +82,7 @@ class UNet(nn.Module):
             if tensor.shape != skip.shape:
                 tensor = nn.functional.interpolate(tensor, size=skip.shape[2:])
 
-            tensor = torch.cat((skip, tensor), dim = 1)
+            tensor = torch.cat((skip, tensor), dim=1)
             tensor = decoder_block(tensor)
 
         return self.final_convolution(tensor)

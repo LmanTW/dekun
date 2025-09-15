@@ -29,9 +29,9 @@ def init_command(path: str, width: int, height: int):
 
 # Get the info of a marker.
 @click.command("info")
-@click.argument("path", type = click.Path(True))
+@click.argument("path", type=click.Path(True))
 def info_command(path: str):
-    data = torch.load(str(Path(path).with_suffix(".pth")), "cpu")
+    data=torch.load(str(Path(path).with_suffix(".pth")), "cpu")
 
     print(f"Width: {data['width']}")
     print(f"Height: {data['height']}")
@@ -41,26 +41,26 @@ def info_command(path: str):
 # Mark an image.
 @click.command("mark")
 @click.argument("path", type=click.Path(True))
-@click.option("-i", "--image", type=click.Path(True, dir_okay = False), required = 1)
-@click.option("-o", "--output", type=click.Path(False, dir_okay = False), default = "output.jpg")
-@click.option("-D", "--device", type=click.Choice(["auto", "cpu", "cuda"]), default = "auto")
+@click.option("-i", "--image", type=click.Path(True, dir_okay=False), required=1)
+@click.option("-o", "--output", type=click.Path(False, dir_okay=False), default="output.jpg")
+@click.option("-D", "--device", type=click.Choice(["auto", "cpu", "cuda"]), default="auto")
 def mark_command(path: str, image: str, output: str, device: str):
-    marker = Marker.load(device, Path(path).with_suffix(".pth"))
+    marker=Marker.load(device, Path(path).with_suffix(".pth"))
 
-    output_image = marker.mark(pil.open(Path(image)))
-    output_image = (output_image * 255).byte().cpu().numpy()
-    output_image = pil.fromarray(output_image)
+    output_image=marker.mark(pil.open(Path(image)))
+    output_image=(output_image * 255).byte().cpu().numpy()
+    output_image=pil.fromarray(output_image)
 
     output_image.save(output)
 
 # Train a marker.
 @click.command("train")
-@click.argument("path", type = click.Path(True))
-@click.option("-d", "--dataset", type = click.Path(True, file_okay = False), required = 1)
-@click.option("-i", "--iterations", type = click.INT)
-@click.option("-t", "--threshold", type = click.FLOAT)
-@click.option("-c", "--cache", type = click.Choice(["none", "disk", "memory"]), default = "none")
-@click.option("-D", "--device", type = click.Choice(["auto", "cpu", "cuda"]), default = "auto")
+@click.argument("path", type=click.Path(True))
+@click.option("-d", "--dataset", type=click.Path(True, file_okay=False), required=1)
+@click.option("-i", "--iterations", type=click.INT)
+@click.option("-t", "--threshold", type=click.FLOAT)
+@click.option("-c", "--cache", type=click.Choice(["none", "disk", "memory"]), default="none")
+@click.option("-D", "--device", type=click.Choice(["auto", "cpu", "cuda"]), default="auto")
 def train_command(path: str, dataset: str, iterations: int, threshold: float, cache: str, device: str):
     marker = Marker.load(device, Path(path).with_suffix(".pth"))
 
