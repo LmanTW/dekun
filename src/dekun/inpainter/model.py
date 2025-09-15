@@ -72,7 +72,7 @@ class Inpainter:
             entries.append([
                 image_tensor.unsqueeze(0),
                 mask_tensor.unsqueeze(0),
-                apply_mask(index, image_tensor, mask_tensor)
+                apply_mask(index, image_tensor, mask_tensor).unsqueeze(0)
             ])
 
         self.model.train()
@@ -110,9 +110,6 @@ class Inpainter:
 
             resized_image, transform = fit_tensor(image_tensor, self.width, self.height)
             resized_mask = fit_tensor(mask_tensor, self.width, self.height)[0]
-
-            print(self.model(torch.cat((resized_image.unsqueeze(0), resized_mask.unsqueeze(0)), dim=1)).min())
-            print(self.model(torch.cat((resized_image.unsqueeze(0), resized_mask.unsqueeze(0)), dim=1)).max())
 
             binary_mask = (resized_mask > 0.5).float()
 
