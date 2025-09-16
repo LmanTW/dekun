@@ -31,7 +31,7 @@ def init_command(path: str, width: int, height: int):
 @click.command("info")
 @click.argument("path", type=click.Path(True))
 def info_command(path: str):
-    data=torch.load(str(Path(path).with_suffix(".pth")), "cpu")
+    data=torch.load(str(Path(path)), "cpu")
 
     print(f"Width: {data['width']}")
     print(f"Height: {data['height']}")
@@ -45,7 +45,7 @@ def info_command(path: str):
 @click.option("-o", "--output", type=click.Path(False, dir_okay=False), default="output.jpg")
 @click.option("-D", "--device", type=click.Choice(["auto", "cpu", "cuda"]), default="auto")
 def mark_command(path: str, image: str, output: str, device: str):
-    marker=Marker.load(device, Path(path).with_suffix(".pth"))
+    marker=Marker.load(device, Path(path))
 
     output_image=marker.mark(pil.open(Path(image)))
     output_image=(output_image * 255).byte().cpu().numpy()
@@ -62,7 +62,7 @@ def mark_command(path: str, image: str, output: str, device: str):
 @click.option("-c", "--cache", type=click.Choice(["none", "disk", "memory"]), default="none")
 @click.option("-D", "--device", type=click.Choice(["auto", "cpu", "cuda"]), default="auto")
 def train_command(path: str, dataset: str, iterations: int, threshold: float, cache: str, device: str):
-    marker = Marker.load(device, Path(path).with_suffix(".pth"))
+    marker = Marker.load(device, Path(path))
 
     duration_history = []
     loss_history = []

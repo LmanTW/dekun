@@ -31,7 +31,7 @@ def init_command(path: str, width: int, height: int):
 @click.command("info")
 @click.argument("path", type=click.Path(True))
 def info_command(path: str):
-    data=torch.load(str(Path(path).with_suffix(".pth")), "cpu")
+    data=torch.load(str(Path(path)), "cpu")
 
     print(f"Width: {data['width']}")
     print(f"Height: {data['height']}")
@@ -46,7 +46,7 @@ def info_command(path: str):
 @click.option("-o", "--output", type=click.Path(False, dir_okay=False), default="output.jpg")
 @click.option("-D", "--device", type=click.Choice(["auto", "cpu", "cuda"]), default="auto")
 def inpaint_command(path: str, image: str, mask: str, output: str, device: str):
-    inpainter = Inpainter.load(device, Path(path).with_suffix(".pth"))
+    inpainter = Inpainter.load(device, Path(path))
 
     output_image = inpainter.inpaint(pil.open(Path(image)), pil.open(Path(mask)))
     output_image = (output_image - output_image.min()) / (output_image.max() - output_image.min())
@@ -66,7 +66,7 @@ def inpaint_command(path: str, image: str, mask: str, output: str, device: str):
 @click.option("-c", "--cache", type=click.Choice(["none", "disk", "memory"]), default="none")
 @click.option("-D", "--device", type=click.Choice(["auto", "cpu", "cuda"]), default="auto")
 def train_command(path: str, dataset: str, iterations: int, threshold: float, cache: str, device: str):
-    inpainter = Inpainter.load(device, Path(path).with_suffix(".pth"))
+    inpainter = Inpainter.load(device, Path(path))
 
     duration_history = []
     loss_history = []

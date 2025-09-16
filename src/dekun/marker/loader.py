@@ -11,10 +11,10 @@ from dekun.core.dataset import Dataset, Entry
 # Load an entry.
 def load_entry(entry: Entry, width: int, height: int, device: torch.device):
     with pil.open(str(entry.image_path)) as image:
-        image_tensor = fit_tensor(cast(torch.Tensor, transform_image(image)).to(device), width, height)[0].unsqueeze(0)
+        image_tensor = fit_tensor(cast(torch.Tensor, transform_image(image.convert("RGB"))).to(device), width, height)[0].unsqueeze(0)
 
     with pil.open(str(entry.mask_path)) as mask:
-        mask_tensor = fit_tensor(cast(torch.Tensor, transform_image(mask)).to(device), width, height)[0].unsqueeze(0)
+        mask_tensor = fit_tensor(cast(torch.Tensor, transform_image(mask.convert("L"))).to(device), width, height)[0].unsqueeze(0)
 
     return image_tensor, mask_tensor
 
