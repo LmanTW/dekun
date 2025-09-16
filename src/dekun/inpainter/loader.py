@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, cast
 from pathlib import Path
 from shutil import rmtree
 import PIL.Image as pil
@@ -33,10 +33,10 @@ def apply_mask(index: int, image: torch.Tensor, mask: torch.Tensor):
 # Load an entry.
 def load_entry(index: int, entry: Entry, width: int, height: int, device: torch.device):
     with pil.open(str(entry.image_path)) as image:
-        image_tensor = fit_tensor(transform_image(image, "RGB").to(device), width, height)[0]
+        image_tensor = fit_tensor(cast(torch.Tensor, transform_image(image)).to(device), width, height)[0]
 
     with pil.open(str(entry.mask_path)) as mask:
-        mask_tensor = fit_tensor(transform_image(mask, "L").to(device), width, height)[0]
+        mask_tensor = fit_tensor(cast(torch.Tensor, transform_image(mask)).to(device), width, height)[0]
 
     return image_tensor.unsqueeze(0), mask_tensor.unsqueeze(0), apply_mask(index, image_tensor, mask_tensor).unsqueeze(0)
 
