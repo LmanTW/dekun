@@ -641,7 +641,7 @@ class Viewer {
 
   // Create an entry element.
   static createEntryElement(name) {
-    const element = createElement('div', { style: 'position: relative; width: min(50dvw, 25rem); margin-top: var(--spacing-medium)' }, [
+    const element = createElement('div', { style: 'position: relative; width: min(50dvw, 25rem)' }, [
       createElement('img', { id: 'image-image', src: `/resource/image/${name}`, style: 'content-visibility: auto; width: 100%' }),
       createElement('img', { id: 'image-mask', src: `/resource/mask/${name}`, style: 'position: absolute; content-visibility: auto; left: 0rem; top: 0rem; width: 100%; filter: invert(46%) sepia(88%) saturate(3060%) hue-rotate(87deg) brightness(126%) contrast(119%); cursor: pointer' }),
       createElement('button', { id: 'button-remove', textContent: 'Remove', style: 'position: absolute; right: 0.5rem; bottom: 0.5rem; margin: 0rem; cursor: pointer; user-select: none' })
@@ -862,9 +862,9 @@ button_reload.addEventListener('click', async () => {
 
 setInterval(() => {
   if (Viewer.entries !== null && Viewer.loading === 0) {
-    if (container_all.scrollTop < window.innerHeight / 5) {
+    if (container_entries.scrollTop < window.innerHeight / 5) {
       Viewer.loadTop(10)
-    } else if (Math.round(container_all.scrollTop + container_all.clientHeight) >= container_all.scrollHeight - (window.innerHeight / 5)) {
+    } else if (Math.round(container_entries.scrollTop + container_entries.clientHeight) >= container_entries.scrollHeight - (window.innerHeight / 5)) {
       Viewer.loadBottom(10)
     }
   }

@@ -14,6 +14,7 @@ import uvloop
 
 from dekun.core.dataset import Dataset
 
+# Start the editor.
 def start_editor(port: int, dataset_path: Path):
     public_directory = Path(__file__).parent.joinpath("public")
 

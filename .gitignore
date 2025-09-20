@@ -3,6 +3,9 @@ __pycache__/
 .venv
 uv.lock
 
+node_modules
+bunk.lock
+
 .DS_Store
 
 *.pth

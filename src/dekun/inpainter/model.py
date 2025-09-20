@@ -78,8 +78,8 @@ class Inpainter:
         self.model.eval()
 
         with torch.no_grad():
-            image_tensor = cast(torch.Tensor, image if isinstance(image, torch.Tensor) else transform_image(image))
-            mask_tensor = cast(torch.Tensor, mask if isinstance(mask, torch.Tensor) else transform_image(mask))
+            image_tensor = cast(torch.Tensor, image if isinstance(image, torch.Tensor) else transform_image(image.convert("RGB")))
+            mask_tensor = cast(torch.Tensor, mask if isinstance(mask, torch.Tensor) else transform_image(mask.convert("L")))
 
             resized_image, transform = fit_tensor(image_tensor, self.width, self.height)
             resized_mask = fit_tensor(mask_tensor, self.width, self.height)[0]

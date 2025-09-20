@@ -77,7 +77,7 @@ class Marker:
         self.model.eval()
 
         with torch.no_grad():
-            image_tensor = cast(torch.Tensor, image if isinstance(image, torch.Tensor) else transform_image(image))
+            image_tensor = cast(torch.Tensor, image if isinstance(image, torch.Tensor) else transform_image(image.convert("RGB")))
             resized_tensor, transform = fit_tensor(image_tensor, self.width, self.height)
 
             output = self.model(resized_tensor.to(self.device).unsqueeze(0))

@@ -3,15 +3,14 @@
 }
 
 :root {
-  --color-background: #0F0F0F;
-  --color-foreground: #DFDFDF;
+  --color-background: #121314;
+  --color-foreground: #F0F5F9;
 
-  --color-container-light: #2A2A2A;
-  --color-container-medium: #202020;
-  --color-container-dark: #1A1A1A;
+  --color-container-light: #242628;
+  --color-container-dark: #1B1D1F;
 
-  --size-large: 1.6rem;
-  --size-big: 1.4rem;
+  --size-large: 1.4rem;
+  --size-big: 1.3rem;
   --size-medium: 1.2rem;
   --size-small: 1.1rem;
   --size-tiny: 1rem;
@@ -65,23 +64,8 @@ p {
   margin: 0rem
 }
 
-a {
-  color: var(--color-foreground);
-  font-size: var(--size-tiny);
-  font-weight: 500;
-  margin: 0rem
-}
-
-li {
-  color: var(--color-foreground);
-  font-size: var(--size-tiny);
-  font-weight: 500;
-  margin: 0rem
-}
-
-.key {
-  background-color: var(--color-container-light);
-  border-radius: 0.25rem;
-  font-size: calc(var(--size-tiny) * 0.8);
-  padding: calc(var(--spacing-tiny) * 0.8) var(--spacing-tiny)
+.shadow {
+  box-shadow: 0rem 0rem 1rem 0rem rgba(0,0,0,0.5);
+  -webkit-box-shadow: 0rem 0rem 1rem 0rem rgba(0,0,0,0.5);
+  -moz-box-shadow: 0rem 0rem 1rem 0rem rgba(0,0,0,0.5) 
 }

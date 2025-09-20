@@ -9,8 +9,8 @@
     <link rel="stylesheet" href="./editor.css">
   </head>
 
-  <body style="flex-direction: column; background-color: var(--color-background); width: 100dvw; height: 100dvh; margin: 0rem; overflow: hidden">
-    <div style="flex-shrink: 0; display: flex; align-items: center; background-color: var(--color-container-dark); left: 0rem; top: 0rem; width: 100dvw; height: 3.5rem">
+  <body style="background-color: var(--color-background); width: 100dvw; height: 100dvh; margin: 0rem; overflow: hidden">
+    <div style="display: flex; align-items: center; background-color: var(--color-container-medium); left: 0rem; top: 0rem; width: 100dvw; height: 3.5rem">
       <h2 style="text-wrap: nowrap; margin-left: var(--spacing-medium); margin-right: var(--spacing-medium)">Dataset Editor</h2>
       <button id="button-help" style="margin-right: var(--spacing-medium); cursor: pointer">Help</button>
       <button id="button-settings" style="margin-right: var(--spacing-medium); cursor: pointer">Settings</button>
@@ -29,101 +29,101 @@
 
     <canvas id="canvas-main" oncontextmenu="return false" style="width: 100dvw; height: calc(100dvh - 3.5rem)"></canvas>
     
-    <div id="container-help" style="position: fixed; display: none; background-color: var(--color-container-dark); border-radius: 0.5rem; left: 0.5rem; top: 4rem; max-height: calc(100dvh - 6.5rem); padding: var(--spacing-medium); overflow-y: auto;">
+    <div id="container-help" style="position: fixed; display: none; background-color: var(--color-container-dark); border-radius: 0.5rem; left: 1rem; top: 4.5rem; max-height: calc(100dvh - 7.5rem); padding: var(--spacing-medium); overflow-y: auto;">
       <p style="margin-bottom: var(--spacing-medium)">
-        <span style="background-color: var(--color-container-light); border-radius: 0.25rem; padding: var(--spacing-tiny)">W</span>
-        <span style="background-color: var(--color-container-light); border-radius: 0.25rem; padding: var(--spacing-tiny)">A</span>
-        <span style="background-color: var(--color-container-light); border-radius: 0.25rem; padding: var(--spacing-tiny)">S</span>
-        <span style="background-color: var(--color-container-light); border-radius: 0.25rem; padding: var(--spacing-tiny)">D</span>
+        <span class="key">W</span>
+        <span class="key">A</span>
+        <span class="key">S</span>
+        <span class="key">D</span>
         to move.
       </p>
 
       <p style="margin-bottom: var(--spacing-medium)">
-        <span style="background-color: var(--color-container-light); border-radius: 0.25rem; padding: var(--spacing-tiny)">E</span>
+        <span class="key">E</span>
         to zoom in,
-        <span style="background-color: var(--color-container-light); border-radius: 0.25rem; padding: var(--spacing-tiny)">Q</span>
+        <span class="key">Q</span>
         to zoom out.
       </p>
 
       <p style="margin-bottom: var(--spacing-large)">
-        <span style="background-color: var(--color-container-light); border-radius: 0.25rem; padding: var(--spacing-tiny)">R</span>
+        <span class="key">R</span>
         to reset the camera.
       </p>
 
       <p style="margin-bottom: var(--spacing-medium)">
-        <span style="background-color: var(--color-container-light); border-radius: 0.25rem; padding: var(--spacing-tiny)">1</span>
-        <span style="background-color: var(--color-container-light); border-radius: 0.25rem; padding: var(--spacing-tiny)">2</span>
-        <span style="background-color: var(--color-container-light); border-radius: 0.25rem; padding: var(--spacing-tiny)">3</span>
+        <span class="key">1</span>
+        <span class="key">2</span>
+        <span class="key">3</span>
         to switch stroke type.
       </p>
 
       <ul style="padding-left: var(--spacing-large); margin-bottom: var(--spacing-medium)">
        <li style="margin-bottom: var(--spacing-medium)">
-        <span style="background-color: var(--color-container-light); border-radius: 0.25rem; padding: var(--spacing-tiny)">1</span>
+        <span class="key">1</span>
         Line with sharp cap.
        </li>
 
        <li style="margin-bottom: var(--spacing-medium)">
-        <span style="background-color: var(--color-container-light); border-radius: 0.25rem; padding: var(--spacing-tiny)">2</span>
+        <span class="key">2</span>
         Line with round cap.
        </li>
 
        <li>
-        <span style="background-color: var(--color-container-light); border-radius: 0.25rem; padding: var(--spacing-tiny)">3</span>
+        <span class="key">3</span>
         Points to make a shape.
        </li>
       </ul>
 
       <p style="margin-bottom: var(--spacing-large)">
-        <span style="background-color: var(--color-container-light); border-radius: 0.25rem; padding: var(--spacing-tiny)">X</span>
+        <span class="key">X</span>
         to delete the last stroke or point.
       </p>
 
       <p style="margin-bottom: var(--spacing-medium)">
-        <span style="background-color: var(--color-container-light); border-radius: 0.25rem; padding: var(--spacing-tiny)">Left Click</span>
+        <span class="key">Left Click</span>
         to draw.
       </p>
 
       <p style="margin-bottom: var(--spacing-medium)">
-        <span style="background-color: var(--color-container-light); border-radius: 0.25rem; padding: var(--spacing-tiny)">Right Click</span>
+        <span class="key">Right Click</span>
         depends on the stroke type.
       </p>
 
       <ul style="padding-left: var(--spacing-large); margin-bottom: var(--spacing-medium)">
        <li style="margin-bottom: var(--spacing-medium)">
-        <span style="background-color: var(--color-container-light); border-radius: 0.25rem; padding: var(--spacing-tiny)">1</span>
-        <span style="background-color: var(--color-container-light); border-radius: 0.25rem; padding: var(--spacing-tiny)">2</span>
+        <span class="key">1</span>
+        <span class="key">2</span>
         Continue from the end of the last stroke.
        </li>
 
        <li>
-        <span style="background-color: var(--color-container-light); border-radius: 0.25rem; padding: var(--spacing-tiny)">3</span>
+        <span class="key">3</span>
         Complete the shape.
        </li>
       </ul>
 
       <p style="margin-bottom: var(--spacing-medium)">
-        <span style="background-color: var(--color-container-light); border-radius: 0.25rem; padding: var(--spacing-tiny)">Mouse Wheel</span>
-        <span style="background-color: var(--color-container-light); border-radius: 0.25rem; padding: var(--spacing-tiny)">-</span>
-        <span style="background-color: var(--color-container-light); border-radius: 0.25rem; padding: var(--spacing-tiny)">+</span>
+        <span class="key">Mouse Wheel</span>
+        <span class="key">-</span>
+        <span class="key">+</span>
         change the stroke size.
       </p>
 
       <p style="margin-bottom: var(--spacing-large)">
-        <span style="background-color: var(--color-container-light); border-radius: 0.25rem; padding: var(--spacing-tiny)">F</span>
+        <span class="key">F</span>
         change the stroke opacity.
       </p>
       
       <p>
-        <span style="background-color: var(--color-container-light); border-radius: 0.25rem; padding: var(--spacing-tiny)">Z</span>
+        <span class="key">Z</span>
         to skip,
-        <span style="background-color: var(--color-container-light); border-radius: 0.25rem; padding: var(--spacing-tiny)">C</span>
+        <span class="key">C</span>
         to submit the current image.
       </p>
     </div>
 
-    <div id="container-settings" style="position: fixed; display: none; flex-direction: column; background-color: var(--color-container-dark); border-radius: 0.5rem; left: 0.5rem; top: 4rem; max-height: calc(100dvh - 6.5rem); padding: var(--spacing-medium); overflow-y: auto">
-      <div style="display: flex; align-items: center; gap: var(--spacing-small); margin-bottom: var(--spacing-big)">
+    <div id="container-settings" style="position: fixed; display: none; flex-direction: column; background-color: var(--color-container-dark); border-radius: 0.5rem; left: 1em; top: 4.5rem; max-height: calc(100dvh - 7.5rem); padding: var(--spacing-medium); overflow-y: auto">
+      <div style="display: flex; align-items: center; gap: var(--spacing-small); margin-bottom: var(--spacing-small)">
         <p>Random Mode (Disable Manual):</p>
         <input id="input-random" type="checkbox">
       </div>
@@ -141,13 +141,13 @@
       </div>
     </div>
 
-    <div id="container-all" style="position: fixed; display: none; flex-direction: column; background-color: var(--color-container-dark); border-radius: 0.5rem; right: 0.5rem; top: 4rem; max-height: calc(100dvh - 6.5rem); padding: var(--spacing-medium); overflow-y: auto">
-      <div style="display: flex">
+    <div id="container-all" style="position: fixed; display: none; flex-direction: column; background-color: var(--color-container-dark); border-radius: 0.5rem; right: 1rem; top: 4.5rem; max-height: calc(100dvh - 7.5rem); overflow: hidden">
+      <div style="display: flex; align-items: center; background-color: var(--color-container-medium); padding: var(--spacing-medium)">
         <h5 id="text-total" style="flex: 1; margin-right: var(--spacing-medium)">0 Entries</h5>
         <button id="button-reload">Reload</button>
       </div>
 
-      <div id="container-entries" style="display: grid; grid-template-columns: 1fr 1fr; column-gap: var(--spacing-medium)"></div>
+      <div id="container-entries" style="display: grid; grid-template-columns: 1fr 1fr; column-gap: var(--spacing-medium); padding: var(--spacing-medium); overflow-y: auto"></div>
     </div> 
 
     <script type="module" src="./editor.js"></script>
