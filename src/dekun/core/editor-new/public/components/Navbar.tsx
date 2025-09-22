@@ -10,13 +10,16 @@ export default () => {
       value: source,
       display: source
     })
+
+    Image.next()
   }
 
   return (
-    <nav class='shadow' style={{ position: 'fixed', display: 'flex', alignItems: 'center', backgroundColor: 'var(--color-container-light)', left: '0rem', top: '0rem', width: '100%', height: '3.5rem' }}>
+    <nav class={(State.settings.reduceTransparency) ? 'container-solid-light shadow' : 'container-glassy-light shadow'} style={{ position: 'fixed', display: 'flex', alignItems: 'center', left: '0rem', top: '0rem', width: '100%', height: '3.5rem' }}>
       <h1 style={{ textWrap: 'nowrap', marginLeft: 'var(--spacing-medium)', marginRight: 'var(--spacing-medium)' }}>Dataset Editor</h1>
       <button onClick={() => State.updateLayout({ help: !State.layout.help })} style={{ marginRight: 'var(--spacing-medium)', cursor: 'pointer' }}>Help</button>
       <button onClick={() => State.updateLayout({ settings: !State.layout.settings })} style={{ marginRight: 'var(--spacing-medium)', cursor: 'pointer' }}>Settings</button>
+      <button onClick={() => State.updateLayout({ tasks: !State.layout.tasks })} style={{ marginRight: 'var(--spacing-medium)', cursor: 'pointer' }}>Tasks</button>
 
       <div style="flex: 1"></div>
 

@@ -3,11 +3,15 @@
 }
 
 :root {
-  --color-background: #121314;
-  --color-foreground: #F0F5F9;
+  --color-background: #0F1114;
+  --color-foreground: #EEF0F2;
 
-  --color-container-light: #242628;
-  --color-container-dark: #1B1D1F;
+  --color-container-light: #252A2F;
+  --color-container-dark: #1A1D21;
+
+  --color-success: #70E000;
+  --color-warning: #E0DD00;
+  --color-error: #E01D00;
 
   --size-large: 1.4rem;
   --size-big: 1.3rem;
@@ -62,6 +66,24 @@ p {
   font-size: var(--size-tiny);
   font-weight: 500;
   margin: 0rem
+}
+
+.container-solid-light {
+  background-color: var(--color-container-light)
+}
+
+.container-solid-dark {
+  background-color: var(--color-container-dark)
+}
+
+.container-glassy-light {
+  background-color: color-mix(in srgb, color-mix(in srgb, var(--color-container-light), var(--color-foreground) 2%), transparent 10%);
+  backdrop-filter: blur(0.5rem) brightness(0.75)
+}
+
+.container-glassy-dark {
+  background-color: color-mix(in srgb, color-mix(in srgb, var(--color-container-dark), var(--color-foreground) 1%), transparent 10%);
+  backdrop-filter: blur(0.5rem) brightness(0.75)
 }
 
 .shadow {

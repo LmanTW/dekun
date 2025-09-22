@@ -1,6 +1,7 @@
 import { signal } from '@preact/signals'
 
 import Image from './image'
+import { ParamHTMLAttributes } from 'react-dom/src'
 
 // Recover states from the local storage.
 function recoverStates <T> (name: string, value: T): T {
@@ -14,10 +15,14 @@ function recoverStates <T> (name: string, value: T): T {
 const layout = signal<{
   help: boolean,
   settings: boolean,
+  tasks: boolean,
+
   entries: boolean
 }>({
   help: false,
   settings: false,
+  tasks: false,
+
   entries: false
 })
 
@@ -29,7 +34,9 @@ const settings = signal<{
   preload: number,
 
   moveSpeed: number,
-  zoomSpeed: number
+  scaleSpeed: number,
+
+  reduceTransparency: boolean
 }>(recoverStates('settings', {
   username: 'unknown',
 
@@ -38,7 +45,9 @@ const settings = signal<{
   preload: 5,
 
   moveSpeed: 1,
-  zoomSpeed: 1
+  scaleSpeed: 1,
+
+  reduceTransparency: false
 }))
 
 const source = signal<{
@@ -53,12 +62,21 @@ const source = signal<{
   display: ''
 }))
 
+const taskMap: {
+  [key: symbol]: Task
+} = {}
+
+const taskList = signal<symbol[]>([])
+
 // All the global states.
 export default class {
-  public static get layout () {return layout.value}
-  public static get settings () {return settings.value}
-  public static get source () {return source.value}
-  
+  public static get layout() {return layout.value}
+  public static get settings() {return settings.value}
+  public static get source() {return source.value}
+
+  public static get taskMap() {return taskMap}
+  public static get taskList() {return taskList.value}
+
   // Update the layout.
   public static updateLayout(modificaitons: Partial<typeof layout.value>): void {
     layout.value = { ...layout.value, ...modificaitons }
@@ -77,4 +95,47 @@ export default class {
 
     localStorage.setItem('source', JSON.stringify(source.value))
   }
+
+  // Add a task.
+  public static addTask(type: Task['type'], title: string, message: string): symbol {
+    const id = Symbol()
+
+    taskMap[id] = {
+      type,
+      title,
+      message
+    }
+
+    taskList.value = Reflect.ownKeys(taskMap) as symbol[]
+
+    return id
+  }
+
+  // Update a task.
+  public static updateTask(id: symbol, modificaitons: Partial<Task>): symbol {
+    if (taskMap.hasOwnProperty(id)) {
+      taskMap[id] = Object.assign(taskMap[id], modificaitons)
+      taskList.value = Reflect.ownKeys(taskMap) as symbol[]
+    }
+
+    return id
+  }
+
+  // Remove a task.
+  public static removeTask(id: symbol): null {
+    if (taskMap.hasOwnProperty(id)) {
+      delete taskMap[id]
+
+      taskList.value = [...taskList.value.slice(0, taskList.value.indexOf(id)), ...taskList.value.slice(taskList.value.indexOf(id) + 1)]
+    }
+
+    return null
+  }
+}
+
+// The data structure of a task.
+interface Task {
+  type: 'success' | 'error' | 'warning',
+  title: string,
+  message: string
 }
