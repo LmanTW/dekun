@@ -1,0 +1,60 @@
+import { render } from 'preact'
+
+import Settings from './components/Settings'
+import Navbar from './components/Navbar'
+import Control from './scripts/control'
+import Editor from './scripts/editor'
+import State from './scripts/state'
+import Image from './scripts/image'
+
+render(<Navbar/>, document.getElementById('container-navbar')!)
+render(<Settings/>, document.getElementById('container-settings')!)
+
+let lastTick = performance.now()
+
+// The main update loop.
+function mainTick(): void {
+  const deltaTime = performance.now() - lastTick
+  lastTick = performance.now()
+
+  Control.update(deltaTime) 
+  Editor.update(deltaTime)
+
+  if (State.settings.fps === 0) {
+    requestAnimationFrame(mainTick)
+  } else {
+    setTimeout(mainTick, (1000 / State.settings.fps) - (performance.now() - lastTick))
+  }
+}
+
+let preloading: boolean = true
+
+// The image preload loop.
+async function preloadTick(): Promise<void> {
+  try {
+    const info = await Image.drivers[State.source.driver].preload(State.settings.preload)
+
+    if (info === null) {
+      setTimeout(preloadTick, 100)
+    } else {
+      await fetch(info.url)
+
+      preloadTick()
+    }
+  } catch (_) {
+    preloading = false
+  } 
+}
+
+window.addEventListener('load', () => {
+  mainTick()
+  preloadTick()
+
+  Image.next()
+
+  State.sourceSignal.subscribe(() => {
+    if (!preloading) {
+      preloadTick()
+    }
+  })
+})

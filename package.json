@@ -2,8 +2,8 @@
   "type": "module",
 
   "scripts": {
-    "editor-live": "bash ./src/dekun/core/editor-new/start.sh",
-    "editor-build": "vite build --config ./src/dekun/core/editor-new/vite.config.ts"
+    "editor-live": "bash ./src/dekun/core/editor/start.sh",
+    "editor-build": "vite build --config ./src/dekun/core/editor/vite.config.ts"
   },
 
   "dependencies": {

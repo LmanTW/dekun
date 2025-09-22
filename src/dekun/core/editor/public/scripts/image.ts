@@ -8,12 +8,13 @@ const modules = import.meta.glob('./drivers/*.ts', { eager: true }) as {
   }
 }
 
-let loadTask: null | symbol = null
-
 // The current image.
 export default class Image {
   public static canvas = document.createElement('canvas')
   public static ctx = this.canvas.getContext('2d')!
+
+  public static submitCanvas = document.createElement('canvas')
+  public static submitCtx = this.submitCanvas.getContext('2d')!
 
   public static drivers: { [key: string]: Driver } = {
     pixiv: modules['./drivers/pixiv.ts'].default,
@@ -21,12 +22,12 @@ export default class Image {
   }
 
   public static data: null | {
+    provider: string,
     id: string,
     page: string,
 
     element: HTMLImageElement,
-    transform: ImageTransform
-    info: string
+    transform: ImageTransform,
 
     strokes: Stroke[]
   } = null
@@ -41,11 +42,8 @@ export default class Image {
     this.data = null
     this.timestamp = performance.now()
 
-    loadTask = (loadTask === null)
-      ? State.addTask('success', 'Load', (override === undefined) ? State.source.value : override)
-      : State.updateTask(loadTask, { type: 'success', message: (override === undefined) ? State.source.value : override })
-
     try {
+      const driver = State.source.driver
       const info = await this.drivers[State.source.driver].next((override === undefined) ? State.source.value : override)
 
       if (info === null) {
@@ -62,12 +60,12 @@ export default class Image {
         element.addEventListener('load', () => {
           if (this.timestamp === timestamp) {
             this.data = {
+              provider: driver,
               id: info.id,
               page: info.page,
 
               element: element,
               transform: this.calculateTransform(element.width, element.height),
-              info: `${element.width} x ${element.height} (${element.src.substring(element.src.lastIndexOf('.') + 1).toUpperCase()})`,
 
               strokes: []
             }
@@ -77,8 +75,82 @@ export default class Image {
           }
         })
       }
-    } catch (error) {
+    } catch (_) {
       this.data = data
+    } 
+  }
+
+  // Submit the current image.
+  public static async submit(): Promise<void> {
+    if (this.data !== null) {
+      const data = this.data
+
+      this.data = null
+
+      Editor.reset()
+      Control.reset()
+
+      const canvas = this.submitCanvas
+      const ctx = this.submitCtx
+
+      canvas.width = data.element.width
+      canvas.height = data.element.height
+
+      ctx.drawImage(data.element, 0, 0, canvas.width, canvas.height)
+
+      const imageURL = canvas.toDataURL('image/jpeg', 1).substring(23)
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+      ctx.fillStyle = 'white'
+      ctx.strokeStyle = 'white'
+
+      for (const stroke of data.strokes) {
+        if (stroke.type === 1 || stroke.type === 2) {
+          ctx.lineCap = (stroke.type === 1) ? 'butt' : 'round'
+          ctx.lineWidth = (data.element.width + data.element.height) * (stroke.size * 0.0025)
+          ctx.moveTo(stroke.x1, stroke.y1)
+          ctx.lineTo(stroke.x2, stroke.y2)
+          ctx.stroke()
+          ctx.beginPath()          
+        } else if (stroke.type === 3) {
+          for (const [index, point] of stroke.points.entries()) {
+            if (index === 0) {
+              ctx.moveTo(point.x, point.y)
+            } else {
+              ctx.lineTo(point.x, point.y)
+            }
+          }
+
+          ctx.lineTo(stroke.points[0].x, stroke.points[0].y)
+          ctx.fill()
+          ctx.beginPath()
+        }
+      }
+
+      const maskURL = canvas.toDataURL('image/png', 1).substring(22)
+
+      try {
+        await fetch('/api/submit', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+
+          body: JSON.stringify({
+            provider: data.provider,
+            id: data.id,
+            page: data.page,
+
+            image: imageURL,
+            mask: maskURL,
+
+            author: State.settings.username
+          })
+        })
+
+        await this.next()
+      } catch (_) {
+        this.data = data
+      }
     }
   }
 
@@ -88,6 +160,32 @@ export default class Image {
     this.ctx.imageSmoothingEnabled = false
 
     if (this.data !== null) {
+      this.ctx.fillStyle = `rgba(0,255,0,${Control.strokeOpacity})`
+      this.ctx.strokeStyle = `rgba(0,255,0,${Control.strokeOpacity})`
+
+      for (const stroke of this.data.strokes) {
+        if (stroke.type === 1 || stroke.type === 2) {
+          this.ctx.lineCap = (stroke.type === 1) ? 'butt' : 'round'
+          this.ctx.lineWidth = (this.data.element.width + this.data.element.height) * (stroke.size * 0.0025)
+          this.ctx.moveTo(stroke.x1, stroke.y1)
+          this.ctx.lineTo(stroke.x2, stroke.y2)
+          this.ctx.stroke()
+          this.ctx.beginPath()          
+        } else if (stroke.type === 3) {
+          for (const [index, point] of stroke.points.entries()) {
+            if (index === 0) {
+              this.ctx.moveTo(point.x, point.y)
+            } else {
+              this.ctx.lineTo(point.x, point.y)
+            }
+          }
+
+          this.ctx.lineTo(stroke.points[0].x, stroke.points[0].y)
+          this.ctx.fill()
+          this.ctx.beginPath()
+        }
+      }
+
       this.ctx.fillStyle = 'rgba(0,255,0,0.5)'
       this.ctx.strokeStyle = 'rgba(0,255,0,0.5)'
 
@@ -100,6 +198,21 @@ export default class Image {
           this.ctx.stroke()
           this.ctx.beginPath()
         }
+      } else if (Control.strokeType === 3) {
+        for (const [index, point] of Control.strokePoints.entries()) {
+          if (index === 0) {
+            this.ctx.moveTo(point.x, point.y)
+          } else {
+            this.ctx.lineTo(point.x, point.y)
+          }
+        }
+
+        if (Control.strokePoints.length > 2) {
+          this.ctx.lineTo(Control.strokePoints[0].x, Control.strokePoints[0].y)
+        }
+
+        this.ctx.fill()
+        this.ctx.beginPath()
       }
     }
   }
@@ -124,11 +237,11 @@ export default class Image {
     let newWidth, newHeight
 
     if (imageAspect > canvasAspect) {
-        newWidth = Editor.canvas.width
-        newHeight = Editor.canvas.width / imageAspect
+      newWidth = Editor.canvas.width
+      newHeight = Editor.canvas.width / imageAspect
     } else {
-        newWidth = Editor.canvas.height * imageAspect
-        newHeight = Editor.canvas.height
+      newWidth = Editor.canvas.height * imageAspect
+      newHeight = Editor.canvas.height
     }
 
     const yOffset = (3.5 * parseFloat(getComputedStyle(document.documentElement).fontSize)) * State.settings.resolution

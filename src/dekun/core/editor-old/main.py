@@ -12,35 +12,69 @@ from typing import cast
 import asyncio
 import uvloop
 
-from dekun.core.dataset import Dataset, Info
+from dekun.core.dataset import Dataset
 
 # Start the editor.
 def start_editor(port: int, dataset_path: Path):
-    static_directory = Path(__file__).parent.joinpath("static")
+    public_directory = Path(__file__).parent.joinpath("public")
 
     app = Starlette(routes = [
-         Mount('/assets', app = StaticFiles(directory = static_directory.joinpath("assets")), name = "assets")
+         Mount('/drivers', app = StaticFiles(directory = public_directory.joinpath("drivers")), name = "static")
     ])
 
     dataset = Dataset(dataset_path, "date")
 
     @app.route("/")
-    async def index_html(_: Request):
-        return FileResponse(static_directory.joinpath("index.html"))
+    async def editor_html(_: Request):
+        return FileResponse(public_directory.joinpath("editor.html"))
 
-    @app.route("/api/submit", methods=["PUT"])
+    @app.route("/editor.js")
+    async def editor_script(_: Request):
+        return FileResponse(public_directory.joinpath("editor.js"))
+
+    @app.route("/editor.css")
+    async def editor_style(_: Request):
+        return FileResponse(public_directory.joinpath("editor.css"))
+
+    @app.route("/api/submit/{name}", methods=["PUT"])
     async def submit(request: Request):
+        name = request.path_params["name"]
         data = await request.json()
-        info = Info(data["provider"], data["id"], data["page"], data["author"])
 
-        image_path = dataset_path.joinpath(f"{data['provider']}-{data['id']}-{data['page']}-{data['author']}-image.jpg")
-        mask_path = dataset_path.joinpath(f"{data['provider']}-{data['id']}-{data['page']}-{data['author']}-mask.png")
+        image_path = dataset_path.joinpath(f"{name}-image.jpg")
+        mask_path = dataset_path.joinpath(f"{name}-mask.png")
         image_path.write_bytes(b64decode(data["image"]))
         mask_path.write_bytes(b64decode(data["mask"]))
 
-        dataset.add(info, image_path, mask_path)
+        dataset.add(name, image_path, mask_path)
 
         return PlainTextResponse("Success", 200)
+
+    @app.route("/api/check/{name}")
+    async def check(request: Request):
+        return JSONResponse(dataset.has(request.path_params["name"]), 200)
+
+    @app.route("/api/list")
+    async def list(request: Request):
+        return JSONResponse(dataset.list(), 200)
+
+    @app.route("/api/remove/{name}", methods=["DELETE"])
+    async def remove(request: Request):
+        name = request.path_params["name"]
+
+        if dataset.has(name):
+            entry = dataset.get(name)
+
+            if entry.image_path.exists():
+                entry.image_path.unlink()
+            if entry.mask_path.exists():
+                entry.mask_path.unlink()
+
+            dataset.remove(name)
+
+            return PlainTextResponse("Success", 200)
+
+        return PlainTextResponse("Failed", 500)
 
     @app.route("/api/drivers/pixiv/discovery")
     async def pixiv_discovery(_: Request):
@@ -101,7 +135,7 @@ def start_editor(port: int, dataset_path: Path):
             "Content-Type": cast(str, response.headers.get("Content-Type")),
             "Cache-Control": "max-age=86400"
         })
-
+        
     config = Config()
     config.bind = [f"0.0.0.0:{str(port)}"]
 

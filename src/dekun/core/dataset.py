@@ -1,6 +1,16 @@
 from typing import Union, cast
 from pathlib import Path
 
+# An entry info.
+class Info:
+
+    # Initialize an entry info.
+    def __init__(self, provider: str, id: str, page: str, author: str):
+        self.provider = provider
+        self.id = id
+        self.page = page
+        self.author = author
+
 # A dataset for training.
 class Dataset():
 
@@ -22,20 +32,24 @@ class Dataset():
         self.entry_list = []
 
         for path in self.directory.iterdir():
-            if "-image" in path.stem:
-                name = path.stem.replace("-image", "", 1)
+            parts = path.stem.split("-")
+            
+            if len(parts) == 5:
+                id = "-".join(parts[0:3])
+                info = Info(parts[0], parts[1], parts[2], parts[3])
+                
+                if "image" == parts[4]:
+                    if id not in self.entry_map:
+                        self.entry_map[id] = Entry(info, self)
 
-                if name not in self.entry_map:
-                    self.entry_map[name] = Entry(name, self)
+                    self.entry_map[id].image_path = path
+                elif "mask" in parts[4]:
+                    if id not in self.entry_map:
+                        self.entry_map[id] = Entry(info, self)
 
-                self.entry_map[name].image_path = path
-            elif "-mask" in path.stem:
-                name = path.stem.replace("-mask", "", 1)
-
-                if name not in self.entry_map:
-                    self.entry_map[name] = Entry(name, self)
-
-                self.entry_map[name].mask_path = path
+                    self.entry_map[id].mask_path = path
+                else:
+                    raise Exception(f"Unknown image type: {parts[4]} ({path.stem})")
 
         for name, entry in self.entry_map.items():
             if entry.image_path == None or entry.mask_path == None:
@@ -72,11 +86,13 @@ class Dataset():
         return self.entry_list
 
     # Add an entry.
-    def add(self, name: str, image_path: Path, mask_path: Path):
-        if name not in self.entry_map:
-            self.entry_list.append(name)
+    def add(self, info: Info, image_path: Path, mask_path: Path):
+        id = f"{info.provider}-{info.id}-{info.page}"
 
-        self.entry_map[name] = Entry(name, self, image_path, mask_path)
+        if id not in self.entry_map:
+            self.entry_list.append(id)
+
+        self.entry_map[id] = Entry(info, self, image_path, mask_path)
 
         if self.sort == "name":
             self.entry_list = sorted(self.entry_list)
@@ -99,8 +115,8 @@ class Dataset():
 class Entry:
 
     # Initialize an entry
-    def __init__(self, name: str, dataset: Dataset, image_path: Union[None, Path] = None, mask_path: Union[None, Path] = None):
-        self.name = name
+    def __init__(self, info: Info, dataset: Dataset, image_path: Union[Path, None] = None, mask_path: Union[Path, None] = None):
+        self.info = info
         self.dataset = dataset
 
         self.image_path = image_path
@@ -112,4 +128,4 @@ class Entry:
 
     # Remove the entry.
     def remove(self):
-        self.dataset.remove(self.name)
+        self.dataset.remove(f"{self.info.provider}-{self.info.id}-{self.info.page}")
