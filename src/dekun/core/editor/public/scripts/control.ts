@@ -207,6 +207,7 @@ export default class Control {
         this.strokePoints.splice(this.strokePoints.length - 1)
       } else if (Image.data !== null && Image.data.strokes.length > 0) {
         Image.data.strokes.splice(Image.data.strokes.length - 1)
+        Image.renderImage()
       } 
     }
 
