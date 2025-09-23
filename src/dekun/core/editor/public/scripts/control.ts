@@ -198,6 +198,8 @@ export default class Control {
       if (this.strokeOpacity < 0) {
         this.strokeOpacity = 1
       }
+
+      Image.renderImage()
     }
 
     if (this.keyboard.get('z') === 1) {
