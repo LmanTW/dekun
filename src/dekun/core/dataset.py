@@ -35,18 +35,15 @@ class Dataset():
             parts = path.stem.split("-")
             
             if len(parts) == 5:
-                id = "-".join(parts[0:3])
+                id = "-".join(parts[0:4])
                 info = Info(parts[0], parts[1], parts[2], parts[3])
+
+                if id not in self.entry_map:
+                    self.entry_map[id] = Entry(info, self)
                 
                 if "image" == parts[4]:
-                    if id not in self.entry_map:
-                        self.entry_map[id] = Entry(info, self)
-
                     self.entry_map[id].image_path = path
                 elif "mask" in parts[4]:
-                    if id not in self.entry_map:
-                        self.entry_map[id] = Entry(info, self)
-
                     self.entry_map[id].mask_path = path
                 else:
                     raise Exception(f"Unknown image type: {parts[4]} ({path.stem})")
@@ -87,7 +84,7 @@ class Dataset():
 
     # Add an entry.
     def add(self, info: Info, image_path: Path, mask_path: Path):
-        id = f"{info.provider}-{info.id}-{info.page}"
+        id = f"{info.provider}-{info.id}-{info.page}-{info.author}"
 
         if id not in self.entry_map:
             self.entry_list.append(id)
@@ -128,4 +125,4 @@ class Entry:
 
     # Remove the entry.
     def remove(self):
-        self.dataset.remove(f"{self.info.provider}-{self.info.id}-{self.info.page}")
+        self.dataset.remove(f"{self.info.provider}-{self.info.id}-{self.info.page}-{self.info.author}")

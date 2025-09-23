@@ -24,7 +24,7 @@ export default class Image {
   public static data: null | {
     provider: string,
     id: string,
-    page: string,
+    page: number,
 
     element: HTMLImageElement,
     transform: ImageTransform,
@@ -35,7 +35,7 @@ export default class Image {
   public static timestamp: number = 0
 
   // Switch to the next image.
-  public static async next(override?: string): Promise<void> {
+  public static async next(override?: { driver: string, id: string, page: string }): Promise<void> {
     const data = this.data
     const timestamp = performance.now()
 
@@ -43,8 +43,8 @@ export default class Image {
     this.timestamp = performance.now()
 
     try {
-      const driver = State.source.driver
-      const info = await this.drivers[State.source.driver].next((override === undefined) ? State.source.value : override)
+      const driver = (override === undefined) ? State.source.driver : override.driver
+      const info = await this.drivers[driver].next((override === undefined) ? State.source.value : `${override.id}/${override.page}`)
 
       if (info === null) {
         this.data = data
@@ -269,7 +269,7 @@ export interface Driver {
 
   next: (source: string) => Promise<{
     id: string,
-    page: string,
+    page: number,
 
     url: string,
     source: string
@@ -277,7 +277,7 @@ export interface Driver {
 
   preload: (amount: number) => Promise<null | {
     id: string,
-    page: string,
+    page: number,
 
     url: string,
     amount: number

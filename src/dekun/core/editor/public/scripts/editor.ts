@@ -179,6 +179,7 @@ Editor.canvas.addEventListener('contextmenu', (event) => {
 Editor.canvas.addEventListener('click', () => {
   State.updateLayout({
     help: false,
-    settings: false
+    settings: false,
+    entries: false
   })
 })

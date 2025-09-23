@@ -42,6 +42,26 @@ def start_editor(port: int, dataset_path: Path):
 
         return PlainTextResponse("Success", 200)
 
+    @app.route("/api/remove/{id}", methods=["DELETE"])
+    async def remove(request: Request):
+        id = request.path_params["id"]
+
+        if dataset.has(id):
+            entry = dataset.get(id)
+
+            if entry.image_path.exists():
+                entry.image_path.unlink()
+            if entry.mask_path.exists():
+                entry.mask_path.unlink()
+
+            dataset.remove(id)
+
+        return PlainTextResponse("Success", 200)
+
+    @app.route("/api/list")
+    async def list(_: Request):
+        return JSONResponse(dataset.list(), 200) 
+
     @app.route("/api/drivers/pixiv/discovery")
     async def pixiv_discovery(_: Request):
         response = send_request("GET", f"https://www.pixiv.net/ajax/illust/discovery?mode=all")
@@ -54,13 +74,13 @@ def start_editor(port: int, dataset_path: Path):
 
         return Response(response.text, response.status_code, media_type = response.headers.get("Content-Type"))
 
-    @app.route("/api/drivers/nHentai/latest")
+    @app.route("/api/drivers/nhentai/latest")
     async def nHentai_latest(_: Request):
         response = send_request("GET", "https://api.nhentai.zip/latest")
 
         return Response(response.text, response.status_code, media_type = response.headers.get("Content-Type"))
 
-    @app.route("/api/drivers/nHentai/pages/{id}")
+    @app.route("/api/drivers/nhentai/pages/{id}")
     async def nHentai_pages(request: Request):
         response = send_request("GET", f"https://api.nhentai.zip/pages/{request.path_params['id']}")
 
@@ -93,7 +113,7 @@ def start_editor(port: int, dataset_path: Path):
             "Cache-Control": "max-age=86400"
         })
 
-    @app.route("/resource/nHentai/{id}/{page}")
+    @app.route("/resource/nhentai/{id}/{page}")
     async def nHentai_image(request: Request):
         response = send_request("GET", f"https://i.nhentai.zip/galleries/{request.path_params['id']}/{request.path_params['page']}")
 

@@ -14,14 +14,10 @@ function recoverStates <T> (name: string, value: T): T {
 const layout = signal<{
   help: boolean,
   settings: boolean,
-  tasks: boolean,
-
   entries: boolean
 }>({
   help: false,
   settings: false,
-  tasks: false,
-
   entries: false
 })
 

@@ -4,14 +4,23 @@ import Image from '../scripts/image'
 // The navbar component.
 export default () => {
 
+  // Update the driver.
+  const updateDriver = async (driver: string): Promise<void> => {
+    State.updateSource({
+      driver
+    })
+
+    await Image.next()
+  }
+
   // Update the source.
-  const updateSource = (source: string): void => {
+  const updateSource = async (source: string): Promise<void> => {
     State.updateSource({
       value: source,
       display: source
     })
 
-    Image.next()
+    await Image.next()
   }
 
   return (
@@ -20,18 +29,18 @@ export default () => {
       <button onClick={() => State.updateLayout({ help: !State.layout.help })} style={{ marginRight: 'var(--spacing-medium)', cursor: 'pointer' }}>Help</button>
       <button onClick={() => State.updateLayout({ settings: !State.layout.settings })} style={{ marginRight: 'var(--spacing-medium)', cursor: 'pointer' }}>Settings</button>
 
-      <div style="flex: 1"></div>
+      <div style='flex: 1'></div>
 
-      <select onChange={(event) => State.updateSource({ driver: (event.target as HTMLInputElement).value })} style={{ marginRight: 'var(--spacing-small)' }}>
+      <select value={State.source.driver} onChange={(event) => updateDriver((event.target as HTMLInputElement).value)} style={{ marginRight: 'var(--spacing-small)' }}>
         {
           Object.keys(Image.drivers).map((id) => (
-            <option value={Image.drivers[id].id} selected={(id === State.source.driver) ? true : undefined}>{Image.drivers[id].name}</option>
+            <option value={Image.drivers[id].id}>{Image.drivers[id].name}</option>
           ))
         }
       </select>
 
-      <input value={State.source.display} autocomplete="off" onChange={(event) => updateSource((event.target as HTMLInputElement).value)} style={{ width: '7.5rem', marginRight: 'var(--spacing-small)' }}/>
-      <button style={{ marginRight: 'var(--spacing-medium)', cursor: 'pointer' }}>Entries</button>
+      <input value={State.source.display} autocomplete='off' onChange={(event) => updateSource((event.target as HTMLInputElement).value)} style={{ width: '7.5rem', marginRight: 'var(--spacing-small)' }}/>
+      <button onClick={() => State.updateLayout({ entries: !State.layout.entries })} style={{ marginRight: 'var(--spacing-medium)', cursor: 'pointer' }}>Entries</button>
     </nav>
   )
 }

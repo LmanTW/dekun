@@ -1,6 +1,7 @@
 import { render } from 'preact'
 
 import Settings from './components/Settings'
+import Entries from './components/Entries'
 import Navbar from './components/Navbar'
 import Control from './scripts/control'
 import Editor from './scripts/editor'
@@ -11,6 +12,7 @@ import Image from './scripts/image'
 render(<Help/>, document.getElementById('container-help')!)
 render(<Navbar/>, document.getElementById('container-navbar')!)
 render(<Settings/>, document.getElementById('container-settings')!)
+render(<Entries/>, document.getElementById('container-entries')!)
 
 let lastTick = performance.now()
 
