@@ -21,7 +21,8 @@ export default class Image {
 
   public static drivers: { [key: string]: Driver } = {
     pixiv: modules['./drivers/pixiv.ts'].default,
-    nhentai: modules['./drivers/nhentai.ts'].default
+    nhentai: modules['./drivers/nhentai.ts'].default,
+    danbooru: modules['./drivers/danbooru.ts'].default
   }
 
   public static data: null | {

@@ -64,27 +64,42 @@ def start_editor(port: int, dataset_path: Path):
 
     @app.route("/api/drivers/pixiv/discovery")
     async def pixiv_discovery(_: Request):
-        response = send_request("GET", f"https://www.pixiv.net/ajax/illust/discovery?mode=all")
+        response = send_request("GET", "https://www.pixiv.net/ajax/illust/discovery?mode=all")
 
-        return Response(response.text, response.status_code, media_type = response.headers.get("Content-Type"))
+        return Response(response.text, response.status_code, media_type=response.headers.get("Content-Type"))
 
     @app.route("/api/drivers/pixiv/pages/{id}")
     async def pixiv_pages(request: Request): 
         response = send_request("GET", f"https://www.pixiv.net/ajax/illust/{request.path_params['id']}/pages")
 
-        return Response(response.text, response.status_code, media_type = response.headers.get("Content-Type"))
+        return Response(response.text, response.status_code, media_type=response.headers.get("Content-Type"))
 
     @app.route("/api/drivers/nhentai/latest")
     async def nHentai_latest(_: Request):
         response = send_request("GET", "https://api.nhentai.zip/latest")
 
-        return Response(response.text, response.status_code, media_type = response.headers.get("Content-Type"))
+        return Response(response.text, response.status_code, media_type=response.headers.get("Content-Type"))
 
     @app.route("/api/drivers/nhentai/pages/{id}")
     async def nHentai_pages(request: Request):
         response = send_request("GET", f"https://api.nhentai.zip/pages/{request.path_params['id']}")
 
-        return Response(response.text, response.status_code, media_type = response.headers.get("Content-Type"))
+        return Response(response.text, response.status_code, media_type=response.headers.get("Content-Type"))
+
+    @app.route("/api/drivers/danbooru/random")
+    async def danbooru_random(request: Request):
+        response = send_request("GET", "https://danbooru.donmai.us/posts/random")
+
+        if response.status_code == 200:
+            return Response(response.url.split("/")[4], 200, media_type = "text/plain")
+
+        return Response(response.text, response.status_code, media_type=response.headers.get("Content-Type"))
+
+    @app.route("/api/drivers/danbooru/post/{id}")
+    async def danbooru_post(request: Request):
+        response = send_request("GET", f"https://danbooru.donmai.us/posts/{request.path_params['id']}.json")
+
+        return Response(response.text, response.status_code, media_type=response.headers.get("Content-Type"))
 
     @app.route("/resource/image/{name}")
     async def image(request: Request):
@@ -116,6 +131,17 @@ def start_editor(port: int, dataset_path: Path):
     @app.route("/resource/nhentai/{id}/{page}")
     async def nHentai_image(request: Request):
         response = send_request("GET", f"https://i.nhentai.zip/galleries/{request.path_params['id']}/{request.path_params['page']}")
+
+        return Response(response.content, response.status_code, headers = {
+            "Content-Type": cast(str, response.headers.get("Content-Type")),
+            "Cache-Control": "max-age=86400"
+        })
+
+    @app.route("/resource/danbooru/{id}")
+    async def danbooru_image(request: Request):
+        id = request.path_params['id']
+
+        response = send_request("GET", f"https://cdn.donmai.us/original/{id[0:2]}/{id[2:4]}/{id}")
 
         return Response(response.content, response.status_code, headers = {
             "Content-Type": cast(str, response.headers.get("Content-Type")),
