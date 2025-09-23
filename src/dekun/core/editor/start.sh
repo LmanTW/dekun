@@ -9,6 +9,7 @@ cleanup() {
     kill $FRONTEND 2> /dev/null
   fi 
 
+  reset
   exit 0
 }
 

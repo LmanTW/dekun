@@ -1,5 +1,7 @@
 * {
   font-family: Arial, Helvetica, sans-serif;
+  -ms-overflow-style: none;
+  scrollbar-width: none
 }
 
 :root {
@@ -24,6 +26,10 @@
   --spacing-medium: 1rem;
   --spacing-small: 0.5rem;
   --spacing-tiny: 0.25rem
+}
+
+::-webkit-scrollbar {
+  display: none
 }
 
 h1 {
@@ -90,4 +96,11 @@ p {
   box-shadow: 0rem 0rem 1rem 0rem rgba(0,0,0,0.5);
   -webkit-box-shadow: 0rem 0rem 1rem 0rem rgba(0,0,0,0.5);
   -moz-box-shadow: 0rem 0rem 1rem 0rem rgba(0,0,0,0.5) 
+}
+
+.key {
+  background-color: color-mix(in srgb, var(--color-foreground), transparent 80%);
+  border-radius: 0.25rem;
+  font-size: calc(var(--size-tiny) * 0.75);
+  padding: calc(var(--spacing-tiny) * 0.75) var(--spacing-tiny)
 }

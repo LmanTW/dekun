@@ -82,6 +82,6 @@ li {
 .key {
   background-color: var(--color-container-light);
   border-radius: 0.25rem;
-  font-size: calc(var(--size-tiny) * 0.8);
+  font-size: calc(var(--size-tiny) * 0.9);
   padding: calc(var(--spacing-tiny) * 0.8) var(--spacing-tiny)
 }

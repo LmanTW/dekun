@@ -8,13 +8,13 @@ export default class Control {
     button: {
       left: 0 | 1 | 2 | 3,
       right: 0 | 1 | 2| 3
-    }
+    },
 
     editorX: number,
     editorY: number,
 
     imageX: number,
-    imageY: number
+    imageY: number,
 
     oldImageX: number,
     oldImageY: number
@@ -142,7 +142,9 @@ export default class Control {
       } 
     }
 
-    if (this.keyboard.get('1') === 1) {
+    if (this.keyboard.get('Escape') === 1) {
+      this.reset()
+    } else if (this.keyboard.get('1') === 1) {
       this.strokeType = 1
       this.strokePoints = []
     } else if (this.keyboard.get('2') === 1) {
@@ -154,10 +156,10 @@ export default class Control {
       this.startY = null
     }
 
-    if (this.keyboard.get('-')) {
+    if (this.keyboard.get('-') === 1) {
       Control.strokeSize -= 1
       Control.strokeSize = Math.min(100 / Editor.camera.scale, Math.max(0.5 / Editor.camera.scale, Control.strokeSize))
-    } else if (this.keyboard.get('+')) {
+    } else if (this.keyboard.get('=') === 1) {
       Control.strokeSize += 1
       Control.strokeSize = Math.min(100 / Editor.camera.scale, Math.max(0.5 / Editor.camera.scale, Control.strokeSize)) 
     }
@@ -233,10 +235,12 @@ export default class Control {
 }
 
 window.addEventListener('mousedown', (event) => {
-  if (event.button === 0) {
-    Control.mouse.button.left = 1
-  } else if (event.button === 2) {
-    Control.mouse.button.right = 1
+  if (event.target === Editor.canvas) {
+    if (event.button === 0) {
+      Control.mouse.button.left = 1
+    } else if (event.button === 2) {
+      Control.mouse.button.right = 1
+    }
   }
 })
 
@@ -249,7 +253,7 @@ window.addEventListener('mouseup', (event) => {
 })
 
 window.addEventListener('mousemove', (event) => {
-  Control.mouse.editorX = event.x * State.settings.resolution 
+  Control.mouse.editorX = event.x * State.settings.resolution
   Control.mouse.editorY = event.y * State.settings.resolution
 })
 

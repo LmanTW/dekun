@@ -96,12 +96,6 @@ export default class Image {
       canvas.width = data.element.width
       canvas.height = data.element.height
 
-      ctx.drawImage(data.element, 0, 0, canvas.width, canvas.height)
-
-      const imageURL = canvas.toDataURL('image/jpeg', 1).substring(23)
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-
       ctx.fillStyle = 'white'
       ctx.strokeStyle = 'white'
 
@@ -129,6 +123,13 @@ export default class Image {
       }
 
       const maskURL = canvas.toDataURL('image/png', 1).substring(22)
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      ctx.imageSmoothingEnabled = false
+ 
+      ctx.drawImage(data.element, 0, 0, canvas.width, canvas.height)
+
+      const imageURL = canvas.toDataURL('image/jpeg', 1).substring(23)
 
       try {
         await fetch('/api/submit', {

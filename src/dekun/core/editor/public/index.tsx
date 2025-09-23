@@ -4,9 +4,11 @@ import Settings from './components/Settings'
 import Navbar from './components/Navbar'
 import Control from './scripts/control'
 import Editor from './scripts/editor'
+import Help from './components/Help'
 import State from './scripts/state'
 import Image from './scripts/image'
 
+render(<Help/>, document.getElementById('container-help')!)
 render(<Navbar/>, document.getElementById('container-navbar')!)
 render(<Settings/>, document.getElementById('container-settings')!)
 

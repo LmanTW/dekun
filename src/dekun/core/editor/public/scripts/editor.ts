@@ -142,7 +142,7 @@ export default class Editor {
         const endY = Control.mouse.editorY + (width * Math.sin(angle + Math.PI))
 
         this.ctx.lineCap = 'butt'
-        this.ctx.lineWidth = 2.5 * Editor.camera.scale
+        this.ctx.lineWidth = (Control.strokeSize * 0.25) * Editor.camera.scale
         this.ctx.moveTo(startX, startY)
         this.ctx.lineTo(endX, endY)
         this.ctx.stroke()

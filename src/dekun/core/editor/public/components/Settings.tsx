@@ -33,7 +33,7 @@ export default () => {
   }
 
   return (
-    <div class='shadow' style={{ display: (State.layout.settings) ? 'block' : 'none', border: '0.05rem solid ', borderRadius: '0.5rem', marginBottom: 'var(--spacing-medium)', overflow: 'hidden' }}>
+    <div class='shadow' style={{ display: (State.layout.settings) ? 'block' : 'none', border: '0.05rem solid ', borderRadius: '0.5rem', marginRight: 'var(--spacing-medium)', marginBottom: 'var(--spacing-medium)', overflow: 'hidden' }}>
       <h3 class={(State.settings.reduceTransparency) ? 'container-solid-light' : 'container-glassy-light'} style={{ padding: 'var(--spacing-medium)' }}>Settings</h3>
       <div class={(State.settings.reduceTransparency) ? 'container-solid-dark' : 'container-glassy-dark'}>
         <div style={{ width: '100%', height: '0.05rem', backgroundColor: 'var(--color-foreground)', opacity: 0.1 }}></div>
