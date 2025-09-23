@@ -64,80 +64,88 @@ export default class Control {
       Control.mouse.imageX = ((this.mouse.editorX / Editor.camera.scale) + (Editor.camera.x - Image.data.transform.x)) / Image.data.transform.widthScale
       Control.mouse.imageY = ((this.mouse.editorY / Editor.camera.scale) + (Editor.camera.y - Image.data.transform.y)) / Image.data.transform.heightScale
 
-      if (this.mouse.button.left === 1) {
-        if (this.strokeType == 1 || this.strokeType === 2) {
-          this.startX = this.mouse.imageX
-          this.startY = this.mouse.imageY
-        } else if (this.strokeType === 3) {
-          for (let i = 0; i < this.strokePoints.length; i++) {
-            const renderX = ((Image.data.transform.x + (Control.strokePoints[i].x * Image.data.transform.widthScale)) - Editor.camera.x) * Editor.camera.scale
-            const renderY = ((Image.data.transform.y + (Control.strokePoints[i].y * Image.data.transform.heightScale)) - Editor.camera.y) * Editor.camera.scale
+      if (!State.settings.randomStrokes) {
+        if (this.mouse.button.left === 1) {
+          if (this.strokeType == 1 || this.strokeType === 2) {
+            this.startX = this.mouse.imageX
+            this.startY = this.mouse.imageY
+          } else if (this.strokeType === 3) {
+            for (let i = 0; i < this.strokePoints.length; i++) {
+              const renderX = ((Image.data.transform.x + (Control.strokePoints[i].x * Image.data.transform.widthScale)) - Editor.camera.x) * Editor.camera.scale
+              const renderY = ((Image.data.transform.y + (Control.strokePoints[i].y * Image.data.transform.heightScale)) - Editor.camera.y) * Editor.camera.scale
 
-            if (Math.hypot(renderX - this.mouse.editorX, renderY - this.mouse.editorY) < 7.5 * State.settings.resolution) {
-              this.moveIndex = i
+              if (Math.hypot(renderX - this.mouse.editorX, renderY - this.mouse.editorY) < 7.5 * State.settings.resolution) {
+                this.moveIndex = i
 
-              break
+                break
+              }
+            }
+
+            if (this.moveIndex === null) {
+              this.strokePoints.push({
+                x: this.mouse.imageX,
+                y: this.mouse.imageY
+              })
+
+              Image.renderImage()
             }
           }
-
-          if (this.moveIndex === null) {
-            this.strokePoints.push({
-              x: this.mouse.imageX,
-              y: this.mouse.imageY
-            })
-          }
-        }
-      } else if (this.mouse.button.right === 1) {
-        if (this.strokeType === 1 || this.strokeType === 2) {
-          const lastStroke = Image.data.strokes[Image.data.strokes.length - 1]
-
-          if (lastStroke !== undefined && lastStroke.type === this.strokeType) {
-            this.startX = lastStroke.x2
-            this.startY = lastStroke.y2
-          }
-        } else if (this.strokeType === 3) {
-          if (this.strokePoints.length === 0) {
+        } else if (this.mouse.button.right === 1) {
+          if (this.strokeType === 1 || this.strokeType === 2) {
             const lastStroke = Image.data.strokes[Image.data.strokes.length - 1]
 
-            if (lastStroke !== undefined && lastStroke.type === 3) {
-              this.strokePoints = lastStroke.points
-
-              Image.data.strokes.splice(Image.data.strokes.length - 1, 1)
+            if (lastStroke !== undefined && lastStroke.type === this.strokeType) {
+              this.startX = lastStroke.x2
+              this.startY = lastStroke.y2
             }
-          } else {
-            if (this.strokePoints.length > 2) {
-              Image.data.strokes.push({
-                type: 3,
-                points: this.strokePoints
-              })
+          } else if (this.strokeType === 3) {
+            if (this.strokePoints.length === 0) {
+              const lastStroke = Image.data.strokes[Image.data.strokes.length - 1]
+
+              if (lastStroke !== undefined && lastStroke.type === 3) {
+                this.strokePoints = lastStroke.points
+
+                Image.data.strokes.splice(Image.data.strokes.length - 1, 1)
+              }
+            } else {
+              if (this.strokePoints.length > 2) {
+                Image.data.strokes.push({
+                  type: 3,
+                  points: this.strokePoints
+                })
+
+                Image.renderImage()
+              }
+
+              this.strokePoints = []
             }
-
-            this.strokePoints = []
           }
-        }
-      } else if (this.mouse.button.left === 2) {
-        if (this.moveIndex !== null) {
-          this.strokePoints[this.moveIndex] = {
-            x: this.mouse.imageX,
-            y: this.mouse.imageY
+        } else if (this.mouse.button.left === 2) {
+          if (this.moveIndex !== null) {
+            this.strokePoints[this.moveIndex] = {
+              x: this.mouse.imageX,
+              y: this.mouse.imageY
+            }
           }
-        }
-      } else if (this.mouse.button.left === 3 || this.mouse.button.right === 3) {
-        if ((this.strokeType === 1 || this.strokeType === 2) && (this.startX !== null && this.startY !== null)) {
-          Image.data.strokes.push({
-            type: this.strokeType,
-            size: this.strokeSize,
+        } else if (this.mouse.button.left === 3 || this.mouse.button.right === 3) {
+          if ((this.strokeType === 1 || this.strokeType === 2) && (this.startX !== null && this.startY !== null)) {
+            Image.data.strokes.push({
+              type: this.strokeType,
+              size: this.strokeSize,
 
-            x1: this.startX,
-            y1: this.startY,
-            x2: this.mouse.imageX,
-            y2: this.mouse.imageY
-          })
+              x1: this.startX,
+              y1: this.startY,
+              x2: this.mouse.imageX,
+              y2: this.mouse.imageY
+            })
 
-          this.startX = null
-          this.startY = null
-        } else if (this.strokeType === 3) {
-          this.moveIndex = null
+            this.startX = null
+            this.startY = null
+
+            Image.renderImage()
+          } else if (this.strokeType === 3) {
+            this.moveIndex = null
+          }
         }
       } 
     }

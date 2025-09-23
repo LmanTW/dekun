@@ -1,5 +1,6 @@
 import Editor from '../scripts/editor'
 import State from '../scripts/state'
+import Image from '../scripts/image'
 
 // The settings component.
 export default () => {
@@ -19,7 +20,7 @@ export default () => {
     }
   }
 
-  // Update the resolution
+  // Update the resolution.
   const updateResolution = (resolution: number): void => {
     Editor.camera.x /= State.settings.resolution
     Editor.camera.y /= State.settings.resolution
@@ -30,6 +31,21 @@ export default () => {
     Editor.camera.y *= State.settings.resolution
 
     Editor.resize()
+  }
+
+  // Update the random strokes.
+  const updateRandomStrokes = (randomStrokes: boolean): void => {
+    State.updateSettings({ randomStrokes })
+
+    if (Image.data !== null) {
+      if (randomStrokes) {
+        Image.generateRandomStrokes()
+        Image.renderImage()
+      } else {
+        Image.data.strokes = []
+        Image.renderImage()
+      }
+    }
   }
 
   return (
@@ -72,6 +88,11 @@ export default () => {
             <p style={{ textWrap: 'nowrap', marginRight: 'var(--spacing-small)' }}>Scale Speed:</p>
             <input type="range" step="0.1" min="0.5" max="1.5" value={State.settings.scaleSpeed} onInput={(event) => State.updateSettings({ scaleSpeed: parseFloat((event.target as HTMLInputElement).value) })} style={{ marginRight: 'var(--spacing-small)' }}/>
             <p>{(State.settings.scaleSpeed === 1) ? '(Default)' : `(${State.settings.scaleSpeed}x)`}</p>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: 'var(--spacing-tiny)' }}>
+            <p style={{ textWrap: 'nowrap', marginRight: 'var(--spacing-small)' }}>Random Strokes:</p>
+            <input type="checkbox" checked={State.settings.randomStrokes} onChange={(event) => updateRandomStrokes(((event.target as HTMLInputElement)).checked)}/>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center' }}>

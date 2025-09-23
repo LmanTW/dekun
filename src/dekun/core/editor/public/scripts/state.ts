@@ -31,6 +31,7 @@ const settings = signal<{
   moveSpeed: number,
   scaleSpeed: number,
 
+  randomStrokes: boolean,
   reduceTransparency: boolean
 }>(recoverStates('settings', {
   username: 'unknown',
@@ -42,6 +43,7 @@ const settings = signal<{
   moveSpeed: 1,
   scaleSpeed: 1,
 
+  randomStrokes: false,
   reduceTransparency: false
 }))
 

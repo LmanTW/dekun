@@ -13,6 +13,9 @@ export default class Image {
   public static canvas = document.createElement('canvas')
   public static ctx = this.canvas.getContext('2d')!
 
+  public static overlayCanvas = document.createElement('canvas')
+  public static overlayCtx = this.overlayCanvas.getContext('2d')!
+
   public static submitCanvas = document.createElement('canvas')
   public static submitCtx = this.submitCanvas.getContext('2d')!
 
@@ -72,6 +75,13 @@ export default class Image {
 
             this.canvas.width = element.width
             this.canvas.height = element.height
+            this.overlayCanvas.width = element.width
+            this.overlayCanvas.height = element.height
+
+            if (State.settings.randomStrokes) {
+              this.generateRandomStrokes()
+              this.renderImage()
+            }
           }
         })
       }
@@ -90,46 +100,42 @@ export default class Image {
       Editor.reset()
       Control.reset()
 
-      const canvas = this.submitCanvas
-      const ctx = this.submitCtx
+      this.submitCanvas.width = data.element.width
+      this.submitCanvas.height = data.element.height
 
-      canvas.width = data.element.width
-      canvas.height = data.element.height
-
-      ctx.fillStyle = 'white'
-      ctx.strokeStyle = 'white'
+      this.submitCtx.fillStyle = 'white'
+      this.submitCtx.strokeStyle = 'white'
 
       for (const stroke of data.strokes) {
         if (stroke.type === 1 || stroke.type === 2) {
-          ctx.lineCap = (stroke.type === 1) ? 'butt' : 'round'
-          ctx.lineWidth = (data.element.width + data.element.height) * (stroke.size * 0.0025)
-          ctx.moveTo(stroke.x1, stroke.y1)
-          ctx.lineTo(stroke.x2, stroke.y2)
-          ctx.stroke()
-          ctx.beginPath()          
+          this.submitCtx.lineCap = (stroke.type === 1) ? 'butt' : 'round'
+          this.submitCtx.lineWidth = (data.element.width + data.element.height) * (stroke.size * 0.0025)
+          this.submitCtx.moveTo(stroke.x1, stroke.y1)
+          this.submitCtx.lineTo(stroke.x2, stroke.y2)
+          this.submitCtx.stroke()
+          this.submitCtx.beginPath()          
         } else if (stroke.type === 3) {
           for (const [index, point] of stroke.points.entries()) {
             if (index === 0) {
-              ctx.moveTo(point.x, point.y)
+              this.submitCtx.moveTo(point.x, point.y)
             } else {
-              ctx.lineTo(point.x, point.y)
+              this.submitCtx.lineTo(point.x, point.y)
             }
           }
 
-          ctx.lineTo(stroke.points[0].x, stroke.points[0].y)
-          ctx.fill()
-          ctx.beginPath()
+          this.submitCtx.lineTo(stroke.points[0].x, stroke.points[0].y)
+          this.submitCtx.fill()
+          this.submitCtx.beginPath()
         }
       }
 
-      const maskURL = canvas.toDataURL('image/png', 1).substring(22)
+      const maskURL = this.submitCanvas.toDataURL('image/png', 1).substring(22)
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-      ctx.imageSmoothingEnabled = false
- 
-      ctx.drawImage(data.element, 0, 0, canvas.width, canvas.height)
+      this.submitCtx.clearRect(0, 0, this.submitCanvas.width, this.submitCanvas.height)
+      this.submitCtx.imageSmoothingEnabled = false
+      this.submitCtx.drawImage(data.element, 0, 0, this.submitCanvas.width, this.submitCanvas.height)
 
-      const imageURL = canvas.toDataURL('image/jpeg', 1).substring(23)
+      const imageURL = this.submitCanvas.toDataURL('image/jpeg', 1).substring(23)
 
       try {
         await fetch('/api/submit', {
@@ -155,67 +161,81 @@ export default class Image {
     }
   }
 
-  // Update the image.
-  public static update(): void {
+  // Render the image.
+  public static renderImage(): HTMLCanvasElement {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
     this.ctx.imageSmoothingEnabled = false
 
     if (this.data !== null) {
-      this.ctx.fillStyle = `rgba(0,255,0,${Control.strokeOpacity})`
-      this.ctx.strokeStyle = `rgba(0,255,0,${Control.strokeOpacity})`
+      if (Control.strokeOpacity > 0) {
+        this.ctx.fillStyle = `rgba(0,255,0,${Control.strokeOpacity})`
+        this.ctx.strokeStyle = `rgba(0,255,0,${Control.strokeOpacity})`
 
-      for (const stroke of this.data.strokes) {
-        if (stroke.type === 1 || stroke.type === 2) {
-          this.ctx.lineCap = (stroke.type === 1) ? 'butt' : 'round'
-          this.ctx.lineWidth = (this.data.element.width + this.data.element.height) * (stroke.size * 0.0025)
-          this.ctx.moveTo(stroke.x1, stroke.y1)
-          this.ctx.lineTo(stroke.x2, stroke.y2)
-          this.ctx.stroke()
-          this.ctx.beginPath()          
-        } else if (stroke.type === 3) {
-          for (const [index, point] of stroke.points.entries()) {
-            if (index === 0) {
-              this.ctx.moveTo(point.x, point.y)
-            } else {
-              this.ctx.lineTo(point.x, point.y)
+        for (const stroke of this.data.strokes) {
+          if (stroke.type === 1 || stroke.type === 2) {
+            this.ctx.lineCap = (stroke.type === 1) ? 'butt' : 'round'
+            this.ctx.lineWidth = (this.data.element.width + this.data.element.height) * (stroke.size * 0.0025)
+            this.ctx.moveTo(stroke.x1, stroke.y1)
+            this.ctx.lineTo(stroke.x2, stroke.y2)
+            this.ctx.stroke()
+            this.ctx.beginPath()          
+          } else if (stroke.type === 3) {
+            for (const [index, point] of stroke.points.entries()) {
+              if (index === 0) {
+                this.ctx.moveTo(point.x, point.y)
+              } else {
+                this.ctx.lineTo(point.x, point.y)
+              }
             }
+
+            this.ctx.lineTo(stroke.points[0].x, stroke.points[0].y)
+            this.ctx.fill()
+            this.ctx.beginPath()
           }
-
-          this.ctx.lineTo(stroke.points[0].x, stroke.points[0].y)
-          this.ctx.fill()
-          this.ctx.beginPath()
         }
-      }
+      } 
+    }
 
-      this.ctx.fillStyle = 'rgba(0,255,0,0.5)'
-      this.ctx.strokeStyle = 'rgba(0,255,0,0.5)'
+    return this.canvas
+  }
+
+  // Render the overlay.
+  public static renderOverlay(): HTMLCanvasElement {
+    this.overlayCtx.clearRect(0, 0, this.overlayCanvas.width, this.overlayCanvas.height)
+    this.overlayCtx.imageSmoothingEnabled = false
+
+    if (this.data !== null) {
+      this.overlayCtx.fillStyle = 'rgba(0,255,0,0.5)'
+      this.overlayCtx.strokeStyle = 'rgba(0,255,0,0.5)'
 
       if (Control.strokeType === 1 || Control.strokeType === 2) {
         if (Control.startX !== null && Control.startY !== null) {
-          this.ctx.lineCap = (Control.strokeType === 1) ? 'butt' : 'round'
-          this.ctx.lineWidth = (this.data.element.width + this.data.element.height) * (Control.strokeSize * 0.0025)
-          this.ctx.moveTo(Control.startX, Control.startY)
-          this.ctx.lineTo(Control.mouse.imageX, Control.mouse.imageY)
-          this.ctx.stroke()
-          this.ctx.beginPath()
+          this.overlayCtx.lineCap = (Control.strokeType === 1) ? 'butt' : 'round'
+          this.overlayCtx.lineWidth = (this.data.element.width + this.data.element.height) * (Control.strokeSize * 0.0025)
+          this.overlayCtx.moveTo(Control.startX, Control.startY)
+          this.overlayCtx.lineTo(Control.mouse.imageX, Control.mouse.imageY)
+          this.overlayCtx.stroke()
+          this.overlayCtx.beginPath()
         }
       } else if (Control.strokeType === 3) {
         for (const [index, point] of Control.strokePoints.entries()) {
           if (index === 0) {
-            this.ctx.moveTo(point.x, point.y)
+            this.overlayCtx.moveTo(point.x, point.y)
           } else {
-            this.ctx.lineTo(point.x, point.y)
+            this.overlayCtx.lineTo(point.x, point.y)
           }
         }
 
         if (Control.strokePoints.length > 2) {
-          this.ctx.lineTo(Control.strokePoints[0].x, Control.strokePoints[0].y)
+          this.overlayCtx.lineTo(Control.strokePoints[0].x, Control.strokePoints[0].y)
         }
 
-        this.ctx.fill()
-        this.ctx.beginPath()
+        this.overlayCtx.fill()
+        this.overlayCtx.beginPath()
       }
     }
+
+    return this.overlayCanvas
   }
 
   // Preload the following image.
@@ -258,6 +278,47 @@ export default class Image {
       height: newHeight,
       widthScale: newWidth / width,
       heightScale: newHeight / height
+    }
+  }
+
+  // Generate random strokes.
+  public static generateRandomStrokes(): void {
+    if (this.data !== null) {
+      this.data.strokes = []
+
+      for (let i = 0; i < (this.data.element.width + this.data.element.height) / 50; i++) {
+        const type = Math.random()
+
+        if (type > 0.1) {
+          const startX = Math.random() * this.data.element.width
+          const startY = Math.random() * this.data.element.height
+          const distance = Math.random() * ((this.data.element.width + this.data.element.width) / 2.5)
+          const direction = (Math.random() * 360) * (Math.PI / 180)
+
+          this.data.strokes.push({
+            type: (Math.random() > 0.75) ? 2 : 1,
+            size: Math.max(0.1, Math.random()) * 10,
+
+            x1: startX,
+            y1: startY,
+            x2: startX + (distance * Math.cos(direction)),
+            y2: startY + (distance * Math.sin(direction))
+          })
+        } else {
+          const startX = Math.random() * this.data.element.width
+          const startY = Math.random() * this.data.element.height
+
+          this.data.strokes.push({
+            type: 2,
+            size: Math.max(0.5, Math.random()) * 25,
+
+            x1: startX,
+            y1: startY,
+            x2: startX,
+            y2: startY
+          })        
+        }
+      }
     }
   }
 }

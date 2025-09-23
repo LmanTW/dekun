@@ -115,8 +115,6 @@ export default class Editor {
         transform.width * this.camera.scale,
         transform.height * this.camera.scale
       )
-
-      Image.update()
  
       this.ctx.drawImage(
         Image.canvas,
@@ -131,33 +129,45 @@ export default class Editor {
       this.ctx.fillStyle = 'rgba(255,0,0,0.5)'
       this.ctx.strokeStyle = 'rgba(255,0,0,0.5)'
 
-      if (Control.strokeType === 1 && (Control.startX === null && Control.startY === null)) {
-        const angle = getAngle() + (Math.PI / 2)
-        const width = ((Image.data.transform.width + Image.data.transform.height) * ((Control.strokeSize / 2) * 0.0025)) * Editor.camera.scale
+      if (!State.settings.randomStrokes) {
+        this.ctx.drawImage(
+          Image.renderOverlay(),
 
-        const startX = Control.mouse.editorX + (width * Math.cos(angle))
-        const startY = Control.mouse.editorY + (width * Math.sin(angle))
+          (transform.x - this.camera.x) * this.camera.scale,
+          (transform.y - this.camera.y) * this.camera.scale,
 
-        const endX = Control.mouse.editorX + (width * Math.cos(angle + Math.PI))
-        const endY = Control.mouse.editorY + (width * Math.sin(angle + Math.PI))
+          transform.width * this.camera.scale,
+          transform.height * this.camera.scale
+        )
 
-        this.ctx.lineCap = 'butt'
-        this.ctx.lineWidth = (Control.strokeSize * 0.25) * Editor.camera.scale
-        this.ctx.moveTo(startX, startY)
-        this.ctx.lineTo(endX, endY)
-        this.ctx.stroke()
-        this.ctx.beginPath()
-      } else if (Control.strokeType === 2 && (Control.startX === null && Control.startY === null)) {
-        this.ctx.arc(Control.mouse.editorX, Control.mouse.editorY, ((Image.data.transform.width + Image.data.transform.height) * ((Control.strokeSize / 2) * 0.0025)) * this.camera.scale, 0, 2 * Math.PI)
-        this.ctx.fill()
-        this.ctx.beginPath() 
-      } else if (Control.strokeType === 3) {
-        for (const point of Control.strokePoints) {
-          this.ctx.arc(((Image.data.transform.x + (point.x * Image.data.transform.widthScale)) - this.camera.x) * this.camera.scale, ((Image.data.transform.y + (point.y * Image.data.transform.heightScale)) - this.camera.y) * this.camera.scale, 5 * State.settings.resolution, 0, 2 * Math.PI)
+        if (Control.strokeType === 1 && (Control.startX === null && Control.startY === null)) {
+          const angle = getAngle() + (Math.PI / 2)
+          const width = ((Image.data.transform.width + Image.data.transform.height) * ((Control.strokeSize / 2) * 0.0025)) * Editor.camera.scale
+
+          const startX = Control.mouse.editorX + (width * Math.cos(angle))
+          const startY = Control.mouse.editorY + (width * Math.sin(angle))
+
+          const endX = Control.mouse.editorX + (width * Math.cos(angle + Math.PI))
+          const endY = Control.mouse.editorY + (width * Math.sin(angle + Math.PI))
+
+          this.ctx.lineCap = 'butt'
+          this.ctx.lineWidth = (Control.strokeSize * 0.25) * Editor.camera.scale
+          this.ctx.moveTo(startX, startY)
+          this.ctx.lineTo(endX, endY)
+          this.ctx.stroke()
+          this.ctx.beginPath()
+        } else if (Control.strokeType === 2 && (Control.startX === null && Control.startY === null)) {
+          this.ctx.arc(Control.mouse.editorX, Control.mouse.editorY, ((Image.data.transform.width + Image.data.transform.height) * ((Control.strokeSize / 2) * 0.0025)) * this.camera.scale, 0, 2 * Math.PI)
           this.ctx.fill()
           this.ctx.beginPath() 
+        } else if (Control.strokeType === 3) {
+          for (const point of Control.strokePoints) {
+            this.ctx.arc(((Image.data.transform.x + (point.x * Image.data.transform.widthScale)) - this.camera.x) * this.camera.scale, ((Image.data.transform.y + (point.y * Image.data.transform.heightScale)) - this.camera.y) * this.camera.scale, 5 * State.settings.resolution, 0, 2 * Math.PI)
+            this.ctx.fill()
+            this.ctx.beginPath() 
+          }
         }
-      }
+      } 
 
       if (Control.saveConfirm > 0) {
         this.ctx.fillStyle = `rgba(255,255,255,${Control.saveConfirm})`
