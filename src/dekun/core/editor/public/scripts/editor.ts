@@ -1,27 +1,35 @@
 import Control from './control'
 import State from './state'
 import Image from './image'
-import Settings from '../components/Settings'
 
+let previousX: number = 0
+let previousY: number = 0
+
+let targetAngle: number = 0
 let previousAngle: number = 0
 
 // Get the angle the mouse is moving to.
-function getAngle(): number {
-  const distant = Math.hypot(Control.mouse.imageX - Control.mouse.oldImageX, Control.mouse.imageY - Control.mouse.oldImageY)
+function getAngle(deltaTime: number): number {
+  const distant = Math.hypot((Control.mouse.imageX * Editor.camera.scale) - previousX, (Control.mouse.imageY * Editor.camera.scale) - previousY)
 
-  if (distant > 0.1) { 
-    let differece = Math.atan2(Control.mouse.imageY - Control.mouse.oldImageY, Control.mouse.imageX - Control.mouse.oldImageX) - previousAngle;
-
-    while (differece < -Math.PI) {
-      differece += 2 * Math.PI
-    }
-
-    while (differece > Math.PI) {
-      differece -= 2 * Math.PI
-    }
-
-    previousAngle += differece * 0.25
+  if (distant > 25) {
+    targetAngle = Math.atan2((Control.mouse.imageY * Editor.camera.scale) - previousY, (Control.mouse.imageX * Editor.camera.scale) - previousX)
+   
+    previousX += (distant - 25) * Math.cos(targetAngle)
+    previousY += (distant - 25) * Math.sin(targetAngle)
   }
+
+  let difference = targetAngle - previousAngle
+
+  while (difference < -Math.PI) {
+    difference += 2 * Math.PI
+  }
+
+  while (difference > Math.PI) {
+    difference -= 2 * Math.PI
+  }
+
+  previousAngle += difference * (0.025 * deltaTime)
 
   return previousAngle
 }
@@ -153,7 +161,7 @@ export default class Editor {
           this.ctx.beginPath()
 
           if (Control.strokeType === 1) {
-            const angle = getAngle() + (Math.PI / 2)
+            const angle = getAngle(deltaTime) + (Math.PI / 2)
             const width = ((Image.data.transform.width + Image.data.transform.height) * ((Control.strokeSize / 2) * 0.0025)) * Editor.camera.scale
   
             const startX = Control.mouse.editorX + (width * Math.cos(angle))

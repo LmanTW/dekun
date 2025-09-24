@@ -14,10 +14,7 @@ export default class Control {
     editorY: number,
 
     imageX: number,
-    imageY: number,
-
-    oldImageX: number,
-    oldImageY: number
+    imageY: number
   } = {
     button: {
       left: 0,
@@ -28,10 +25,7 @@ export default class Control {
     editorY: 0,
 
     imageX: 0,
-    imageY: 0,
-
-    oldImageX: 0,
-    oldImageY: 0 
+    imageY: 0
   }
 
   public static keyboard: Map<string, 1 | 2> = new Map()
@@ -63,8 +57,6 @@ export default class Control {
   // Update the control.
   public static update(deltaTime: number): void {
     if (Image.data !== null) {
-      Control.mouse.oldImageX = this.mouse.imageX
-      Control.mouse.oldImageY = this.mouse.imageY
       Control.mouse.imageX = ((this.mouse.editorX / Editor.camera.scale) + (Editor.camera.x - Image.data.transform.x)) / Image.data.transform.widthScale
       Control.mouse.imageY = ((this.mouse.editorY / Editor.camera.scale) + (Editor.camera.y - Image.data.transform.y)) / Image.data.transform.heightScale
 
