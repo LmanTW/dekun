@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'preact/hooks'
+import { useRef, useEffect, useState } from 'preact/hooks'
 import { batch, signal } from '@preact/signals'
 
 import State from '../scripts/state'
@@ -165,6 +165,8 @@ const Entry = (id: string) => {
   const imageLoadedRefrence = useRef<boolean>(false)
   const maskLoadedRefrence = useRef<boolean>(false)
 
+  const [toggled, setToggled] = useState<boolean>(true)
+
   // Handle image loaded.
   const imageLoaded = (): void => {
     if (!imageLoadedRefrence.current) {
@@ -241,14 +243,10 @@ const Entry = (id: string) => {
         }
       })
     }
-  }
+  } 
 
   useEffect(() => {
     EntryManager.loading += 2
-
-    maskRefrence.current!.addEventListener('click', () => {
-      maskRefrence.current!.style.opacity = (maskRefrence.current!.style.opacity === '1') ? '0' : '1'
-    })
 
     return () => {
       EntryManager.loading -= (imageLoadedRefrence.current) ? 0 : 1
@@ -261,8 +259,8 @@ const Entry = (id: string) => {
   return (
     <div key={id}>
       <div style={{ position: 'relative', width: '100%', marginBottom: '-0.25rem', userSelect: 'none' }}>
-        <img ref={imageRefrence} src={`/resource/image/${id}`} onLoad={imageLoaded} style={{ borderRadius: '0.25rem 0.25rem 0rem 0rem', width: '100%' }}/>
-        <img ref={maskRefrence} src={`/resource/mask/${id}`} onLoad={maskLoaded} style={{ position: 'absolute', borderRadius: '0.25rem 0.25rem 0rem 0rem', left: '0rem', top: '0rem', width: '100%', filter: 'invert(46%) sepia(88%) saturate(3060%) hue-rotate(87deg) brightness(126%) contrast(119%)', cursor: 'pointer' }}/>
+        <img ref={imageRefrence} src={`/resource/image/${id}`} onLoad={imageLoaded} style={{ contentVisibility: 'auto', borderRadius: '0.25rem 0.25rem 0rem 0rem', width: '100%' }}/>
+        <img ref={maskRefrence} src={`/resource/mask/${id}`} onLoad={maskLoaded} onClick={() => setToggled(!toggled)} style={{ position: 'absolute', contentVisibility: 'auto', borderRadius: '0.25rem 0.25rem 0rem 0rem', left: '0rem', top: '0rem', width: '100%', filter: 'invert(46%) sepia(88%) saturate(3060%) hue-rotate(87deg) brightness(126%) contrast(119%)', opacity: (toggled) ? 1 : 0, cursor: 'pointer' }}/>
       </div>
 
       <div style={{ display: 'flex', backgroundColor: 'var(--color-container-light)', borderRadius: '0rem 0rem 0.25rem 0.25rem', padding: 'var(--spacing-small)' }}>

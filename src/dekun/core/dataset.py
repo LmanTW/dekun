@@ -34,7 +34,7 @@ class Dataset():
         for path in self.directory.iterdir():
             parts = path.stem.split("-")
             
-            if len(parts) == 5:
+            if path.stem[0] != "." and len(parts) == 5:
                 id = "-".join(parts[0:4])
                 info = Info(parts[0], parts[1], parts[2], parts[3])
 
