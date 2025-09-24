@@ -107,6 +107,10 @@ export default class Editor {
     if (Image.data !== null) {
       const transform = Image.data.transform
 
+      if (Control.skipConfirm > 0) {
+        this.ctx.globalAlpha = 1 - Control.skipConfirm
+      }
+
       this.ctx.drawImage(
         Image.data.element,
 
@@ -126,6 +130,8 @@ export default class Editor {
         transform.width * this.camera.scale,
         transform.height * this.camera.scale
       )
+
+      this.ctx.globalAlpha = 1
 
       if (!State.settings.randomStrokes) {
         this.ctx.drawImage(
@@ -174,7 +180,13 @@ export default class Editor {
 
       if (Control.saveConfirm > 0) {
         this.ctx.fillStyle = `rgba(255,255,255,${Control.saveConfirm})`
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height)
+        this.ctx.fillRect(
+          (transform.x - this.camera.x) * this.camera.scale,
+          (transform.y - this.camera.y) * this.camera.scale,
+
+          transform.width * this.camera.scale,
+          transform.height * this.camera.scale
+        )
       }
     }
   }

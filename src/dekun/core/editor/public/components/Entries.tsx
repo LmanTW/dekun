@@ -34,6 +34,8 @@ class EntryManager {
 
   // Load the entries.
   public static async loadEntries(): Promise<void> {
+    data.value = null
+
     const entries = await (await fetch('/api/list')).json()
     const providers: string[] = []
     const authors: string[] = []
@@ -260,7 +262,7 @@ const Entry = (id: string) => {
     <div key={id}>
       <div style={{ position: 'relative', width: '100%', marginBottom: '-0.25rem', userSelect: 'none' }}>
         <img ref={imageRefrence} src={`/resource/image/${id}`} onLoad={imageLoaded} style={{ contentVisibility: 'auto', borderRadius: '0.25rem 0.25rem 0rem 0rem', width: '100%' }}/>
-        <img ref={maskRefrence} src={`/resource/mask/${id}`} onLoad={maskLoaded} onClick={() => setToggled(!toggled)} style={{ position: 'absolute', contentVisibility: 'auto', borderRadius: '0.25rem 0.25rem 0rem 0rem', left: '0rem', top: '0rem', width: '100%', filter: 'invert(46%) sepia(88%) saturate(3060%) hue-rotate(87deg) brightness(126%) contrast(119%)', opacity: (toggled) ? 1 : 0, cursor: 'pointer' }}/>
+        <img ref={maskRefrence} src={`/resource/mask/${id}`} onLoad={maskLoaded} onClick={() => setToggled(!toggled)} style={{ position: 'absolute', contentVisibility: 'auto',borderRadius: '0.25rem 0.25rem 0rem 0rem', left: '0rem', top: '0rem', width: '100%', filter: 'invert(46%) sepia(88%) saturate(3060%) hue-rotate(87deg) brightness(126%) contrast(119%)', opacity: (toggled) ? 1 : 0, cursor: 'pointer' }}/>
       </div>
 
       <div style={{ display: 'flex', backgroundColor: 'var(--color-container-light)', borderRadius: '0rem 0rem 0.25rem 0.25rem', padding: 'var(--spacing-small)' }}>
@@ -303,7 +305,7 @@ export default () => {
 
           {
             (data.value === null) ? undefined : (
-              <p style={{ marginLeft: 'var(--spacing-small)', opacity: 0.5 }}>(Found {data.value.filtered.length})</p>
+              <p style={{ marginLeft: 'var(--spacing-small)', opacity: 0.5 }}>(Found {data.value.filtered.length} / {data.value.entries.length})</p>
             )
           }
         </div>
@@ -344,7 +346,7 @@ export default () => {
           )
         }
 
-        <button onClick={() => EntryManager.loadEntries()} style={{ cursor: 'pointer' }}>Refresh</button>
+        <button disabled={data.value === null} onClick={() => EntryManager.loadEntries()} style={{ cursor: 'pointer' }}>Refresh</button>
       </div> 
 
       <div class={(State.settings.reduceTransparency) ? 'container-solid-dark' : 'container-glassy-dark'} style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>

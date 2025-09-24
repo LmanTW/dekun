@@ -40,6 +40,8 @@ export default class Image {
 
   // Switch to the next image.
   public static async next(override?: { driver: string, id: string, page: string }): Promise<void> {
+    State.updateSource({ locked: true })
+
     const data = this.data
     const timestamp = performance.now()
 
@@ -88,7 +90,9 @@ export default class Image {
       }
     } catch (_) {
       this.data = data
-    } 
+    }
+
+    State.updateSource({ locked: false })
   }
 
   // Submit the current image.

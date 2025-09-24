@@ -39,13 +39,14 @@ export default class Control {
   static strokeType: 1 | 2 | 3 = 1
   static strokeSize: number = 2
   static strokePoints: { x: number, y: number }[] = []
+  static strokeOpacity: number = 1
 
   static startX: null | number = null
   static startY: null | number = null
   static moveIndex: null | number = null
 
-  static strokeOpacity: number = 1
   static saveConfirm: number = 0
+  static skipConfirm: number = 0
 
   // Reset the control.
   public static reset(): void {
@@ -54,6 +55,9 @@ export default class Control {
     this.startX = null
     this.startY = null
     this.moveIndex = null
+
+    this.saveConfirm = 0
+    this.skipConfirm = 0
   }
 
   // Update the control.
@@ -103,9 +107,8 @@ export default class Control {
               const lastStroke = Image.data.strokes[Image.data.strokes.length - 1]
 
               if (lastStroke !== undefined && lastStroke.type === 3) {
-                this.strokePoints = lastStroke.points
+                this.strokePoints = (Image.data.strokes.splice(Image.data.strokes.length - 1, 1)[0] as { points: { x: number, y: number }[] }).points 
 
-                Image.data.strokes.splice(Image.data.strokes.length - 1, 1)
                 Image.renderImage()
               }
             } else {
@@ -150,6 +153,8 @@ export default class Control {
         }
       } 
     }
+
+    Control.strokeSize = Math.min(250 / Editor.camera.scale, Math.max(1 / Editor.camera.scale, Control.strokeSize))
 
     if (this.keyboard.get('Escape') === 1) {
       this.reset()
@@ -201,27 +206,39 @@ export default class Control {
       }
 
       Image.renderImage()
-    }
-
-    if (this.keyboard.get('z') === 1) {
-      Image.next()
     } else if (this.keyboard.get('x') === 1) {
       if (this.strokePoints.length > 0) {
         this.strokePoints.splice(this.strokePoints.length - 1)
       } else if (Image.data !== null && Image.data.strokes.length > 0) {
         Image.data.strokes.splice(Image.data.strokes.length - 1)
         Image.renderImage()
-      } 
+      }
     }
 
     if (Image.data !== null) {
+      if (this.keyboard.has('z')) {
+        if (this.skipConfirm >= 0) {
+          this.skipConfirm += 0.003 * deltaTime
+
+          if (this.skipConfirm > 1) {
+            Image.next()
+
+            this.skipConfirm = -1
+          }
+        }
+      } else {
+        this.skipConfirm = 0
+      }
+
       if (this.keyboard.has('c')) {
-        this.saveConfirm += 0.003 * deltaTime
+        if (this.saveConfirm >= 0) {
+          this.saveConfirm += 0.003 * deltaTime
 
-        if (this.saveConfirm > 1) {
-          Image.submit()
+          if (this.saveConfirm > 1) {
+            Image.submit()
 
-          this.saveConfirm = 0
+            this.saveConfirm = -1
+          }
         }
       } else {
         this.saveConfirm = 0
@@ -272,7 +289,6 @@ window.addEventListener('mousemove', (event) => {
 window.addEventListener('wheel', (event) => {
   if (event.target === Editor.canvas) {
     Control.strokeSize += -event.deltaY / (10 * Editor.camera.scale)
-    Control.strokeSize = Math.min(100 / Editor.camera.scale, Math.max(0.5 / Editor.camera.scale, Control.strokeSize))
   }
 })
 

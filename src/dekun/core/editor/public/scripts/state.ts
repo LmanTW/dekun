@@ -51,12 +51,16 @@ const source = signal<{
   driver: string,
 
   value: string,
-  display: string
+  display: string,
+
+  locked: boolean
 }>(recoverStates('source', {
   driver: Object.keys(Image.drivers)[0],
 
   value: '',
-  display: ''
+  display: '',
+
+  locked: false
 }))
 
 // All the global states.

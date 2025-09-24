@@ -21,8 +21,10 @@ function mainTick(): void {
   const deltaTime = performance.now() - lastTick
   lastTick = performance.now()
 
-  Control.update(deltaTime) 
-  Editor.update(deltaTime)
+  if (document.hasFocus()) {
+    Control.update(deltaTime)
+    Editor.update(deltaTime)
+  }
 
   if (State.settings.fps === 0) {
     requestAnimationFrame(mainTick)

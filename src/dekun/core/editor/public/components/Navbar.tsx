@@ -31,7 +31,7 @@ export default () => {
 
       <div style='flex: 1'></div>
 
-      <select value={State.source.driver} onChange={(event) => updateDriver((event.target as HTMLInputElement).value)} style={{ marginRight: 'var(--spacing-small)' }}>
+      <select value={State.source.driver} disabled={State.source.locked} onChange={(event) => updateDriver((event.target as HTMLInputElement).value)} style={{ marginRight: 'var(--spacing-small)' }}>
         {
           Object.keys(Image.drivers).map((id) => (
             <option value={Image.drivers[id].id}>{Image.drivers[id].name}</option>
@@ -39,7 +39,7 @@ export default () => {
         }
       </select>
 
-      <input value={State.source.display} autocomplete='off' onChange={(event) => updateSource((event.target as HTMLInputElement).value)} style={{ width: '7.5rem', marginRight: 'var(--spacing-small)' }}/>
+      <input value={State.source.display} autocomplete='off' disabled={State.source.locked} onChange={(event) => updateSource((event.target as HTMLInputElement).value)} style={{ width: '7.5rem', marginRight: 'var(--spacing-small)' }}/>
       <button onClick={() => State.updateLayout({ entries: !State.layout.entries })} style={{ marginRight: 'var(--spacing-medium)', cursor: 'pointer' }}>Entries</button>
     </nav>
   )
