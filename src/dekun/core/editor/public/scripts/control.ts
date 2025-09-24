@@ -174,15 +174,15 @@ export default class Control {
     }
 
     if (this.keyboard.has('a')) {
-      Editor.camera.xSpeed = -3 * State.settings.moveSpeed
+      Editor.camera.xSpeed = -2.5 * State.settings.moveSpeed
     } else if (this.keyboard.has('d')) {
-      Editor.camera.xSpeed = 3 * State.settings.moveSpeed
+      Editor.camera.xSpeed = 2.5 * State.settings.moveSpeed
     }
 
     if (this.keyboard.has('w')) {
-      Editor.camera.ySpeed = -3 * State.settings.moveSpeed
+      Editor.camera.ySpeed = -2.5 * State.settings.moveSpeed
     } else if (this.keyboard.has('s')) {
-      Editor.camera.ySpeed = 3 * State.settings.moveSpeed
+      Editor.camera.ySpeed = 2.5 * State.settings.moveSpeed
     }
 
     if (this.keyboard.has('q')){
