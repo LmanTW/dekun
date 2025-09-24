@@ -26,6 +26,39 @@ class ConvolutionalBlock(nn.Module):
     def forward(self, x):
         return self.block(x)
 
+# The attention block.
+class AttentionBlock(nn.Module):
+    def __init__(self, g_channels: int, x_channels: int, inter_channels: int):
+        super(AttentionBlock, self).__init__()
+
+        self.W_g = nn.Sequential(
+            nn.Conv2d(g_channels, inter_channels, kernel_size=1, stride=1, padding=0, bias=True),
+            nn.BatchNorm2d(inter_channels)
+        )
+
+        self.W_x = nn.Sequential(
+            nn.Conv2d(x_channels, inter_channels, kernel_size=1, stride=1, padding=0, bias=True),
+            nn.BatchNorm2d(inter_channels)
+        )
+
+        self.psi = nn.Sequential(
+            nn.Conv2d(inter_channels, 1, kernel_size=1, stride=1, padding=0, bias=True),
+            nn.BatchNorm2d(1),
+            nn.Sigmoid()
+        )
+
+        self.relu = nn.ReLU(inplace=True)
+
+    # Forward the attention block.
+    def forward(self, g, x):
+        g1 = self.W_g(g)
+        x1 = self.W_x(x)
+
+        psi = self.relu(g1 + x1)
+        psi = self.psi(psi)
+
+        return x * psi
+
 # The U-Net.
 class UNet(nn.Module):
 
@@ -48,9 +81,11 @@ class UNet(nn.Module):
             self.pools.append(nn.MaxPool2d(kernel_size=2, stride=2))
             in_channels = 2 ** (layer + 5)
 
-        self.bottleneck = ConvolutionalBlock(in_channels, in_channels * 2)
+
         self.decoders = nn.ModuleList()
         self.decoder_blocks = nn.ModuleList()
+        self.attention_blocks = nn.ModuleList()
+        self.bottleneck = ConvolutionalBlock(in_channels, in_channels * 2)
 
         in_channels = (2 ** (depth + 5)) * 2
 
@@ -58,6 +93,7 @@ class UNet(nn.Module):
             channels = 2 ** (layer + 5)
 
             self.decoders.append(nn.ConvTranspose2d(in_channels, channels, kernel_size=2, stride=2))
+            self.attention_blocks.append(AttentionBlock(g_channels=channels, x_channels=channels, inter_channels=channels // 2))
             self.decoder_blocks.append(ConvolutionalBlock(channels * 2, channels))
 
             in_channels = channels
@@ -76,12 +112,13 @@ class UNet(nn.Module):
         tensor = self.bottleneck(tensor)
         skip_connections = skip_connections[::-1]
 
-        for decoder, decoder_block, skip in zip(self.decoders, self.decoder_blocks, skip_connections):
+        for decoder, attention_block, decoder_block, skip in zip(self.decoders, self.attention_blocks, self.decoder_blocks, skip_connections):
             tensor = decoder(tensor)
 
             if tensor.shape != skip.shape:
                 tensor = nn.functional.interpolate(tensor, size=skip.shape[2:])
 
+            skip = attention_block(tensor, skip)
             tensor = torch.cat((skip, tensor), dim=1)
             tensor = decoder_block(tensor)
 

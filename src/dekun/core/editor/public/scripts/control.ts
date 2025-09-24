@@ -50,8 +50,13 @@ export default class Control {
     this.startY = null
     this.moveIndex = null
 
-    this.saveConfirm = 0
-    this.skipConfirm = 0
+    if (this.keyboard.has('z')) {
+      this.saveConfirm = -1
+    }
+
+    if (this.keyboard.has('c')) {
+      this.skipConfirm = -1
+    }
   }
 
   // Update the control.

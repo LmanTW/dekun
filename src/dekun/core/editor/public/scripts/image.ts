@@ -85,6 +85,9 @@ export default class Image {
               this.generateRandomStrokes()
               this.renderImage()
             }
+
+            Editor.reset()
+            Control.reset()
           }
         })
       }
