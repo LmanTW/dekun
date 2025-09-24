@@ -106,6 +106,7 @@ export default class Control {
                 this.strokePoints = lastStroke.points
 
                 Image.data.strokes.splice(Image.data.strokes.length - 1, 1)
+                Image.renderImage()
               }
             } else {
               if (this.strokePoints.length > 2) {

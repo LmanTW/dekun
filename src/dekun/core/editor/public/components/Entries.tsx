@@ -265,7 +265,7 @@ const Entry = (id: string) => {
 
       <div style={{ display: 'flex', backgroundColor: 'var(--color-container-light)', borderRadius: '0rem 0rem 0.25rem 0.25rem', padding: 'var(--spacing-small)' }}>
         <h5 style={{ marginRight: 'var(--spacing-small)' }}>{(Image.drivers.hasOwnProperty(parts[0])) ? Image.drivers[parts[0]].name : parts[0]}:</h5>
-        <p style={{ flex: 1, marginRight: 'var(--spacing-small)' }}>{parts[1]}/{parts[2]}</p>
+        <p style={{ flex: 1, marginRight: 'var(--spacing-small)' }}>{parts[1]}/{parts[2]} ({parts[3]})</p>
         <button onClick={remove} style={{ marginRight: 'var(--spacing-small)', cursor: 'pointer' }}>Remove</button>
         <button onClick={edit} style={{ cursor: 'pointer' }}>Edit</button>
       </div>
