@@ -8,6 +8,7 @@ export default class Control {
   public static mouse: {
     button: {
       left: 0 | 1 | 2 | 3,
+      middle: 0 | 1 | 2 | 3,
       right: 0 | 1 | 2| 3
     },
 
@@ -20,6 +21,7 @@ export default class Control {
   } = {
     button: {
       left: 0,
+      middle: 0,
       right: 0
     },
 
@@ -171,11 +173,19 @@ export default class Control {
     }
 
     if (this.isCombinationClicked(State.keybinds.decreaseStrokeSize)) {
-      Control.strokeSize -= 1
-      Control.strokeSize = Math.min(100 / Editor.camera.scale, Math.max(0.5 / Editor.camera.scale, Control.strokeSize))
+      this.strokeSize -= 1
+      this.strokeSize = Math.min(100 / Editor.camera.scale, Math.max(0.5 / Editor.camera.scale, Control.strokeSize))
     } else if (this.isCombinationClicked(State.keybinds.increaseStrokeSize)) {
-      Control.strokeSize += 1
-      Control.strokeSize = Math.min(100 / Editor.camera.scale, Math.max(0.5 / Editor.camera.scale, Control.strokeSize)) 
+      this.strokeSize += 1
+      this.strokeSize = Math.min(100 / Editor.camera.scale, Math.max(0.5 / Editor.camera.scale, Control.strokeSize)) 
+    }
+
+    if (State.settings.trackpad && this.mouse.button.middle === 1) {
+      this.strokeSize += 5 / Editor.camera.scale
+
+      if (Control.strokeSize >= 20 / Editor.camera.scale){
+        this.strokeSize=5 / Editor.camera.scale
+      } 
     }
 
     if (this.isCombinationPressed(State.keybinds.moveLeft)) Editor.camera.xSpeed = -2.5 * State.settings.moveSpeed
@@ -239,6 +249,9 @@ export default class Control {
     if (this.mouse.button.left === 1) this.mouse.button.left = 2
     else if (this.mouse.button.left === 3) this.mouse.button.left = 0
 
+    if (this.mouse.button.middle === 1) this.mouse.button.middle = 2
+    else if (this.mouse.button.middle === 3) this.mouse.button.middle = 0
+
     if (this.mouse.button.right === 1) this.mouse.button.right = 2
     else if (this.mouse.button.right === 3) this.mouse.button.right = 0
 
@@ -287,12 +300,14 @@ export default class Control {
 window.addEventListener('mousedown', (event) => {
   if (event.target === Editor.canvas) {
     if (event.button === 0) Control.mouse.button.left = 1
+    else if (event.button === 1) Control.mouse.button.middle = 1
     else if (event.button === 2) Control.mouse.button.right = 1
   }
 })
 
 window.addEventListener('mouseup', (event) => {
   if (event.button === 0) Control.mouse.button.left = 3
+  else if (event.button === 1) Control.mouse.button.middle = 3
   else if (event.button === 2) Control.mouse.button.right = 3
 })
 
@@ -303,19 +318,23 @@ window.addEventListener('mousemove', (event) => {
 
 window.addEventListener('wheel', (event) => {
   if (event.target === Editor.canvas) {
-    if (event.ctrlKey === true){
-      if (Math.abs(event.deltaY - Control.mouse.trackpad) > 0.2){
-        Editor.camera.scaleSpeed = 0.002 *-event.deltaY
-        Control.mouse.trackpad = event.deltaY
+    if (State.settings.trackpad) {
+      if (event.ctrlKey === true){
+        if (Math.abs(event.deltaY - Control.mouse.trackpad) > 0.2){
+          Editor.camera.scaleSpeed = 0.002 * -event.deltaY
+          Control.mouse.trackpad = event.deltaY
+        }
+      } else {
+        Editor.camera.ySpeed = event.deltaY * 0.5
+        Editor.camera.xSpeed = event.deltaX * 0.5
       }
 
       event.preventDefault()
     } else {
       Control.strokeSize += -event.deltaY / (10 * Editor.camera.scale)
     }
-
   }
-},{ passive: false })
+}, { passive: false })
 
 window.addEventListener('keydown', (event) => {
   if (event.target === document.body) {

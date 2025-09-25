@@ -30,6 +30,12 @@ export default () => {
       <button onClick={() => State.updateLayout({ settings: !State.layout.settings })} style={{ marginRight: 'var(--spacing-medium)', cursor: 'pointer' }}>Settings</button>
       <button onClick={() => State.updateLayout({ keybinds: !State.layout.keybinds })} style={{ marginRight: 'var(--spacing-medium)', cursor: 'pointer' }}>Keybinds</button>
 
+      {
+        (State.source.duplicate) ? (
+          <p style={{ marginRight: 'var(--spacing-medium)', opacity: 0.5 }}>(Duplicated)</p>
+        ) : undefined 
+      }
+
       <div style='flex: 1'></div>
 
       <select value={State.source.driver} disabled={State.source.locked} onChange={(event) => updateDriver((event.target as HTMLInputElement).value)} style={{ marginRight: 'var(--spacing-small)' }}>

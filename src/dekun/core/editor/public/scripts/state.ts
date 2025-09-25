@@ -12,6 +12,18 @@ function recoverStates <T> (name: string, value: T): T {
   return value  
 }
 
+const layout = signal<{
+  help: boolean,
+  settings: boolean,
+  keybinds: boolean,
+  entries: boolean
+}>({
+  help: false,
+  settings: false,
+  keybinds: false,
+  entries: false
+})
+
 const defaultSettings: {
   username: string,
 
@@ -19,6 +31,7 @@ const defaultSettings: {
   resolution: number,
   preload: number,
 
+  trackpad: boolean,
   moveSpeed: number,
   scaleSpeed: number,
 
@@ -31,24 +44,13 @@ const defaultSettings: {
   resolution: window.devicePixelRatio,
   preload: 5,
 
+  trackpad: false,
   moveSpeed: 1,
   scaleSpeed: 1,
 
   randomStrokes: false,
   reduceTransparency: false
 }
-
-const layout = signal<{
-  help: boolean,
-  settings: boolean,
-  keybinds: boolean,
-  entries: boolean
-}>({
-  help: false,
-  settings: false,
-  keybinds: false,
-  entries: false
-})
 
 const defaultKeybinds: {
   moveLeft: Combination,
@@ -99,14 +101,16 @@ const source = signal<{
   value: string,
   display: string,
 
-  locked: boolean
+  locked: boolean,
+  duplicate: boolean
 }>(recoverStates('source', {
   driver: Object.keys(Image.drivers)[0],
 
   value: '',
   display: '',
 
-  locked: false
+  locked: false,
+  duplicate: false
 }))
 
 // All the global states.

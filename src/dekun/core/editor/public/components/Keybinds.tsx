@@ -37,6 +37,8 @@ const Keybind = (properties: { id: keyof typeof State.keybinds }) => {
 
   // Handle keydown.
   const handleKeyup = (): void => {
+    console.log(true)
+
     if (recording) {
       pressed.current--
 

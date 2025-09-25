@@ -83,6 +83,11 @@ export default () => {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', marginBottom: 'var(--spacing-tiny)' }}>
+           <p style={{ textWrap: 'nowrap', marginRight: 'var(--spacing-small)' }}>Trackpad Mode:</p>
+           <input type="checkbox" checked={State.settings.trackpad} onChange={(event) => State.updateSettings({ trackpad: ((event.target as HTMLInputElement)).checked })}/>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: 'var(--spacing-tiny)' }}>
             <p style={{ textWrap: 'nowrap', marginRight: 'var(--spacing-small)' }}>Move Speed:</p>
             <input type="range" step="0.1" min="0.1" max="2" value={State.settings.moveSpeed} onInput={(event) => State.updateSettings({ moveSpeed: parseFloat((event.target as HTMLInputElement).value) })} style={{ marginRight: 'var(--spacing-small)' }}/>
             <p>{(State.settings.moveSpeed === 1) ? '(Default)' : `(${State.settings.moveSpeed}x)`}</p>

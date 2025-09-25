@@ -48,11 +48,11 @@ class Dataset():
                 else:
                     raise Exception(f"Unknown image type: {parts[4]} ({path.stem})")
 
-        for name, entry in self.entry_map.items():
+        for id, entry in self.entry_map.items():
             if entry.image_path == None or entry.mask_path == None:
-                raise Exception(f"Incomplete dataset entry: {name}")
+                raise Exception(f"Incomplete dataset entry: {id}")
 
-            self.entry_list.append(name)
+            self.entry_list.append(id)
 
         if self.sort == "name":
             self.entry_list = sorted(self.entry_list)

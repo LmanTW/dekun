@@ -27,37 +27,39 @@ class ConvolutionalBlock(nn.Module):
         return self.block(x)
 
 # The attention block.
+
 class AttentionBlock(nn.Module):
-    def __init__(self, g_channels: int, x_channels: int, inter_channels: int):
+    def __init__(self, gating_channels: int, input_channels: int, intermediate_channels: int):
         super(AttentionBlock, self).__init__()
 
-        self.W_g = nn.Sequential(
-            nn.Conv2d(g_channels, inter_channels, kernel_size=1, stride=1, padding=0, bias=True),
-            nn.BatchNorm2d(inter_channels)
+        self.gating_transform = nn.Sequential(
+            nn.Conv2d(gating_channels, intermediate_channels, kernel_size=1, stride=1, padding=0, bias=True),
+            nn.BatchNorm2d(intermediate_channels)
         )
 
-        self.W_x = nn.Sequential(
-            nn.Conv2d(x_channels, inter_channels, kernel_size=1, stride=1, padding=0, bias=True),
-            nn.BatchNorm2d(inter_channels)
+        self.input_transform = nn.Sequential(
+            nn.Conv2d(input_channels, intermediate_channels, kernel_size=1, stride=1, padding=0, bias=True),
+            nn.BatchNorm2d(intermediate_channels)
         )
 
-        self.psi = nn.Sequential(
-            nn.Conv2d(inter_channels, 1, kernel_size=1, stride=1, padding=0, bias=True),
+        self.attention_coefficients = nn.Sequential(
+            nn.Conv2d(intermediate_channels, 1, kernel_size=1, stride=1, padding=0, bias=True),
             nn.BatchNorm2d(1),
             nn.Sigmoid()
         )
 
         self.relu = nn.ReLU(inplace=True)
 
-    # Forward the attention block.
-    def forward(self, g, x):
-        g1 = self.W_g(g)
-        x1 = self.W_x(x)
+    def forward(self, gating_signal, input_features):
+        transformed_gating = self.gating_transform(gating_signal)
+        transformed_input = self.input_transform(input_features)
 
-        psi = self.relu(g1 + x1)
-        psi = self.psi(psi)
+        attention_map = self.relu(transformed_gating + transformed_input)
+        attention_weights = self.attention_coefficients(attention_map)
+        output = input_features * attention_weights
 
-        return x * psi
+        return output
+
 
 # The U-Net.
 class UNet(nn.Module):
@@ -80,7 +82,6 @@ class UNet(nn.Module):
             self.encoders.append(ConvolutionalBlock(in_channels, 2 ** (layer + 5)))
             self.pools.append(nn.MaxPool2d(kernel_size=2, stride=2))
             in_channels = 2 ** (layer + 5)
-
 
         self.decoders = nn.ModuleList()
         self.decoder_blocks = nn.ModuleList()

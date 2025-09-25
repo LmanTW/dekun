@@ -10,8 +10,8 @@ import Help from './components/Help'
 import State from './scripts/state'
 import Image from './scripts/image'
 
-render(<Help/>, document.getElementById('container-help')!)
 render(<Navbar/>, document.getElementById('container-navbar')!)
+render(<Help/>, document.getElementById('container-help')!)
 render(<Settings/>, document.getElementById('container-settings')!)
 render(<Keybinds/>, document.getElementById('container-keybinds')!)
 render(<Entries/>, document.getElementById('container-entries')!)

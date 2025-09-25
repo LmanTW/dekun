@@ -57,8 +57,9 @@ export default class Image {
       } else {
         State.updateSource({
           value: info.source,
-          display: `${info.id}/${info.page}`
-        })
+          display: `${info.id}/${info.page}`,
+          duplicate: await (await fetch(`/api/check/${driver}/${info.id}/${info.page}`)).json()
+        }) 
 
         const element = document.createElement('img')
         element.src = info.url

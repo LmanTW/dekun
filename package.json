@@ -3,13 +3,14 @@
 
   "scripts": {
     "editor-live": "bash ./src/dekun/core/editor/start.sh",
-    "editor-build": "vite build --config ./src/dekun/core/editor/vite.config.ts"
+    "editor-build": "vite build --config ./src/dekun/core/editor/vite.config.ts",
+    "playground-live": "bash ./src/dekun/core/playground/start.sh",
+    "playground-build": "vite build --config ./src/dekun/core/playground/vite.config.ts"
   },
 
   "dependencies": {
     "@preact/preset-vite": "^2.10.2",
     "@preact/signals": "^2.3.1",
-    "lucide-preact": "^0.544.0",
     "preact": "^10.27.2",
     "vite": "^7.1.5",
     "vite-plugin-html": "^3.2.2"

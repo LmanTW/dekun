@@ -28,6 +28,16 @@ def start_editor(port: int, dataset_path: Path):
     async def index_html(_: Request):
         return FileResponse(static_directory.joinpath("index.html"))
 
+    @app.route("/api/check/{provider}/{id}/{page}")
+    async def check(request: Request):
+        parts = [request.path_params["provider"], request.path_params["id"], request.path_params["page"]]
+
+        for entry in dataset.list():
+            if entry.split("-")[0:3] == parts:
+                return JSONResponse(True, 200)
+
+        return JSONResponse(False, 200)
+
     @app.route("/api/submit", methods=["PUT"])
     async def submit(request: Request):
         data = await request.json()
@@ -60,7 +70,7 @@ def start_editor(port: int, dataset_path: Path):
 
     @app.route("/api/list")
     async def list(_: Request):
-        return JSONResponse(dataset.list(), 200) 
+        return JSONResponse(dataset.list(), 200);
 
     @app.route("/api/drivers/pixiv/discovery")
     async def pixiv_discovery(_: Request):
