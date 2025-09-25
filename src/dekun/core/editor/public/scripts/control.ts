@@ -177,23 +177,14 @@ export default class Control {
       Control.strokeSize = Math.min(100 / Editor.camera.scale, Math.max(0.5 / Editor.camera.scale, Control.strokeSize)) 
     }
 
-    if (this.keyboard.has('a')) {
-      Editor.camera.xSpeed = -2.5 * State.settings.moveSpeed
-    } else if (this.keyboard.has('d')) {
-      Editor.camera.xSpeed = 2.5 * State.settings.moveSpeed
-    }
+    if (this.keyboard.has('a')) Editor.camera.xSpeed = -2.5 * State.settings.moveSpeed
+    else if (this.keyboard.has('d')) Editor.camera.xSpeed = 2.5 * State.settings.moveSpeed
 
-    if (this.keyboard.has('w')) {
-      Editor.camera.ySpeed = -2.5 * State.settings.moveSpeed
-    } else if (this.keyboard.has('s')) {
-      Editor.camera.ySpeed = 2.5 * State.settings.moveSpeed
-    }
+    if (this.keyboard.has('w')) Editor.camera.ySpeed = -2.5 * State.settings.moveSpeed
+    else if (this.keyboard.has('s')) Editor.camera.ySpeed = 2.5 * State.settings.moveSpeed
 
-    if (this.keyboard.has('q')){
-      Editor.camera.scaleSpeed = -0.005 * State.settings.scaleSpeed
-    } else if (this.keyboard.has('e')) {
-      Editor.camera.scaleSpeed = 0.005 * State.settings.scaleSpeed
-    }
+    if (this.keyboard.has('q')) Editor.camera.scaleSpeed = -0.005 * State.settings.scaleSpeed
+    else if (this.keyboard.has('e')) Editor.camera.scaleSpeed = 0.005 * State.settings.scaleSpeed
 
     if (this.keyboard.get('r') === 1) {
       Editor.reset()
@@ -244,17 +235,11 @@ export default class Control {
       }
     }
 
-    if (this.mouse.button.left === 1) {
-      this.mouse.button.left = 2
-    } else if (this.mouse.button.left === 3) {
-      this.mouse.button.left = 0
-    }
-    
-    if (this.mouse.button.right === 1) {
-      this.mouse.button.right = 2
-    } else if (this.mouse.button.right === 3) {
-      this.mouse.button.right = 0
-    }
+    if (this.mouse.button.left === 1) this.mouse.button.left = 2
+    else if (this.mouse.button.left === 3) this.mouse.button.left = 0
+
+    if (this.mouse.button.right === 1) this.mouse.button.right = 2
+    else if (this.mouse.button.right === 3) this.mouse.button.right = 0
 
     this.keyboard.forEach((_, key) => {
       this.keyboard.set(key, 2)
@@ -264,21 +249,15 @@ export default class Control {
 
 window.addEventListener('mousedown', (event) => {
   if (event.target === Editor.canvas) {
-    if (event.button === 0) {
-      Control.mouse.button.left = 1
-    } else if (event.button === 2) {
-      Control.mouse.button.right = 1
-    }
+    if (event.button === 0) Control.mouse.button.left = 1
+    else if (event.button === 2) Control.mouse.button.right = 1
   }
 })
 
 
 window.addEventListener('mouseup', (event) => {
-  if (event.button === 0) {
-    Control.mouse.button.left = 3
-  } else if (event.button === 2) {
-    Control.mouse.button.right = 3
-  }
+  if (event.button === 0) Control.mouse.button.left = 3
+  else if (event.button === 2) Control.mouse.button.right = 3
 })
 
 window.addEventListener('mousemove', (event) => {

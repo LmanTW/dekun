@@ -28,6 +28,7 @@ export default () => {
       <h1 style={{ textWrap: 'nowrap', marginLeft: 'var(--spacing-medium)', marginRight: 'var(--spacing-medium)' }}>Dataset Editor</h1>
       <button onClick={() => State.updateLayout({ help: !State.layout.help })} style={{ marginRight: 'var(--spacing-medium)', cursor: 'pointer' }}>Help</button>
       <button onClick={() => State.updateLayout({ settings: !State.layout.settings })} style={{ marginRight: 'var(--spacing-medium)', cursor: 'pointer' }}>Settings</button>
+      <button onClick={() => State.updateLayout({ keybinds: !State.layout.keybinds })} style={{ marginRight: 'var(--spacing-medium)', cursor: 'pointer' }}>Keybinds</button>
 
       <div style='flex: 1'></div>
 

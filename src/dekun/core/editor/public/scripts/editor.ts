@@ -213,6 +213,7 @@ Editor.canvas.addEventListener('click', () => {
   State.updateLayout({
     help: false,
     settings: false,
+    keybinds: false,
     entries: false
   })
 })

@@ -5,6 +5,7 @@ import Image from '../scripts/image'
 // The settings component.
 export default () => {
 
+
   // Update the username.
   const updateUsername = (username: string): void => {
     const characters = username.substring(0, 20).toLowerCase().split('')
@@ -50,7 +51,10 @@ export default () => {
 
   return (
     <div class='shadow' style={{ display: (State.layout.settings) ? 'block' : 'none', border: '0.05rem solid ', borderRadius: '0.5rem', marginRight: 'var(--spacing-medium)', marginBottom: 'var(--spacing-medium)', overflow: 'hidden' }}>
-      <h3 class={(State.settings.reduceTransparency) ? 'container-solid-light' : 'container-glassy-light'} style={{ padding: 'var(--spacing-medium)' }}>Settings</h3>
+      <div class={(State.settings.reduceTransparency) ? 'container-solid-light' : 'container-glassy-light'} style={{ display: 'flex', alignItems: 'center', padding: 'var(--spacing-medium)' }}>
+        <h3 style={{ flex: 1 }}>Settings</h3>
+        <button onClick={() => State.updateSettings(State.defaultSettings)}>Reset</button>
+      </div>
 
       <div class={(State.settings.reduceTransparency) ? 'container-solid-dark' : 'container-glassy-dark'}>
         <div style={{ width: '100%', height: '0.05rem', backgroundColor: 'var(--color-foreground)', opacity: 0.1 }}></div>
@@ -80,13 +84,13 @@ export default () => {
 
           <div style={{ display: 'flex', alignItems: 'center', marginBottom: 'var(--spacing-tiny)' }}>
             <p style={{ textWrap: 'nowrap', marginRight: 'var(--spacing-small)' }}>Move Speed:</p>
-            <input type="range" step="0.1" min="0.1" max="1.5" value={State.settings.moveSpeed} onInput={(event) => State.updateSettings({ moveSpeed: parseFloat((event.target as HTMLInputElement).value) })} style={{ marginRight: 'var(--spacing-small)' }}/>
+            <input type="range" step="0.1" min="0.1" max="2" value={State.settings.moveSpeed} onInput={(event) => State.updateSettings({ moveSpeed: parseFloat((event.target as HTMLInputElement).value) })} style={{ marginRight: 'var(--spacing-small)' }}/>
             <p>{(State.settings.moveSpeed === 1) ? '(Default)' : `(${State.settings.moveSpeed}x)`}</p>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', marginBottom: 'var(--spacing-big)' }}>
             <p style={{ textWrap: 'nowrap', marginRight: 'var(--spacing-small)' }}>Scale Speed:</p>
-            <input type="range" step="0.1" min="0.5" max="1.5" value={State.settings.scaleSpeed} onInput={(event) => State.updateSettings({ scaleSpeed: parseFloat((event.target as HTMLInputElement).value) })} style={{ marginRight: 'var(--spacing-small)' }}/>
+            <input type="range" step="0.1" min="0.1" max="2" value={State.settings.scaleSpeed} onInput={(event) => State.updateSettings({ scaleSpeed: parseFloat((event.target as HTMLInputElement).value) })} style={{ marginRight: 'var(--spacing-small)' }}/>
             <p>{(State.settings.scaleSpeed === 1) ? '(Default)' : `(${State.settings.scaleSpeed}x)`}</p>
           </div>
 

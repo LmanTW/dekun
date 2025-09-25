@@ -169,24 +169,24 @@ const Entry = (id: string) => {
 
   const [toggled, setToggled] = useState<boolean>(true)
 
-  // Handle image loaded.
-  const imageLoaded = (): void => {
+  // Handle image load.
+  const handleImageLoad = (): void => {
     if (!imageLoadedRefrence.current) {
       imageLoadedRefrence.current = true
       EntryManager.loading--
     }
   }
 
-  // Handle mask loaded.
-  const maskLoaded = (): void => {
+  // Handle mask load.
+  const handleMaskLoad = (): void => {
     if (!maskLoadedRefrence.current) {
       maskLoadedRefrence.current = true
       EntryManager.loading--
     }
   }
 
-  // Edit the image.
-  const edit = (): void => {
+  // Edit the entry.
+  const editEntry = (): void => {
     if (Image.drivers.hasOwnProperty(parts[0])) {
       Image.next({
         driver: parts[0],
@@ -202,8 +202,8 @@ const Entry = (id: string) => {
     }
   }
 
-  // Remove the image.
-  const remove = async (): Promise<void> => {
+  // Remove the entry.
+  const removeEntry = async (): Promise<void> => {
     if (data.value !== null) {
       await fetch(`/api/remove/${id}`, {
         method: 'DELETE'
@@ -261,15 +261,15 @@ const Entry = (id: string) => {
   return (
     <div key={id}>
       <div style={{ position: 'relative', width: '100%', marginBottom: '-0.25rem', userSelect: 'none' }}>
-        <img ref={imageRefrence} src={`/resource/image/${id}`} onLoad={imageLoaded} style={{ contentVisibility: 'auto', borderRadius: '0.25rem 0.25rem 0rem 0rem', width: '100%' }}/>
-        <img ref={maskRefrence} src={`/resource/mask/${id}`} onLoad={maskLoaded} onClick={() => setToggled(!toggled)} style={{ position: 'absolute', contentVisibility: 'auto',borderRadius: '0.25rem 0.25rem 0rem 0rem', left: '0rem', top: '0rem', width: '100%', filter: 'invert(46%) sepia(88%) saturate(3060%) hue-rotate(87deg) brightness(126%) contrast(119%)', opacity: (toggled) ? 1 : 0, cursor: 'pointer' }}/>
+        <img ref={imageRefrence} src={`/resource/image/${id}`} onLoad={handleImageLoad} style={{ contentVisibility: 'auto', borderRadius: '0.25rem 0.25rem 0rem 0rem', width: '100%' }}/>
+        <img ref={maskRefrence} src={`/resource/mask/${id}`} onLoad={handleMaskLoad} onClick={() => setToggled(!toggled)} style={{ position: 'absolute', contentVisibility: 'auto',borderRadius: '0.25rem 0.25rem 0rem 0rem', left: '0rem', top: '0rem', width: '100%', filter: 'invert(46%) sepia(88%) saturate(3060%) hue-rotate(87deg) brightness(126%) contrast(119%)', opacity: (toggled) ? 1 : 0, cursor: 'pointer' }}/>
       </div>
 
       <div style={{ display: 'flex', backgroundColor: 'var(--color-container-light)', borderRadius: '0rem 0rem 0.25rem 0.25rem', padding: 'var(--spacing-small)' }}>
         <h5 style={{ marginRight: 'var(--spacing-tiny)' }}>{(Image.drivers.hasOwnProperty(parts[0])) ? Image.drivers[parts[0]].name : parts[0]}:</h5>
         <p style={{ flex: 1, marginRight: 'var(--spacing-small)' }}>{parts[1]}/{parts[2]} ({parts[3]})</p>
-        <button onClick={remove} style={{ marginRight: 'var(--spacing-small)', cursor: 'pointer' }}>Remove</button>
-        <button onClick={edit} style={{ cursor: 'pointer' }}>Edit</button>
+        <button onClick={removeEntry} style={{ marginRight: 'var(--spacing-small)', cursor: 'pointer' }}>Remove</button>
+        <button onClick={editEntry} style={{ cursor: 'pointer' }}>Edit</button>
       </div>
     </div>
   )

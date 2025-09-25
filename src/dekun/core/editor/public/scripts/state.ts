@@ -1,5 +1,6 @@
 import { signal } from '@preact/signals'
 
+import { Combination, keysToCombination } from '../components/Keybinds'
 import Image from './image'
 
 // Recover states from the local storage.
@@ -11,17 +12,7 @@ function recoverStates <T> (name: string, value: T): T {
   return value  
 }
 
-const layout = signal<{
-  help: boolean,
-  settings: boolean,
-  entries: boolean
-}>({
-  help: false,
-  settings: false,
-  entries: false
-})
-
-const settings = signal<{
+const defaultSettings: {
   username: string,
 
   fps: number,
@@ -33,7 +24,7 @@ const settings = signal<{
 
   randomStrokes: boolean,
   reduceTransparency: boolean
-}>(recoverStates('settings', {
+} = {
   username: 'unknown',
 
   fps: 0,
@@ -45,7 +36,62 @@ const settings = signal<{
 
   randomStrokes: false,
   reduceTransparency: false
-}))
+}
+
+const layout = signal<{
+  help: boolean,
+  settings: boolean,
+  keybinds: boolean,
+  entries: boolean
+}>({
+  help: false,
+  settings: false,
+  keybinds: false,
+  entries: false
+})
+
+const defaultKeybinds: {
+  moveLeft: Combination,
+  moveRight: Combination,
+  moveUp: Combination,
+  moveDown: Combination,
+  zoomIn: Combination,
+  zoomOut: Combination,
+  resetCamera: Combination,
+
+  changeStrokeType1: Combination,
+  changeStrokeType2: Combination,
+  changeStrokeType3: Combination,
+  increaseStrokeSize: Combination,
+  decreaseStrokeSize: Combination,
+  changeStrokeOpacity: Combination,
+
+  undoLastAction: Combination,
+  skipImage: Combination,
+  submitImage: Combination
+} = {
+  moveLeft: keysToCombination(['a']),
+  moveRight: keysToCombination(['d']),
+  moveUp: keysToCombination(['w']),
+  moveDown: keysToCombination(['s']),
+  zoomIn: keysToCombination(['e']),
+  zoomOut: keysToCombination(['q']),
+  resetCamera: keysToCombination(['r']),
+
+  changeStrokeType1: keysToCombination(['1']),
+  changeStrokeType2: keysToCombination(['2']),
+  changeStrokeType3: keysToCombination(['3']),
+  increaseStrokeSize: keysToCombination(['=']),
+  decreaseStrokeSize: keysToCombination(['-']),
+  changeStrokeOpacity: keysToCombination(['f']),
+
+  undoLastAction: keysToCombination(['x']),
+  skipImage: keysToCombination(['z']),
+  submitImage: keysToCombination(['c'])
+}
+
+const settings = signal<typeof defaultSettings>(recoverStates('settings', defaultSettings))
+const keybinds = signal<typeof defaultKeybinds>(recoverStates('keybinds', defaultKeybinds))
 
 const source = signal<{
   driver: string,
@@ -67,11 +113,16 @@ const source = signal<{
 export default class {
   public static get layout() {return layout.value}
   public static get settings() {return settings.value}
+  public static get keybinds() {return keybinds.value}
   public static get source() {return source.value}
 
   public static get layoutSignal() {return layout}
   public static get settingsSignal() {return settings}
+  public static get keybindsSignal() {return keybinds}
   public static get sourceSignal() {return source}
+
+  public static get defaultSettings() {return defaultSettings}
+  public static get defaultKeybinds() {return defaultKeybinds}
 
   // Update the layout.
   public static updateLayout(modificaitons: Partial<typeof layout.value>): void {
@@ -83,6 +134,13 @@ export default class {
     settings.value = { ...settings.value, ...modificaitons }
 
     localStorage.setItem('settings', JSON.stringify(settings.value))
+  }
+
+  // Update the keybind.
+  public static updateKeybind(modificaitons: Partial<typeof keybinds.value>): void {
+    keybinds.value = { ...keybinds.value, ...modificaitons }
+
+    localStorage.setItem('keybinds', JSON.stringify(keybinds.value))
   }
 
   // Update the source.
