@@ -12,9 +12,10 @@ export default class Control {
 
     editorX: number,
     editorY: number,
-
     imageX: number,
-    imageY: number
+    imageY: number,
+
+    trackpad:number,
   } = {
     button: {
       left: 0,
@@ -23,9 +24,10 @@ export default class Control {
 
     editorX: 0,
     editorY: 0,
-
     imageX: 0,
-    imageY: 0
+    imageY: 0,
+
+    trackpad: 0
   }
 
   public static keyboard: Map<string, 1 | 2> = new Map()
@@ -270,6 +272,7 @@ window.addEventListener('mousedown', (event) => {
   }
 })
 
+
 window.addEventListener('mouseup', (event) => {
   if (event.button === 0) {
     Control.mouse.button.left = 3
@@ -285,9 +288,19 @@ window.addEventListener('mousemove', (event) => {
 
 window.addEventListener('wheel', (event) => {
   if (event.target === Editor.canvas) {
-    Control.strokeSize += -event.deltaY / (10 * Editor.camera.scale)
+    if (event.ctrlKey === true){
+      if (Math.abs(event.deltaY - Control.mouse.trackpad) > 0.2){
+        Editor.camera.scaleSpeed = 0.002 *-event.deltaY
+        Control.mouse.trackpad = event.deltaY
+      }
+
+      event.preventDefault()
+    } else {
+      Control.strokeSize += -event.deltaY / (10 * Editor.camera.scale)
+    }
+
   }
-})
+},{ passive: false })
 
 window.addEventListener('keydown', (event) => {
   if (event.target === document.body) {

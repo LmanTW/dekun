@@ -68,7 +68,7 @@ export default () => {
 
           <div style={{ display: 'flex', alignItems: 'center', marginBottom: 'var(--spacing-tiny)' }}>
             <p style={{ textWrap: 'nowrap', marginRight: 'var(--spacing-small)' }}>Resolution:</p>
-            <input type="range" step="0.1" min="0.5" max="2" value={State.settings.resolution} onInput={(event) => updateResolution(parseFloat((event.target as HTMLInputElement).value))} style={{ marginRight: 'var(--spacing-small)' }}/>
+            <input type="range" step="0.1" min="0.1" max="2" value={State.settings.resolution} onInput={(event) => updateResolution(parseFloat((event.target as HTMLInputElement).value))} style={{ marginRight: 'var(--spacing-small)' }}/>
             <p>{(State.settings.resolution === window.devicePixelRatio) ? '(Native)' : `(${State.settings.resolution}x)`}</p>
           </div>
 
@@ -80,7 +80,7 @@ export default () => {
 
           <div style={{ display: 'flex', alignItems: 'center', marginBottom: 'var(--spacing-tiny)' }}>
             <p style={{ textWrap: 'nowrap', marginRight: 'var(--spacing-small)' }}>Move Speed:</p>
-            <input type="range" step="0.1" min="0.5" max="1.5" value={State.settings.moveSpeed} onInput={(event) => State.updateSettings({ moveSpeed: parseFloat((event.target as HTMLInputElement).value) })} style={{ marginRight: 'var(--spacing-small)' }}/>
+            <input type="range" step="0.1" min="0.1" max="1.5" value={State.settings.moveSpeed} onInput={(event) => State.updateSettings({ moveSpeed: parseFloat((event.target as HTMLInputElement).value) })} style={{ marginRight: 'var(--spacing-small)' }}/>
             <p>{(State.settings.moveSpeed === 1) ? '(Default)' : `(${State.settings.moveSpeed}x)`}</p>
           </div>
 
