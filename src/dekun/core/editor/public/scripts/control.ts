@@ -1,3 +1,4 @@
+import { Combination } from '../components/Keybinds'
 import Editor from './editor'
 import State from './state'
 import Image from './image'
@@ -157,38 +158,38 @@ export default class Control {
 
     if (this.keyboard.get('Escape') === 1) {
       this.reset()
-    } else if (this.keyboard.get('1') === 1) {
+    } else if (this.isCombinationClicked(State.keybinds.changeStrokeType1)) {
       this.strokeType = 1
       this.strokePoints = []
-    } else if (this.keyboard.get('2') === 1) {
+    } else if (this.isCombinationClicked(State.keybinds.changeStrokeType2)) {
       this.strokeType = 2
       this.strokePoints = []
-    } else if (this.keyboard.get('3') === 1) {
+    } else if (this.isCombinationClicked(State.keybinds.changeStrokeType3)) {
       this.strokeType = 3
       this.startX = null
       this.startY = null
     }
 
-    if (this.keyboard.get('-') === 1) {
+    if (this.isCombinationClicked(State.keybinds.decreaseStrokeSize)) {
       Control.strokeSize -= 1
       Control.strokeSize = Math.min(100 / Editor.camera.scale, Math.max(0.5 / Editor.camera.scale, Control.strokeSize))
-    } else if (this.keyboard.get('=') === 1) {
+    } else if (this.isCombinationClicked(State.keybinds.increaseStrokeSize)) {
       Control.strokeSize += 1
       Control.strokeSize = Math.min(100 / Editor.camera.scale, Math.max(0.5 / Editor.camera.scale, Control.strokeSize)) 
     }
 
-    if (this.keyboard.has('a')) Editor.camera.xSpeed = -2.5 * State.settings.moveSpeed
-    else if (this.keyboard.has('d')) Editor.camera.xSpeed = 2.5 * State.settings.moveSpeed
+    if (this.isCombinationPressed(State.keybinds.moveLeft)) Editor.camera.xSpeed = -2.5 * State.settings.moveSpeed
+    else if (this.isCombinationPressed(State.keybinds.moveRight)) Editor.camera.xSpeed = 2.5 * State.settings.moveSpeed
 
-    if (this.keyboard.has('w')) Editor.camera.ySpeed = -2.5 * State.settings.moveSpeed
-    else if (this.keyboard.has('s')) Editor.camera.ySpeed = 2.5 * State.settings.moveSpeed
+    if (this.isCombinationPressed(State.keybinds.moveUp)) Editor.camera.ySpeed = -2.5 * State.settings.moveSpeed
+    else if (this.isCombinationPressed(State.keybinds.moveDown)) Editor.camera.ySpeed = 2.5 * State.settings.moveSpeed
 
-    if (this.keyboard.has('q')) Editor.camera.scaleSpeed = -0.005 * State.settings.scaleSpeed
-    else if (this.keyboard.has('e')) Editor.camera.scaleSpeed = 0.005 * State.settings.scaleSpeed
+    if (this.isCombinationPressed(State.keybinds.zoomOut)) Editor.camera.scaleSpeed = -0.005 * State.settings.scaleSpeed
+    else if (this.isCombinationPressed(State.keybinds.zoomIn)) Editor.camera.scaleSpeed = 0.005 * State.settings.scaleSpeed
 
-    if (this.keyboard.get('r') === 1) {
+    if (this.isCombinationClicked(State.keybinds.resetCamera)) {
       Editor.reset()
-    } else if (this.keyboard.get('f') === 1) {
+    } else if (this.isCombinationClicked(State.keybinds.changeStrokeOpacity)) {
       this.strokeOpacity -= 0.5
 
       if (this.strokeOpacity < 0) {
@@ -196,7 +197,7 @@ export default class Control {
       }
 
       Image.renderImage()
-    } else if (this.keyboard.get('x') === 1) {
+    } else if (this.isCombinationClicked(State.keybinds.undoLastAction)) {
       if (this.strokePoints.length > 0) {
         this.strokePoints.splice(this.strokePoints.length - 1)
       } else if (Image.data !== null && Image.data.strokes.length > 0) {
@@ -206,7 +207,7 @@ export default class Control {
     }
 
     if (Image.data !== null) {
-      if (this.keyboard.has('z')) {
+      if (this.isCombinationPressed(State.keybinds.skipImage)) {
         if (this.skipConfirm >= 0) {
           this.skipConfirm += 0.003 * deltaTime
 
@@ -220,7 +221,7 @@ export default class Control {
         this.skipConfirm = 0
       }
 
-      if (this.keyboard.has('c')) {
+      if (this.isCombinationPressed(State.keybinds.submitImage)) {
         if (this.saveConfirm >= 0) {
           this.saveConfirm += 0.003 * deltaTime
 
@@ -245,6 +246,42 @@ export default class Control {
       this.keyboard.set(key, 2)
     })
   }
+
+  // Check if a combination is clicked.
+  public static isCombinationClicked(combination: Combination): boolean {
+    if (combination.modifiers.control !== this.keyboard.has('control')) return false
+    if (combination.modifiers.option !== this.keyboard.has('option')) return false
+    if (combination.modifiers.meta !== this.keyboard.has('meta')) return false
+    if (combination.modifiers.shift !== this.keyboard.has('shift')) return false
+
+    let points: number = 0
+
+    for (const key of combination.keys) {
+      if (this.keyboard.has(key)) {
+        points += this.keyboard.get(key)!
+      } else {
+        return false
+      } 
+    }
+
+    return points < combination.keys.length * 2
+  }
+
+  // Check if a combination is pressed.
+  public static isCombinationPressed(combination: Combination): boolean {
+    if (combination.modifiers.control !== this.keyboard.has('control')) return false
+    if (combination.modifiers.option !== this.keyboard.has('option')) return false
+    if (combination.modifiers.meta !== this.keyboard.has('meta')) return false
+    if (combination.modifiers.shift !== this.keyboard.has('shift')) return false
+
+    for (const key of combination.keys) {
+      if (!this.keyboard.has(key)) {
+        return false
+      }
+    }
+
+    return true
+  }
 }
 
 window.addEventListener('mousedown', (event) => {
@@ -253,7 +290,6 @@ window.addEventListener('mousedown', (event) => {
     else if (event.button === 2) Control.mouse.button.right = 1
   }
 })
-
 
 window.addEventListener('mouseup', (event) => {
   if (event.button === 0) Control.mouse.button.left = 3
@@ -283,12 +319,14 @@ window.addEventListener('wheel', (event) => {
 
 window.addEventListener('keydown', (event) => {
   if (event.target === document.body) {
-    if (!Control.keyboard.has(event.key)) {
-      Control.keyboard.set(event.key, 1)
+    const key = event.key.toLowerCase()
+
+    if (!Control.keyboard.has(key)) {
+      Control.keyboard.set(key, 1)
     }
   }
 })
 
 window.addEventListener('keyup', (event) => {
-  Control.keyboard.delete(event.key)
+  Control.keyboard.delete(event.key.toLowerCase())
 })
