@@ -71,7 +71,7 @@ const Keybind = (properties: { id: keyof typeof State.keybinds }) => {
 // The keybinds component.
 export default () => {
   return (
-    <div class='shadow' style={{ display: (State.layout.keybinds) ? 'block' : 'none', border: '0.05rem solid ', borderRadius: '0.5rem', marginRight: 'var(--spacing-medium)', marginBottom: 'var(--spacing-medium)', overflow: 'hidden'}}>
+    <div class='shadow' style={{ display: (State.layout.keybinds) ? 'block' : 'none', border: '0.05rem solid ', borderRadius: '0.5rem', marginRight: 'var(--spacing-medium)', marginBottom: 'var(--spacing-medium)', overflow: 'hidden' }}>
       <div class={(State.settings.reduceTransparency) ? 'container-solid-light' : 'container-glassy-light'} style={{ display: 'flex', alignItems: 'center', padding: 'var(--spacing-medium)' }}>
         <h3 style={{ flex: 1 }}>Keybinds</h3>
         <button onClick={() => State.updateKeybind(State.defaultKeybinds)}>Reset</button>
@@ -79,7 +79,7 @@ export default () => {
 
       <div class={(State.settings.reduceTransparency) ? 'container-solid-dark' : 'container-glassy-dark'}>
         <div style={{ width: '100%', height: '0.05rem', backgroundColor: 'var(--color-foreground)', opacity: 0.1 }}></div>
-        <div style={{ padding: 'var(--spacing-medium)' }}>
+        <div style={{ padding: 'var(--spacing-medium)', overflowX: 'auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', marginBottom: 'var(--spacing-small)' }}>
             <p style={{ marginRight: 'var(--spacing-small)' }}>Move Left:</p>
             <Keybind id='moveLeft'/>
@@ -142,7 +142,7 @@ export default () => {
             <p style={{ marginRight: 'var(--spacing-small)' }}>Skip Current Image:</p>
             <Keybind id='skipImage'/>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', marginBottom: 'var(--spacing-small)' }}>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
             <p style={{ marginRight: 'var(--spacing-small)' }}>Submit Current Image:</p>
             <Keybind id='submitImage'/>
           </div>

@@ -58,7 +58,7 @@ export default () => {
 
       <div class={(State.settings.reduceTransparency) ? 'container-solid-dark' : 'container-glassy-dark'}>
         <div style={{ width: '100%', height: '0.05rem', backgroundColor: 'var(--color-foreground)', opacity: 0.1 }}></div>
-        <div style={{ padding: 'var(--spacing-medium)' }}>
+        <div style={{ padding: 'var(--spacing-medium)', overflowX: 'scroll' }}>
           <div style={{ display: 'flex', alignItems: 'center', marginBottom: 'var(--spacing-big)' }}>
             <p style={{ textWrap: 'nowrap', marginRight: 'var(--spacing-small)' }}>Username:</p>
             <input value={State.settings.username} onChange={(event) => updateUsername((event.target as HTMLInputElement).value)}/>
