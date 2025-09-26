@@ -2,7 +2,7 @@
 
 dekun (pronounced [/diːˈkuːn/](https://ipa-reader.com/?text=%2Fdi%CB%90%CB%88ku%CB%90n%2F)) is a toolkit for marking and regenerating parts of an image. dekun consists of two separate models: the marker and the inpainter. You can use pre-trained models or train the model yourself.
 
-> [!WARNING]
+> [!WARNING4]
 > This project is still under heavy development, things might break at anytime.
 
 ## 📦 Installation
@@ -15,4 +15,4 @@ uv tool install git+https://github.com/LmanTW/dekun --group cpu
 ```
 
 > [!WARNING]
-> Requirements: [uv](https://docs.astral.sh/uv), [git](https://git-scm.com).
+> Requirements: [uv](https://docs.astral.sh/uv) and [git](https://git-scm.com).
