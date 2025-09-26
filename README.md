@@ -7,6 +7,12 @@ dekun (pronounced [/diːˈkuːn/](https://ipa-reader.com/?text=%2Fdi%CB%90%CB%88
 
 ## 📦 Installation
 
+> [!WARNING]
+> Requirements: [uv][https://docs.astral.sh/uv], [git](https://git-scm.com).
+
 ```bash
-uv tool install git+https://github.com/LmanTW/dekun
+# Set the group to the hardware acceleration backend you want to use.
+# The following are supported: "cpu", "xpu", "cuda".
+
+uv tool install git+https://github.com/LmanTW/dekun --group cpu
 ```

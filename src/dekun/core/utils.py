@@ -1,6 +1,4 @@
 import torchvision.transforms as transform
-import PIL.Image as pil
-from typing import cast
 import torch
 
 # Resolve a device.
@@ -8,13 +6,25 @@ def resolve_device(device):
     if device == "auto":
         if torch.cuda.is_available():
             return "cuda"
-        else:
+        elif torch.xpu.is_available():
+            return "xpu"
+        elif torch.cpu.is_available():
             return "cpu"
+        else:
+            raise Exception("No device is available")
     elif device == "cpu":
+        if not torch.cpu.is_available():
+            raise Exception("Device not available: CPU")
+
         return "cpu"
+    elif device == "xpu":
+        if not torch.xpu.is_available():
+            raise Exception("Device not available: XPU")
+
+        return "xpu"
     elif device == "cuda":
         if not torch.cuda.is_available():
-            raise Exception("Cuda is not available")
+            raise Exception("Device not available: Cuda")
 
         return "cuda"
     else:
