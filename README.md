@@ -8,11 +8,8 @@ dekun (pronounced [/diːˈkuːn/](https://ipa-reader.com/?text=%2Fdi%CB%90%CB%88
 ## 📦 Installation
 
 ```bash
-# Set the group to the hardware acceleration backend you want to use.
-# The following are supported: "cpu", "xpu", "cuda".
-
-uv tool install git+https://github.com/LmanTW/dekun --group cpu
+uv tool install git+https://github.com/LmanTW/dekun
 ```
 
 > [!WARNING]
-> Requirements: [uv](https://docs.astral.sh/uv) and [git](https://git-scm.com).
+> If you want support for hardware acceleration backend other than `cpu` and `cuda`, you need to clone the repository and then run `uv sync --group <group>`. The avialiable groups are: `cpu`, `xpu` and `cuda`.

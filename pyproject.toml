@@ -9,10 +9,12 @@ dependencies = [
     "requests==2.32.5",
     "starlette==0.48.0",
     "uvloop==0.21.0",
+    "torch==2.8.0",
+    "torchvision==0.23.0",
     "numpy==2.0.0"
 ]
 
-[project.optional-dependencies]
+[dependency-groups]
 cpu = ["torch==2.8.0+cpu", "torchvision==0.23.0+cpu"]
 xpu = ["torch==2.8.0+xpu", "torchvision==0.23.0+xpu"]
 cuda = ["torch==2.8.0+cu128", "torchvision==0.23.0+cu128"]
@@ -37,9 +39,9 @@ url = "https://download.pytorch.org/whl/cu128"
 index-strategy = "unsafe-best-match"
 conflicts = [
     [
-      { extra = "cpu" },
-      { extra = "xpu" },
-      { extra = "cuda" }
+      { group = "cpu" },
+      { group = "xpu" },
+      { group = "cuda" }
     ]
 ]
 
