@@ -12,4 +12,7 @@ uv tool install git+https://github.com/LmanTW/dekun
 ```
 
 > [!WARNING]
-> If you want support for hardware acceleration backend other than `cpu` and `cuda`, you need to clone the repository and then run `uv sync --group <group>`. The avialiable groups are: `cpu`, `xpu` and `cuda`.
+> Requirements: [uv](https://docs.astral.sh/uv) and [git](https://git-scm.com).
+
+> [!WARNING]
+> If you want support for hardware acceleration backend other than cpu and cuda, you need to clone the repository and then run `uv sync --group <group>`. The avialiable groups are: "cpu", "xpu" and "cuda".

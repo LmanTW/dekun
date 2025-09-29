@@ -94,7 +94,7 @@ class UNet(nn.Module):
             channels = 2 ** (layer + 5)
 
             self.decoders.append(nn.ConvTranspose2d(in_channels, channels, kernel_size=2, stride=2))
-            self.attention_blocks.append(AttentionBlock(g_channels=channels, x_channels=channels, inter_channels=channels // 2))
+            self.attention_blocks.append(AttentionBlock(channels, channels, channels // 2))
             self.decoder_blocks.append(ConvolutionalBlock(channels * 2, channels))
 
             in_channels = channels

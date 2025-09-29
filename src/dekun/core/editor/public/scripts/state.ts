@@ -129,27 +129,27 @@ export default class {
   public static get defaultKeybinds() {return defaultKeybinds}
 
   // Update the layout.
-  public static updateLayout(modificaitons: Partial<typeof layout.value>): void {
-    layout.value = { ...layout.value, ...modificaitons }
+  public static updateLayout(modifications: Partial<typeof layout.value>): void {
+    layout.value = { ...layout.value, ...modifications }
   }
 
   // Update the settings.
-  public static updateSettings(modificaitons: Partial<typeof settings.value>): void {
-    settings.value = { ...settings.value, ...modificaitons }
+  public static updateSettings(modifications: Partial<typeof settings.value>): void {
+    settings.value = { ...settings.value, ...modifications }
 
     localStorage.setItem('settings', JSON.stringify(settings.value))
   }
 
   // Update the keybind.
-  public static updateKeybind(modificaitons: Partial<typeof keybinds.value>): void {
-    keybinds.value = { ...keybinds.value, ...modificaitons }
+  public static updateKeybind(modifications: Partial<typeof keybinds.value>): void {
+    keybinds.value = { ...keybinds.value, ...modifications }
 
     localStorage.setItem('keybinds', JSON.stringify(keybinds.value))
   }
 
   // Update the source.
-  public static updateSource(modificaitons: Partial<typeof source.value>): void {
-    source.value = { ...source.value, ...modificaitons }
+  public static updateSource(modifications: Partial<typeof source.value>): void {
+    source.value = { ...source.value, ...modifications }
 
     localStorage.setItem('source', JSON.stringify(source.value))
   }
