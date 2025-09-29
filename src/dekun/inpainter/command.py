@@ -63,7 +63,7 @@ def inpaint_command(path: str, image: str, mask: str, output: str, device: str):
 @click.option("-d", "--dataset", type=click.Path(True, file_okay=False), required=1)
 @click.option("-i", "--iterations", type=click.INT)
 @click.option("-t", "--threshold", type=click.FLOAT)
-@click.option("-c", "--cache", type=click.Choice(["none", "disk", "memory"]), default="none")
+@click.option("-C", "--cache", type=click.Choice(["none", "disk", "memory"]), default="none")
 @click.option("-D", "--device", type=click.Choice(["auto", "cpu", "cuda"]), default="auto")
 def train_command(path: str, dataset: str, iterations: int, threshold: float, cache: str, device: str):
     inpainter = Inpainter.load(device, Path(path))
