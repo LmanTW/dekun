@@ -62,7 +62,7 @@ class Loader(object):
                 self.entries.append(entry)
 
         if cache == "disk":
-            chunk_size = round((device_available_memory(device.type) * 0.75) / ((width * height) * 100))
+            chunk_size = round(device_available_memory(device.type) / ((width * height) * 50))
 
             self.temporary = Path(tempfile.mkdtemp())
             self.chunks = 0
