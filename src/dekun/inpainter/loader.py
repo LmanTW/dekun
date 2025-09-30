@@ -4,11 +4,10 @@ from pathlib import Path
 from shutil import rmtree
 import PIL.Image as pil
 import tempfile
-import numpy
 import torch
 import gc
 
-from dekun.core.utils import transform_image, fit_tensor 
+from dekun.core.utils import device_available_memory, transform_image, fit_tensor
 from dekun.core.dataset import Dataset, Entry
 
 COLORS = [
@@ -63,20 +62,22 @@ class Loader(object):
                 self.entries.append(entry)
 
         if cache == "disk":
+            chunk_size = round((device_available_memory(device.type) * 0.75) / ((width * height) * 100))
+
             self.temporary = Path(tempfile.mkdtemp())
             self.chunks = 0
 
             while True:
                 chunk = []
 
-                while (len(chunk) < 100) and (self.chunks * 100) + len(chunk) < len(self.entries):
-                    index = (self.chunks * 100) + len(chunk)
+                while (len(chunk) < chunk_size) and (self.chunks * chunk_size) + len(chunk) < len(self.entries):
+                    index = (self.chunks * chunk_size) + len(chunk)
                     chunk.append(load_entry(index, self.entries[index], self.width, self.height, self.device))
 
                 torch.save(chunk, str(self.temporary.joinpath(f"chunk-{self.chunks + 1}.pth")))
                 gc.collect()
 
-                if (self.chunks * 100) + len(chunk) >= len(self.entries):
+                if (self.chunks * chunk_size) + len(chunk) >= len(self.entries):
                     break
 
                 self.chunks += 1
@@ -107,7 +108,7 @@ class Loader(object):
             for index, entry in enumerate(self.entries):
                 callback(*load_entry(index, entry, self.width, self.height, self.device))
         elif self.cache == "disk":
-            for i in range(0, self.chunks):
+            for i in range(0, self.chunks + 1):
                 for entry in torch.load(str(self.temporary.joinpath(f"chunk-{i + 1}.pth")), self.device):
                     callback(entry[0], entry[1], entry[2])
 

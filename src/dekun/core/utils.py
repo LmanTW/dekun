@@ -1,8 +1,9 @@
 import torchvision.transforms as transform
+import psutil
 import torch
 
 # Resolve a device.
-def resolve_device(device):
+def resolve_device(device: str):
     if device == "auto":
         if torch.cuda.is_available():
             return "cuda"
@@ -27,6 +28,17 @@ def resolve_device(device):
             raise Exception("Device not available: Cuda")
 
         return "cuda"
+    else:
+        raise ValueError(f"Unsupported device: {device}")
+
+# Get the available memory of a device.
+def device_available_memory(device: str):
+    if device == "cpu":
+        return psutil.virtual_memory().available
+    elif device == "xpu":
+        return torch.xpu.mem_get_info()[0]
+    elif device == "cuda":
+        return torch.cuda.mem_get_info()[0]
     else:
         raise ValueError(f"Unsupported device: {device}")
 
