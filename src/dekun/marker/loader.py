@@ -81,15 +81,21 @@ class Loader(object):
         if self.cache == "disk":
             shutil.rmtree(str(self.temporary))
 
+        gc.collect()
+
     # Loop through the dataset.
     def loop(self, callback: Callable[[torch.Tensor, torch.Tensor], None]):
         if self.cache == "none":
             for entry in self.entries:
                 callback(*load_entry(entry, self.width, self.height, self.device))
+
+            gc.collect()
         elif self.cache == "disk":
             for i in range(0, self.chunks + 1):
                 for entry in torch.load(str(self.temporary.joinpath(f"chunk-{i + 1}.pth")), self.device):
                     callback(entry[0], entry[1])
+
+                gc.collect()
         elif self.cache == "memory":
             for entry in self.processed_entries:
                 callback(entry[0], entry[1])

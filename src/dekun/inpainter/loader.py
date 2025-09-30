@@ -81,12 +81,12 @@ class Loader(object):
                     break
 
                 self.chunks += 1
-
         elif cache == "memory":
             self.processed_entries = []
 
             for index, entry in enumerate(self.entries):
-                self.processed_entries.append(load_entry(index, entry, self.width, self.height, self.device))
+                if entry.exists():
+                    self.processed_entries.append(load_entry(index, entry, self.width, self.height, self.device))
 
         elif cache != "none":
             raise ValueError(f"Unsupported cache type: {cache}")
@@ -107,6 +107,8 @@ class Loader(object):
         if self.cache == "none":
             for index, entry in enumerate(self.entries):
                 callback(*load_entry(index, entry, self.width, self.height, self.device))
+
+            gc.collect()
         elif self.cache == "disk":
             for i in range(0, self.chunks + 1):
                 for entry in torch.load(str(self.temporary.joinpath(f"chunk-{i + 1}.pth")), self.device):
