@@ -18,7 +18,6 @@ class TrainProgress:
         self.iteration = iteration
         self.loss = loss
         self.duration = duration
-    
 
 # Resolve a device.
 def resolve_device(device: str):

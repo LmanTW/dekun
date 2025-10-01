@@ -1,5 +1,5 @@
-import PIL.Image as pil
 from pathlib import Path
+import PIL.Image as pil
 from math import ceil
 import click
 import torch
@@ -56,7 +56,6 @@ def inpaint_command(path: str, image: str, mask: str, output: str, device: str):
 
     output_image.save(output)
 
-
 # Train a generator.
 @click.command("train")
 @click.argument("path", type=click.Path(True))
@@ -76,7 +75,7 @@ def train_command(path: str, dataset: str, iterations: int, threshold: float, ca
         parts = [
             f"Loading Dataset ({cache})",
             f"Loaded: {progress.loaded}",
-            f"Total: {progress.total}",
+            f"Total: {progress.total}"
         ]
 
         print(" | ".join(f"{part: <20}" for part in parts))
@@ -94,7 +93,7 @@ def train_command(path: str, dataset: str, iterations: int, threshold: float, ca
 
         if iterations != None:
             parts = [
-                f"Training Model ({inpainter.width} x {inpainter.height})",
+                f"Training Model ({inpainter.width}x{inpainter.height})",
                 f"Iteration: {progress.iteration}",
                 f"Loss: {progress.loss:.5f}",
                 f"Duration: {format_duration(progress.duration)}",
@@ -110,7 +109,7 @@ def train_command(path: str, dataset: str, iterations: int, threshold: float, ca
             estimate = ceil((progress.loss - threshold) / average_difference(loss_history)) * (sum(duration_history) / len(duration_history)) if len(loss_history) > 1 else 0
 
             parts = [
-                f"Training Model ({inpainter.width} x {inpainter.height})",
+                f"Training Model ({inpainter.width}x{inpainter.height})",
                 f"Iteration: {progress.iteration}",
                 f"Loss: {progress.loss:.5f}",
                 f"Duration: {format_duration(progress.duration)}",
@@ -126,7 +125,7 @@ def train_command(path: str, dataset: str, iterations: int, threshold: float, ca
 
     if (iterations == None or inpainter.iterations >= iterations) and (threshold == None or inpainter.loss <= threshold):
         parts = [
-            f"Model Info ({inpainter.width} x {inpainter.height})",
+            f"Model Info ({inpainter.width}x{inpainter.height})",
             f"Iteration: {inpainter.iterations}",
             f"Loss: {inpainter.loss:.5f}"
         ]

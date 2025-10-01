@@ -1,4 +1,3 @@
-from functools import cache
 from pathlib import Path
 import PIL.Image as pil
 from math import ceil
@@ -70,9 +69,9 @@ def train_command(path: str, dataset: str, iterations: int, threshold: float, ca
     # The loading callback.
     def load_callback(progress: LoadProgress):
         parts = [
-            "Loading Dataset",
+            f"Loading Dataset ({cache})",
             f"Loaded: {progress.loaded}",
-            f"Total: {progress.total}",
+            f"Total: {progress.total}"
         ]
 
         print(" | ".join(f"{part: <20}" for part in parts))
@@ -90,7 +89,7 @@ def train_command(path: str, dataset: str, iterations: int, threshold: float, ca
 
         if iterations != None:
             parts = [
-                f"Training Model ({marker.width} x {marker.height})",
+                f"Training Model ({marker.width}x{marker.height})",
                 f"Iteration: {progress.iteration}",
                 f"Loss: {progress.loss:.5f}",
                 f"Duration: {format_duration(progress.duration)}",
@@ -106,7 +105,7 @@ def train_command(path: str, dataset: str, iterations: int, threshold: float, ca
             estimate = ceil((progress.loss - threshold) / average_difference(loss_history)) * (sum(duration_history) / len(duration_history)) if len(loss_history) > 1 else 0
 
             parts = [
-                f"Training Model ({marker.width} x {marker.height})",
+                f"Training Model ({marker.width}x{marker.height})",
                 f"Iteration: {progress.iteration}",
                 f"Loss: {progress.loss:.5f}",
                 f"Duration: {format_duration(progress.duration)}",
@@ -122,9 +121,9 @@ def train_command(path: str, dataset: str, iterations: int, threshold: float, ca
 
     if (iterations == None or marker.iterations >= iterations) and (threshold == None or marker.loss <= threshold):
         parts = [
-            f"Info Model ({marker.width} x {marker.height})",
+            f"Info Model ({marker.width}x{marker.height})",
             f"Iteration: {marker.iterations}",
-            f"Loss: {marker.loss:.5f}",
+            f"Loss: {marker.loss:.5f}"
         ]
 
         print("Info     |" + " | ".join(f"{part: <20}" for part in parts))
