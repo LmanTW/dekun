@@ -1,14 +1,13 @@
 from typing import Callable, cast
+from shutil import rmtree
+from typing import Union
 from pathlib import Path
 import PIL.Image as pil
 import tempfile
-import shutil
 import torch
 import gc
 
-from torch._prims_common import check
-
-from dekun.core.utils import device_available_memory, transform_image, fit_tensor 
+from dekun.core.utils import LoadProgress, device_available_memory, transform_image, fit_tensor
 from dekun.core.dataset import Dataset, Entry
 
 # Load an entry.
@@ -25,7 +24,7 @@ def load_entry(entry: Entry, width: int, height: int, device: torch.device):
 class Loader(object):
 
     # Initialize a marker dataset loader.
-    def __init__(self, dataset: Dataset, width: int, height: int, cache: str, device: torch.device):
+    def __init__(self, dataset: Dataset, width: int, height: int, cache: str, device: torch.device, load_callback: Union[Callable[[LoadProgress], None], None] = None):
         self.dataset = dataset
         self.entries = []
 
@@ -54,6 +53,9 @@ class Loader(object):
                     index = (self.chunks * chunk_size) + len(chunk)
                     chunk.append(load_entry(self.entries[index], self.width, self.height, self.device))
 
+                    if load_callback != None:
+                        load_callback(LoadProgress(index + 1, len(self.entries)))
+
                 torch.save(chunk, str(self.temporary.joinpath(f"chunk-{self.chunks + 1}.pth")))
                 gc.collect()
 
@@ -64,11 +66,12 @@ class Loader(object):
         elif cache == "memory":
             self.processed_entries = []
 
-            for name in dataset.list():
-                entry = dataset.get(name)
-
+            for index, entry in enumerate(self.entries):
                 if entry.exists():
                     self.processed_entries.append(load_entry(entry, self.width, self.height, self.device))
+
+                if load_callback != None:
+                    load_callback(LoadProgress(index + 1, len(self.entries)))
         elif cache != "none":
             raise ValueError(f"Unsupported cache type: {cache}")
 
@@ -79,7 +82,7 @@ class Loader(object):
     # Exit the dataset loader.
     def __exit__(self, exc_type, exc_value, exc_traceback):
         if self.cache == "disk":
-            shutil.rmtree(str(self.temporary))
+            rmtree(str(self.temporary))
 
         gc.collect()
 

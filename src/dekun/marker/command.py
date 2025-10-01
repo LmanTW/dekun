@@ -5,7 +5,7 @@ from math import ceil
 import click
 import torch
 
-from dekun.core.utils import format_duration, average_difference
+from dekun.core.utils import LoadProgress, TrainProgress, format_duration, average_difference
 from dekun.core.dataset import Dataset
 from dekun.marker.model import Marker
 
@@ -67,9 +67,20 @@ def train_command(path: str, dataset: str, iterations: int, threshold: float, ca
     duration_history = []
     loss_history = []
 
-    def callback(iteration, loss, duration):
-        duration_history.append(duration)
-        loss_history.append(loss)
+    # The loading callback.
+    def load_callback(progress: LoadProgress):
+        parts = [
+            "Loading Dataset",
+            f"Loaded: {progress.loaded}",
+            f"Total: {progress.total}",
+        ]
+
+        print(" | ".join(f"{part: <20}" for part in parts))
+
+    # The training callback.
+    def train_callback(progress: TrainProgress):
+        duration_history.append(progress.duration)
+        loss_history.append(progress.loss)
 
         if len(duration_history) > 10:
             del duration_history[0]
@@ -79,43 +90,46 @@ def train_command(path: str, dataset: str, iterations: int, threshold: float, ca
 
         if iterations != None:
             parts = [
-                f"Iteration: {iteration}",
-                f"Loss: {loss:.5f}",
-                f"Duration: {format_duration(duration)}",
-                f"Estimate: {format_duration((iterations - iteration) * (sum(duration_history) / len(duration_history)))}"
+                f"Training Model ({marker.width} x {marker.height})",
+                f"Iteration: {progress.iteration}",
+                f"Loss: {progress.loss:.5f}",
+                f"Duration: {format_duration(progress.duration)}",
+                f"Estimate: {format_duration((iterations - progress.iteration) * (sum(duration_history) / len(duration_history)))}"
             ]
 
             print(" | ".join(f"{part: <20}" for part in parts))
 
-            if iteration < iterations:
+            if progress.iteration < iterations:
                 return True
 
         if threshold != None:
-            estimate = ceil((loss - threshold) / average_difference(loss_history)) * (sum(duration_history) / len(duration_history)) if len(loss_history) > 1 else 0
+            estimate = ceil((progress.loss - threshold) / average_difference(loss_history)) * (sum(duration_history) / len(duration_history)) if len(loss_history) > 1 else 0
 
             parts = [
-                f"Iteration: {iteration}",
-                f"Loss: {loss:.5f}",
-                f"Duration: {format_duration(duration)}",
+                f"Training Model ({marker.width} x {marker.height})",
+                f"Iteration: {progress.iteration}",
+                f"Loss: {progress.loss:.5f}",
+                f"Duration: {format_duration(progress.duration)}",
                 f"Estimate: {format_duration(estimate) if len(loss_history) > 1 and estimate >= 0 else 'unknown'}"
             ]
 
             print(" | ".join(f"{part: <20}" for part in parts))
 
-            if loss > threshold:
+            if progress.loss > threshold:
                 return True
 
         return False
 
     if (iterations == None or marker.iterations >= iterations) and (threshold == None or marker.loss <= threshold):
         parts = [
+            f"Info Model ({marker.width} x {marker.height})",
             f"Iteration: {marker.iterations}",
             f"Loss: {marker.loss:.5f}",
         ]
 
-        print(" | ".join(f"{part: <20}" for part in parts))
+        print("Info     |" + " | ".join(f"{part: <20}" for part in parts))
     else:
-        marker.train(Dataset(Path(dataset)), cache, callback)
+        marker.train(Dataset(Path(dataset)), cache, load_callback, train_callback)
         marker.save(Path(path))
 
 marker_command.add_command(init_command)

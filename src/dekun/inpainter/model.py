@@ -5,7 +5,7 @@ import numpy as numpy
 import torch
 import time
 
-from dekun.core.utils import resolve_device, transform_image, fit_tensor
+from dekun.core.utils import LoadProgress, TrainProgress, resolve_device, transform_image, fit_tensor
 from dekun.inpainter.loader import Loader
 from dekun.core.dataset import Dataset
 from dekun.core.unet import UNet
@@ -47,15 +47,15 @@ class Inpainter:
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr = 1e-4)
 
     # Train the inpainter.
-    def train(self, dataset: Dataset, cache: str = "none", callback: Union[Callable[[int, float, int], bool], None] = None):
+    def train(self, dataset: Dataset, cache: str = "none", load_callback: Union[Callable[[LoadProgress], None], None] = None, train_callback: Union[Callable[[TrainProgress], bool], None] = None):
         self.model.train()
 
-        with Loader(dataset, self.width, self.height, cache, self.device) as loader:
+        with Loader(dataset, self.width, self.height, cache, self.device, load_callback) as loader:
             while True:
                 start = time.time()
                 average = []
 
-                def train_callback(image: torch.Tensor, mask: torch.Tensor, combined: torch.Tensor):
+                def train_step(image: torch.Tensor, mask: torch.Tensor, combined: torch.Tensor):
                     prediction = self.model(torch.cat((combined, mask), dim=1))
                     loss = self.criterion(prediction, image)
 
@@ -65,12 +65,12 @@ class Inpainter:
 
                     average.append(loss.item())
                 
-                loader.loop(train_callback)
+                loader.loop(train_step)
 
                 self.loss = sum(average) / len(average)
                 self.iterations += 1
 
-                if callback == None or not callback(self.iterations, self.loss, round(time.time() - start)):
+                if train_callback == None or not train_callback(TrainProgress(self.iterations, self.loss, round(time.time() - start))):
                     break
 
     # Inpaint an image.

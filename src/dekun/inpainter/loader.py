@@ -1,13 +1,13 @@
-from threading import ExceptHookArgs
 from typing import Callable, cast
-from pathlib import Path
 from shutil import rmtree
+from typing import Union
+from pathlib import Path
 import PIL.Image as pil
 import tempfile
 import torch
 import gc
 
-from dekun.core.utils import device_available_memory, transform_image, fit_tensor
+from dekun.core.utils import LoadProgress, device_available_memory, transform_image, fit_tensor
 from dekun.core.dataset import Dataset, Entry
 
 COLORS = [
@@ -45,7 +45,7 @@ def load_entry(index: int, entry: Entry, width: int, height: int, device: torch.
 class Loader(object):
 
     # Initialize a inpainter dataset loader.
-    def __init__(self, dataset: Dataset, width: int, height: int, cache: str, device: torch.device):
+    def __init__(self, dataset: Dataset, width: int, height: int, cache: str, device: torch.device, load_callback: Union[Callable[[LoadProgress], None], None] = None):
         self.dataset = dataset
         self.entries = []
 
@@ -74,6 +74,9 @@ class Loader(object):
                     index = (self.chunks * chunk_size) + len(chunk)
                     chunk.append(load_entry(index, self.entries[index], self.width, self.height, self.device))
 
+                    if load_callback != None:
+                        load_callback(LoadProgress(index + 1, len(self.entries)))
+
                 torch.save(chunk, str(self.temporary.joinpath(f"chunk-{self.chunks + 1}.pth")))
                 gc.collect()
 
@@ -82,12 +85,14 @@ class Loader(object):
 
                 self.chunks += 1
         elif cache == "memory":
-            self.processed_entries = []
+            self.processed_entries = [] 
 
             for index, entry in enumerate(self.entries):
                 if entry.exists():
                     self.processed_entries.append(load_entry(index, entry, self.width, self.height, self.device))
 
+                if load_callback != None:
+                    load_callback(LoadProgress(index + 1, len(self.entries)))
         elif cache != "none":
             raise ValueError(f"Unsupported cache type: {cache}")
 
