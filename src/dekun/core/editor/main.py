@@ -7,10 +7,12 @@ from starlette.routing import Mount
 from hypercorn.config import Config
 from hypercorn.asyncio import serve
 from base64 import b64decode
+from threading import Timer
 from pathlib import Path
 from typing import cast
 import asyncio
 import uvloop
+import gc
 
 from dekun.core.dataset import Dataset, Info
 
@@ -160,6 +162,14 @@ def start_editor(port: int, dataset_path: Path):
 
     config = Config()
     config.bind = [f"0.0.0.0:{str(port)}"]
+
+    # Trigger garbage collection.
+    def trigger_garbage_collection():
+        gc.collect()
+
+        Timer(30.0, trigger_garbage_collection).start()
+
+    trigger_garbage_collection()
 
     uvloop.install()
     asyncio.run(serve(app, config)) # type: ignore
