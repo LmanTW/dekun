@@ -144,9 +144,18 @@ export default () => {
             <p style={{ marginRight: 'var(--spacing-small)' }}>Skip Current Image:</p>
             <Keybind id='skipImage'/>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: 'var(--spacing-big)' }}>
             <p style={{ marginRight: 'var(--spacing-small)' }}>Submit Current Image:</p>
             <Keybind id='submitImage'/>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: 'var(--spacing-small)' }}>
+            <p style={{ marginRight: 'var(--spacing-small)' }}>Jump to Bottom Entry:</p>
+            <Keybind id='jumpToTopEntry'/>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <p style={{ marginRight: 'var(--spacing-small)' }}>Jump to Top Entry:</p>
+            <Keybind id='jumpToBottomEntry'/>
           </div>
         </div>
       </div>

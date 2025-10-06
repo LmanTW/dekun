@@ -4,9 +4,9 @@ import { Combination, keysToCombination } from '../components/Keybinds'
 import Image from './image'
 
 // Recover states from the local storage.
-function recoverStates <T> (name: string, value: T): T {
+function recoverStates <T extends object> (name: string, value: T): T {
   if (localStorage.hasOwnProperty(name)) {
-    return JSON.parse(localStorage.getItem(name)!)
+    return Object.assign(value, JSON.parse(localStorage.getItem(name)!))
   }
 
   return value  
@@ -70,7 +70,10 @@ const defaultKeybinds: {
 
   undoLastAction: Combination,
   skipImage: Combination,
-  submitImage: Combination
+  submitImage: Combination,
+
+  jumpToTopEntry: Combination,
+  jumpToBottomEntry: Combination
 } = {
   moveLeft: keysToCombination(['a']),
   moveRight: keysToCombination(['d']),
@@ -89,7 +92,10 @@ const defaultKeybinds: {
 
   undoLastAction: keysToCombination(['x']),
   skipImage: keysToCombination(['z']),
-  submitImage: keysToCombination(['c'])
+  submitImage: keysToCombination(['c']),
+
+  jumpToTopEntry: keysToCombination(['t']),
+  jumpToBottomEntry: keysToCombination(['b'])
 }
 
 const settings = signal<typeof defaultSettings>(recoverStates('settings', defaultSettings))

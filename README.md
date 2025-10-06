@@ -12,4 +12,4 @@ uv tool install git+https://github.com/LmanTW/dekun
 ```
 
 > [!NOTE]
-> If you want support for hardware acceleration backend other than cpu and cuda, you need to clone the repository and then run `uv sync --group <group>`. The avialiable groups are: "cpu", "xpu" and "cuda".
+> If you want support for hardware acceleration backend other than cpu or cuda, you'll need to clone the repository and then run `uv sync --group <group>`. The avialiable groups are: "cpu", "xpu" and "cuda".

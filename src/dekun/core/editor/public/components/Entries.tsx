@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState } from 'preact/hooks'
 import { batch, signal } from '@preact/signals'
 
+import Control from '../scripts/control'
 import State from '../scripts/state'
 import Image from '../scripts/image'
 
@@ -29,7 +30,7 @@ const range = signal<{
 })
 
 // The entry manager.
-class EntryManager {
+export class EntryManager {
   static loading: number = 0
 
   // Load the entries.
@@ -85,14 +86,7 @@ class EntryManager {
       }
     }
 
-    batch(() => {
-      range.value = {
-        top: 0,
-        bottom: 0
-      }
-
-      this.loadBottom(10, 20) 
-    })
+    this.loadBottom(10, 20, 0, 0) 
   }
 
   // update the filter.
@@ -113,10 +107,10 @@ class EntryManager {
   }
 
   // Load entries at the top.
-  public static loadTop(amount: number, max: number): void {
+  public static loadTop(amount: number, max: number, top?: number, bottom?: number): void {
     if (data.value !== null) {
-      let topIndex = range.value.top
-      let bottomIndex = range.value.bottom
+      let topIndex = (top !== undefined) ? top : range.value.top
+      let bottomIndex = (bottom !== undefined) ? bottom : range.value.bottom
 
       if (Math.abs(topIndex - bottomIndex) > max) {
         for (let i = 0; i < amount; i++) {
@@ -136,10 +130,10 @@ class EntryManager {
   }
 
   // Load entries at the bottom.
-  public static loadBottom(amount: number, max: number): void {
+  public static loadBottom(amount: number, max: number, top?: number, bottom?: number): void {
     if (data.value !== null) {
-      let topIndex = range.value.top
-      let bottomIndex = range.value.bottom
+      let topIndex = (top !== undefined) ? top : range.value.top
+      let bottomIndex = (bottom !== undefined) ? bottom : range.value.bottom
 
       if (Math.abs(topIndex - bottomIndex) > max) {
         for (let i = 0; i < amount; i++) {
@@ -157,6 +151,20 @@ class EntryManager {
       }
     }
   }
+
+  // Jump to the top entry.
+  public static jumpTop(): void {
+    if (data.value !== null) {
+      this.loadBottom(10, 20, 0, 0)
+    }
+  }
+
+  // Jump to the bottom entry.
+  public static jumpBottom(): void {
+    if (data.value !== null) {
+      EntryManager.loadTop(10, 20, data.value.filtered.length - 1, data.value.filtered.length - 1)
+    }
+  }
 }
 
 // The entry component.
@@ -169,16 +177,16 @@ const Entry = (id: string) => {
 
   const [toggled, setToggled] = useState<boolean>(true)
 
-  // Handle image load.
-  const handleImageLoad = (): void => {
+  // Handle when the image is loaded.
+  const handleImageLoaded = (): void => {
     if (!imageLoadedRefrence.current) {
       imageLoadedRefrence.current = true
       EntryManager.loading--
     }
   }
 
-  // Handle mask load.
-  const handleMaskLoad = (): void => {
+  // Handle when the mask is loaded.
+  const handleMaskLoaded = (): void => {
     if (!maskLoadedRefrence.current) {
       maskLoadedRefrence.current = true
       EntryManager.loading--
@@ -261,8 +269,8 @@ const Entry = (id: string) => {
   return (
     <div key={id}>
       <div style={{ position: 'relative', width: '100%', marginBottom: '-0.25rem', userSelect: 'none' }}>
-        <img ref={imageRefrence} src={`/resource/image/${id}`} onLoad={handleImageLoad} style={{ contentVisibility: 'auto', borderRadius: '0.25rem 0.25rem 0rem 0rem', width: '100%' }}/>
-        <img ref={maskRefrence} src={`/resource/mask/${id}`} onLoad={handleMaskLoad} onClick={() => setToggled(!toggled)} style={{ position: 'absolute', contentVisibility: 'auto',borderRadius: '0.25rem 0.25rem 0rem 0rem', left: '0rem', top: '0rem', width: '100%', filter: 'invert(46%) sepia(88%) saturate(3060%) hue-rotate(87deg) brightness(126%) contrast(119%)', opacity: (toggled) ? 1 : 0, cursor: 'pointer' }}/>
+        <img ref={imageRefrence} src={`/resource/image/${id}`} onLoad={handleImageLoaded} style={{ contentVisibility: 'auto', borderRadius: '0.25rem 0.25rem 0rem 0rem', width: '100%' }}/>
+        <img ref={maskRefrence} src={`/resource/mask/${id}`} onLoad={handleMaskLoaded} onClick={() => setToggled(!toggled)} style={{ position: 'absolute', contentVisibility: 'auto',borderRadius: '0.25rem 0.25rem 0rem 0rem', left: '0rem', top: '0rem', width: '100%', filter: 'invert(46%) sepia(88%) saturate(3060%) hue-rotate(87deg) brightness(126%) contrast(119%)', opacity: (toggled) ? 1 : 0, cursor: 'pointer' }}/>
       </div>
 
       <div style={{ display: 'flex', backgroundColor: 'var(--color-container-light)', borderRadius: '0rem 0rem 0.25rem 0.25rem', padding: 'var(--spacing-small)' }}>
@@ -282,10 +290,10 @@ export default () => {
   useEffect(() => {
     if (containerRefrence.current !== null) {
       const interval = setInterval(() => {
-        if (data.value !== null && EntryManager.loading === 0) {
-          if (containerRefrence.current!.scrollTop < window.innerHeight / 5) {
+        if (containerRefrence.current !== null && (data.value !== null && EntryManager.loading === 0)) {
+          if (range.value.top > 0 && containerRefrence.current.scrollTop < window.innerHeight / 5) {
             EntryManager.loadTop(10, 20)
-          } else if (Math.round(containerRefrence.current!.scrollTop + containerRefrence.current!.clientHeight) >= containerRefrence.current!.scrollHeight - (window.innerHeight / 5)) {
+          } else if (Math.round(containerRefrence.current.scrollTop + containerRefrence.current.clientHeight) >= containerRefrence.current.scrollHeight - (window.innerHeight / 5)) {
             EntryManager.loadBottom(10, 20)
           }
         }
