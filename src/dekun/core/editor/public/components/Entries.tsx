@@ -172,6 +172,7 @@ const Entry = (id: string) => {
   const imageRefrence = useRef<HTMLImageElement>(null)
   const maskRefrence = useRef<HTMLImageElement>(null)
 
+  const initializedRefrence = useRef<boolean>(false)
   const imageLoadedRefrence = useRef<boolean>(false)
   const maskLoadedRefrence = useRef<boolean>(false)
 
@@ -256,11 +257,14 @@ const Entry = (id: string) => {
   } 
 
   useEffect(() => {
-    EntryManager.loading += 2
+    if (!initializedRefrence.current) {
+      EntryManager.loading += 2
+      initializedRefrence.current = true
 
-    return () => {
-      EntryManager.loading -= (imageLoadedRefrence.current) ? 0 : 1
-      EntryManager.loading -= (maskLoadedRefrence.current) ? 0 : 1
+      return () => {
+        EntryManager.loading -= (imageLoadedRefrence.current) ? 0 : 1
+        EntryManager.loading -= (maskLoadedRefrence.current) ? 0 : 1
+      }
     }
   }, [])
 
