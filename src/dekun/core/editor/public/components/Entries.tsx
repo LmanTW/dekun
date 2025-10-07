@@ -289,20 +289,20 @@ export default () => {
   useEffect(() => {
     if (containerRefrence.current !== null) {
       // Handle when the container is scrolled.
-      const handleScroll = () => {
+      const handleScroll = (event: WheelEvent): void => {
         if (data.value !== null && EntryManager.loadingImages.size === 0) {
-          if (range.value.top > 0 && containerRefrence.current!.scrollTop < window.innerHeight / 5) {
+          if (event.deltaY < 0 && (range.value.top > 0 && containerRefrence.current!.scrollTop < window.innerHeight / 5)) {
             EntryManager.loadTop(10, 20)
-          } else if (Math.round(containerRefrence.current!.scrollTop + containerRefrence.current!.clientHeight) >= containerRefrence.current!.scrollHeight - (window.innerHeight / 5)) {
+          } else if (event.deltaY > 0 && (Math.round(containerRefrence.current!.scrollTop + containerRefrence.current!.clientHeight) >= containerRefrence.current!.scrollHeight - (window.innerHeight / 5))) {
             EntryManager.loadBottom(10, 20)
           }
         }
       }
 
-      containerRefrence.current.addEventListener('scroll', handleScroll)
+      containerRefrence.current.addEventListener('wheel', handleScroll)
 
       return () => {
-        containerRefrence.current!.removeEventListener('scroll', handleScroll)
+        containerRefrence.current!.removeEventListener('wheel', handleScroll)
       }
     }
   })
@@ -320,8 +320,8 @@ export default () => {
           }
         </div>
 
-        <button onClick={() => EntryManager.jumpTop()} style={{ textWrap: 'nowrap', marginRight: 'var(--spacing-small)', cursor: 'pointer' }}>To Top</button>
-        <button onClick={() => EntryManager.jumpBottom()} style={{ textWrap: 'nowrap', marginRight: 'var(--spacing-medium)',  cursor: 'pointer' }}>To Bottom</button>
+        <button onClick={() => EntryManager.jumpBottom()} style={{ textWrap: 'nowrap', marginRight: 'var(--spacing-small)', cursor: 'pointer' }}>To Bottom</button>
+        <button onClick={() => EntryManager.jumpTop()} style={{ textWrap: 'nowrap', marginRight: 'var(--spacing-medium)', cursor: 'pointer' }}>To Top</button>
 
         {
           (data.value === null) ? (
@@ -360,7 +360,7 @@ export default () => {
         }
 
         <button disabled={data.value === null} onClick={() => EntryManager.loadEntries()} style={{ cursor: 'pointer' }}>Refresh</button>
-      </div> 
+      </div>
 
       <div class={(State.settings.reduceTransparency) ? 'container-solid-dark' : 'container-glassy-dark'} style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
         <div style={{ backgroundColor: 'var(--color-foreground)', width: '100%', height: '0.05rem', opacity: 0.1 }}></div>
