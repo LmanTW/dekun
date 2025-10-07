@@ -185,15 +185,11 @@ const Entry = (id: string) => {
   // Handle when the image is loaded.
   const handleImageLoaded = (source: string): void => {
     EntryManager.loadingImages.delete(`${source.substring(source.lastIndexOf('/') + 1)}-image`)
-
-    console.log('Loaded', EntryManager.loadingImages.size, source.substring(source.lastIndexOf('/') + 1))
   }
 
   // Handle when the mask is loaded.
   const handleMaskLoaded = (source: string): void => {
     EntryManager.loadingImages.delete(`${source.substring(source.lastIndexOf('/') + 1)}-mask`)
-
-    console.log('Loaded', EntryManager.loadingImages.size, source.substring(source.lastIndexOf('/') + 1))
   }
 
   // Edit the entry.

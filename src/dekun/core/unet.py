@@ -11,7 +11,7 @@ class ConvolutionalBlock(nn.Module):
         if in_channels < 1:
             raise ValueError(f"Invalid input channels: {in_channels}")
         if out_channels < 1:
-            raise ValueError(f"Invalid output channels: {out_channels}")
+            raise ValueError(f"Invalid output channels: {out_channels}") 
 
         self.block = nn.Sequential(
             nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1),
@@ -25,7 +25,6 @@ class ConvolutionalBlock(nn.Module):
     # Forward the convolutional block.
     def forward(self, x):
         return self.block(x)
-
 
 # The U-Net.
 class UNet(nn.Module):
@@ -46,7 +45,8 @@ class UNet(nn.Module):
 
         for layer in range(1, depth + 1):
             self.encoders.append(ConvolutionalBlock(in_channels, 2 ** (layer + 5)))
-            self.pools.append(nn.MaxPool2d(kernel_size=2, stride=2))
+            self.pools.append(nn.MaxPool2d(2))
+
             in_channels = 2 ** (layer + 5)
 
         self.decoders = nn.ModuleList()
