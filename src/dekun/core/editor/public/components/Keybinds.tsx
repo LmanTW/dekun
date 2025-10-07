@@ -133,6 +133,10 @@ export default () => {
             <p style={{ marginRight: 'var(--spacing-small)' }}>Change Stroke Opacity:</p>
             <Keybind id='changeStrokeOpacity'/>
           </div>
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: 'var(--spacing-big)' }}>
+            <p style={{ marginRight: 'var(--spacing-small)' }}>Change Image Filter:</p>
+            <Keybind id='changeImageFilter'/>
+          </div>
 
           <div style={{ display: 'flex', alignItems: 'center', marginBottom: 'var(--spacing-small)' }}>
             <p style={{ marginRight: 'var(--spacing-small)' }}>Remove Last Stroke or Point:</p>

@@ -67,6 +67,7 @@ const defaultKeybinds: {
   increaseStrokeSize: Combination,
   decreaseStrokeSize: Combination,
   changeStrokeOpacity: Combination,
+  changeImageFilter: Combination,
 
   undoLastAction: Combination,
   skipImage: Combination,
@@ -86,6 +87,7 @@ const defaultKeybinds: {
   increaseStrokeSize: keysToCombination(['=']),
   decreaseStrokeSize: keysToCombination(['-']),
   changeStrokeOpacity: keysToCombination(['f']),
+  changeImageFilter: keysToCombination(['v']),
 
   undoLastAction: keysToCombination(['x']),
   skipImage: keysToCombination(['z']),

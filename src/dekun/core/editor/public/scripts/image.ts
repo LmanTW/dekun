@@ -10,8 +10,8 @@ const modules = import.meta.glob('./drivers/*.ts', { eager: true }) as {
 
 // The current image.
 export default class Image {
-  public static canvas = document.createElement('canvas')
-  public static ctx = this.canvas.getContext('2d')!
+  public static baseCanvas = document.createElement('canvas')
+  public static baseCtx = this.baseCanvas.getContext('2d')!
 
   public static overlayCanvas = document.createElement('canvas')
   public static overlayCtx = this.overlayCanvas.getContext('2d')!
@@ -77,18 +77,19 @@ export default class Image {
               strokes: []
             }
 
-            this.canvas.width = element.width
-            this.canvas.height = element.height
+            this.baseCanvas.width = element.width
+            this.baseCanvas.height = element.height
             this.overlayCanvas.width = element.width
             this.overlayCanvas.height = element.height
 
             if (State.settings.randomStrokes) {
               this.generateRandomStrokes()
-              this.renderImage()
             }
 
             Editor.reset()
             Control.reset()
+
+            this.renderBase()
           }
         })
       }
@@ -170,42 +171,49 @@ export default class Image {
     }
   }
 
-  // Render the image.
-  public static renderImage(): HTMLCanvasElement {
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
-    this.ctx.imageSmoothingEnabled = false
+  // Render the base.
+  public static renderBase(): HTMLCanvasElement {
+    this.baseCtx.clearRect(0, 0, this.baseCanvas.width, this.baseCanvas.height)
+    this.baseCtx.imageSmoothingEnabled = false
 
     if (this.data !== null) {
+      if (Control.imageFilter === 1) {
+        this.baseCtx.filter = 'invert(100%)'
+      }
+
+      this.baseCtx.drawImage(this.data.element, 0, 0, this.baseCanvas.width, this.baseCanvas.height)
+      this.baseCtx.filter = 'none'
+
       if (Control.strokeOpacity > 0) {
-        this.ctx.fillStyle = `rgba(0,255,0,${Control.strokeOpacity})`
-        this.ctx.strokeStyle = `rgba(0,255,0,${Control.strokeOpacity})`
+        this.baseCtx.fillStyle = `rgba(0,255,0,${Control.strokeOpacity})`
+        this.baseCtx.strokeStyle = `rgba(0,255,0,${Control.strokeOpacity})`
 
         for (const stroke of this.data.strokes) {
           if (stroke.type === 1 || stroke.type === 2) {
-            this.ctx.lineCap = (stroke.type === 1) ? 'butt' : 'round'
-            this.ctx.lineWidth = (this.data.element.width + this.data.element.height) * (stroke.size * 0.0025)
-            this.ctx.moveTo(stroke.x1, stroke.y1)
-            this.ctx.lineTo(stroke.x2, stroke.y2)
-            this.ctx.stroke()
-            this.ctx.beginPath()          
+            this.baseCtx.lineCap = (stroke.type === 1) ? 'butt' : 'round'
+            this.baseCtx.lineWidth = (this.data.element.width + this.data.element.height) * (stroke.size * 0.0025)
+            this.baseCtx.moveTo(stroke.x1, stroke.y1)
+            this.baseCtx.lineTo(stroke.x2, stroke.y2)
+            this.baseCtx.stroke()
+            this.baseCtx.beginPath()          
           } else if (stroke.type === 3) {
             for (const [index, point] of stroke.points.entries()) {
               if (index === 0) {
-                this.ctx.moveTo(point.x, point.y)
+                this.baseCtx.moveTo(point.x, point.y)
               } else {
-                this.ctx.lineTo(point.x, point.y)
+                this.baseCtx.lineTo(point.x, point.y)
               }
             }
 
-            this.ctx.lineTo(stroke.points[0].x, stroke.points[0].y)
-            this.ctx.fill()
-            this.ctx.beginPath()
+            this.baseCtx.lineTo(stroke.points[0].x, stroke.points[0].y)
+            this.baseCtx.fill()
+            this.baseCtx.beginPath()
           }
         }
       } 
     }
 
-    return this.canvas
+    return this.baseCanvas
   }
 
   // Render the overlay.

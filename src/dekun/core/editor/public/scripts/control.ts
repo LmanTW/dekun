@@ -39,13 +39,14 @@ export default class Control {
   static strokeSize: number = 2
   static strokePoints: { x: number, y: number }[] = []
   static strokeOpacity: number = 1
+  static imageFilter: number = 0
 
   static startX: null | number = null
   static startY: null | number = null
   static moveIndex: null | number = null
 
   static saveConfirm: number = 0
-  static skipConfirm: number = 0
+  static skipConfirm: number = 1
 
   // Reset the control.
   public static reset(): void {
@@ -93,7 +94,7 @@ export default class Control {
                 y: this.mouse.imageY
               })
 
-              Image.renderImage()
+              Image.renderBase()
             }
           }
         } else if (this.mouse.button.right === 1) {
@@ -111,7 +112,7 @@ export default class Control {
               if (lastStroke !== undefined && lastStroke.type === 3) {
                 this.strokePoints = (Image.data.strokes.splice(Image.data.strokes.length - 1, 1)[0] as { points: { x: number, y: number }[] }).points 
 
-                Image.renderImage()
+                Image.renderBase()
               }
             } else {
               if (this.strokePoints.length > 2) {
@@ -120,7 +121,7 @@ export default class Control {
                   points: this.strokePoints
                 })
 
-                Image.renderImage()
+                Image.renderBase()
               }
 
               this.strokePoints = []
@@ -148,7 +149,7 @@ export default class Control {
             this.startX = null
             this.startY = null
 
-            Image.renderImage()
+            Image.renderBase()
           } else if (this.strokeType === 3) {
             this.moveIndex = null
           }
@@ -206,13 +207,21 @@ export default class Control {
         this.strokeOpacity = 1
       }
 
-      Image.renderImage()
+      Image.renderBase()
+    } else if (this.isCombinationClicked(State.keybinds.changeImageFilter)) {
+      this.imageFilter++
+
+      if (this.imageFilter > 1) {
+        this.imageFilter = 0
+      }
+
+      Image.renderBase()
     } else if (this.isCombinationClicked(State.keybinds.undoLastAction)) {
       if (this.strokePoints.length > 0) {
         this.strokePoints.splice(this.strokePoints.length - 1)
       } else if (Image.data !== null && Image.data.strokes.length > 0) {
         Image.data.strokes.splice(Image.data.strokes.length - 1)
-        Image.renderImage()
+        Image.renderBase()
       }
     }
 

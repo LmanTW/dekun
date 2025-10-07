@@ -118,19 +118,9 @@ export default class Editor {
       if (Control.skipConfirm > 0) {
         this.ctx.globalAlpha = 1 - Control.skipConfirm
       }
-
-      this.ctx.drawImage(
-        Image.data.element,
-
-        (transform.x - this.camera.x) * this.camera.scale,
-        (transform.y - this.camera.y) * this.camera.scale,
-
-        transform.width * this.camera.scale,
-        transform.height * this.camera.scale
-      )
  
       this.ctx.drawImage(
-        Image.canvas,
+        Image.baseCanvas,
 
         (transform.x - this.camera.x) * this.camera.scale,
         (transform.y - this.camera.y) * this.camera.scale,
