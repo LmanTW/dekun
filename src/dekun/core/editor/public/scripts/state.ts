@@ -70,10 +70,7 @@ const defaultKeybinds: {
 
   undoLastAction: Combination,
   skipImage: Combination,
-  submitImage: Combination,
-
-  jumpToTopEntry: Combination,
-  jumpToBottomEntry: Combination
+  submitImage: Combination
 } = {
   moveLeft: keysToCombination(['a']),
   moveRight: keysToCombination(['d']),
@@ -92,10 +89,7 @@ const defaultKeybinds: {
 
   undoLastAction: keysToCombination(['x']),
   skipImage: keysToCombination(['z']),
-  submitImage: keysToCombination(['c']),
-
-  jumpToTopEntry: keysToCombination(['t']),
-  jumpToBottomEntry: keysToCombination(['b'])
+  submitImage: keysToCombination(['c'])
 }
 
 const settings = signal<typeof defaultSettings>(recoverStates('settings', defaultSettings))

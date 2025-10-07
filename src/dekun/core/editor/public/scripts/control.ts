@@ -1,5 +1,4 @@
 import { Combination } from '../components/Keybinds'
-import { EntryManager } from '../components/Entries'
 import Editor from './editor'
 import State from './state'
 import Image from './image'
@@ -244,14 +243,6 @@ export default class Control {
         }
       } else {
         this.saveConfirm = 0
-      }
-    }
-
-    if (State.layout.entries) {
-      if (this.isCombinationPressed(State.keybinds.jumpToTopEntry)) {
-        EntryManager.jumpTop()
-      } else if (this.isCombinationPressed(State.keybinds.jumpToBottomEntry)) {
-        EntryManager.jumpBottom()
       }
     }
 
