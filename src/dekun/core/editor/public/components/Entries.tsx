@@ -1,9 +1,10 @@
 import { useRef, useEffect, useState } from 'preact/hooks'
 import { batch, signal } from '@preact/signals'
 
-import Control from '../scripts/control'
 import State from '../scripts/state'
 import Image from '../scripts/image'
+
+const eventTarget = new EventTarget()
 
 const data = signal<null | {
   entries: string[],
@@ -31,7 +32,9 @@ const range = signal<{
 
 // The entry manager.
 export class EntryManager {
-  static loading: number = 0
+  public static loading: number = 0
+
+  public static loadingImages = new Set<string>()
 
   // Load the entries.
   public static async loadEntries(): Promise<void> {
@@ -156,6 +159,8 @@ export class EntryManager {
   public static jumpTop(): void {
     if (data.value !== null) {
       this.loadBottom(10, 20, 0, 0)
+
+      eventTarget.dispatchEvent(new Event('jumpTop'))
     }
   }
 
@@ -163,35 +168,32 @@ export class EntryManager {
   public static jumpBottom(): void {
     if (data.value !== null) {
       EntryManager.loadTop(10, 20, data.value.filtered.length - 1, data.value.filtered.length - 1)
+
+      eventTarget.dispatchEvent(new Event('jumpBottom'))
     }
   }
 }
 
 // The entry component.
 const Entry = (id: string) => {
+  const idRefrence = useRef<null | string>(null)
   const imageRefrence = useRef<HTMLImageElement>(null)
   const maskRefrence = useRef<HTMLImageElement>(null)
-
-  const initializedRefrence = useRef<boolean>(false)
-  const imageLoadedRefrence = useRef<boolean>(false)
-  const maskLoadedRefrence = useRef<boolean>(false)
 
   const [toggled, setToggled] = useState<boolean>(true)
 
   // Handle when the image is loaded.
-  const handleImageLoaded = (): void => {
-    if (!imageLoadedRefrence.current) {
-      imageLoadedRefrence.current = true
-      EntryManager.loading--
-    }
+  const handleImageLoaded = (source: string): void => {
+    EntryManager.loadingImages.delete(`${source.substring(source.lastIndexOf('/') + 1)}-image`)
+
+    console.log('Loaded', EntryManager.loadingImages.size, source.substring(source.lastIndexOf('/') + 1))
   }
 
   // Handle when the mask is loaded.
-  const handleMaskLoaded = (): void => {
-    if (!maskLoadedRefrence.current) {
-      maskLoadedRefrence.current = true
-      EntryManager.loading--
-    }
+  const handleMaskLoaded = (source: string): void => {
+    EntryManager.loadingImages.delete(`${source.substring(source.lastIndexOf('/') + 1)}-mask`)
+
+    console.log('Loaded', EntryManager.loadingImages.size, source.substring(source.lastIndexOf('/') + 1))
   }
 
   // Edit the entry.
@@ -254,27 +256,32 @@ const Entry = (id: string) => {
         }
       })
     }
-  } 
+  }
 
   useEffect(() => {
-    if (!initializedRefrence.current) {
-      EntryManager.loading += 2
-      initializedRefrence.current = true
+    if (id !== idRefrence.current) {
+      EntryManager.loadingImages.delete(`${idRefrence.current}-image`)
+      EntryManager.loadingImages.delete(`${idRefrence.current}-mask`)
 
-      return () => {
-        EntryManager.loading -= (imageLoadedRefrence.current) ? 0 : 1
-        EntryManager.loading -= (maskLoadedRefrence.current) ? 0 : 1
+      idRefrence.current = id
+
+      if (imageRefrence.current !== null && !imageRefrence.current.complete) {
+        EntryManager.loadingImages.add(`${id}-image`)
+      }
+
+      if (maskRefrence.current !== null && !maskRefrence.current.complete) {
+        EntryManager.loadingImages.add(`${id}-mask`)
       }
     }
-  }, [])
+  })
 
   const parts = id.split('-')
  
   return (
     <div key={id}>
       <div style={{ position: 'relative', width: '100%', marginBottom: '-0.25rem', userSelect: 'none' }}>
-        <img ref={imageRefrence} src={`/resource/image/${id}`} onLoad={handleImageLoaded} style={{ contentVisibility: 'auto', borderRadius: '0.25rem 0.25rem 0rem 0rem', width: '100%' }}/>
-        <img ref={maskRefrence} src={`/resource/mask/${id}`} onLoad={handleMaskLoaded} onClick={() => setToggled(!toggled)} style={{ position: 'absolute', contentVisibility: 'auto',borderRadius: '0.25rem 0.25rem 0rem 0rem', left: '0rem', top: '0rem', width: '100%', filter: 'invert(46%) sepia(88%) saturate(3060%) hue-rotate(87deg) brightness(126%) contrast(119%)', opacity: (toggled) ? 1 : 0, cursor: 'pointer' }}/>
+        <img ref={imageRefrence} src={`/resource/image/${id}`} onLoad={(event) => handleImageLoaded((event.target as HTMLImageElement).src)} style={{ contentVisibility: 'auto', borderRadius: '0.25rem 0.25rem 0rem 0rem', width: '100%' }}/>
+        <img ref={maskRefrence} src={`/resource/mask/${id}`} onLoad={(event) => handleMaskLoaded((event.target as HTMLImageElement).src)} onClick={() => setToggled(!toggled)} style={{ position: 'absolute', contentVisibility: 'auto',borderRadius: '0.25rem 0.25rem 0rem 0rem', left: '0rem', top: '0rem', width: '100%', filter: 'invert(46%) sepia(88%) saturate(3060%) hue-rotate(87deg) brightness(126%) contrast(119%)', opacity: (toggled) ? 1 : 0, cursor: 'pointer' }}/>
       </div>
 
       <div style={{ display: 'flex', backgroundColor: 'var(--color-container-light)', borderRadius: '0rem 0rem 0.25rem 0.25rem', padding: 'var(--spacing-small)' }}>
@@ -290,11 +297,11 @@ const Entry = (id: string) => {
 // The entries component.
 export default () => {
   const containerRefrence = useRef<HTMLDivElement>(null)
- 
+
   useEffect(() => {
     if (containerRefrence.current !== null) {
       const interval = setInterval(() => {
-        if (containerRefrence.current !== null && (data.value !== null && EntryManager.loading === 0)) {
+        if (containerRefrence.current !== null && (data.value !== null && EntryManager.loadingImages.size === 0)) {
           if (range.value.top > 0 && containerRefrence.current.scrollTop < window.innerHeight / 5) {
             EntryManager.loadTop(10, 20)
           } else if (Math.round(containerRefrence.current.scrollTop + containerRefrence.current.clientHeight) >= containerRefrence.current.scrollHeight - (window.innerHeight / 5)) {
@@ -303,8 +310,28 @@ export default () => {
         }
       }, 100)
 
+      // Handle when jumpped to the top.
+      const handleJumpTop = () => {
+        if (containerRefrence.current !== null) {
+          containerRefrence.current.scrollTo(0, 0)
+        }
+      }
+
+      // Handle when jumpped to the bottom.
+      const handleJumpBottom = () => {
+        if (containerRefrence.current !== null) {
+          containerRefrence.current.scrollTo(0, containerRefrence.current.clientHeight)
+        }
+      }
+
+      eventTarget.addEventListener('jumpTop', handleJumpTop)
+      eventTarget.addEventListener('jumpBottom', handleJumpBottom)
+
       return () => {
         clearInterval(interval)
+
+        eventTarget.removeEventListener('jumpTop', handleJumpTop)
+        eventTarget.removeEventListener('jumpBottom', handleJumpBottom)
       }
     }
   })

@@ -5,7 +5,6 @@ import Image from '../scripts/image'
 // The settings component.
 export default () => {
 
-
   // Update the username.
   const updateUsername = (username: string): void => {
     const characters = username.substring(0, 20).toLowerCase().split('')
