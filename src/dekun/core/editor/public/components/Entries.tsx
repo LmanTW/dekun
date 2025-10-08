@@ -256,6 +256,10 @@ const Entry = (id: string) => {
       if (maskRefrence.current !== null && !maskRefrence.current.complete) {
         EntryManager.loadingImages.add(`${id}-mask`)
       }
+
+      if (maskRefrence.current !== null) {
+        maskRefrence.current.style.opacity = '1'
+      }
     }
   })
 
@@ -378,7 +382,7 @@ export default () => {
       <div class={(State.settings.reduceTransparency) ? 'container-solid-light' : 'container-glassy-light'} style={{ flex: 1, display: 'flex', alignItems: 'center', padding: 'var(--spacing-medium)' }}>
         <p style={{ flex: 1, opacity: 0.5 }}>{range.value.top} ~ {range.value.bottom} ({range.value.bottom - range.value.top})</p>
         <button onClick={() => EntryManager.jumpBottom()} style={{ textWrap: 'nowrap', marginRight: 'var(--spacing-small)', cursor: 'pointer' }}>To Bottom</button>
-        <button onClick={() => EntryManager.jumpTop()} style={{ textWrap: 'nowrap', marginRight: 'var(--spacing-medium)', cursor: 'pointer' }}>To Top</button>
+        <button onClick={() => EntryManager.jumpTop()} style={{ textWrap: 'nowrap', cursor: 'pointer' }}>To Top</button>
       </div>
     </div>
   )
