@@ -85,7 +85,7 @@ class EntryManager {
       }
     }
 
-    this.loadBottom(10, 20, 0, 0) 
+    this.loadBottom(12, 24, 0, 0) 
   }
 
   // update the filter.
@@ -109,16 +109,14 @@ class EntryManager {
   public static loadTop(amount: number, max: number, top?: number, bottom?: number): void {
     if (data.value !== null) {
       let topIndex = (top !== undefined) ? top : range.value.top
-      let bottomIndex = (bottom !== undefined) ? bottom : range.value.bottom
-
-      if (Math.abs(topIndex - bottomIndex) > max) {
-        for (let i = 0; i < amount; i++) {
-          bottomIndex--
-        }
-      }
+      let bottomIndex = (bottom !== undefined) ? bottom : range.value.bottom 
 
       for (let i = 0; i < amount && topIndex > 0; i++) {
         topIndex--
+      }
+
+      while (bottomIndex - topIndex > max) {
+        bottomIndex--
       }
 
       range.value = {
@@ -132,17 +130,15 @@ class EntryManager {
   public static loadBottom(amount: number, max: number, top?: number, bottom?: number): void {
     if (data.value !== null) {
       let topIndex = (top !== undefined) ? top : range.value.top
-      let bottomIndex = (bottom !== undefined) ? bottom : range.value.bottom
-
-      if (Math.abs(topIndex - bottomIndex) > max) {
-        for (let i = 0; i < amount; i++) {
-          topIndex++
-        }
-      }
+      let bottomIndex = (bottom !== undefined) ? bottom : range.value.bottom 
 
       for (let i = 0; i < amount && bottomIndex < data.value.filtered.length; i++) {
         bottomIndex++
-      } 
+      }
+
+      while (bottomIndex - topIndex > max) {
+        topIndex++
+      }
 
       range.value = {
         top: topIndex,
@@ -154,14 +150,14 @@ class EntryManager {
   // Jump to the top entry.
   public static jumpTop(): void {
     if (data.value !== null) {
-      this.loadBottom(10, 20, 0, 0)
+      this.loadBottom(12, 24, 0, 0)
     }
   }
 
   // Jump to the bottom entry.
   public static jumpBottom(): void {
     if (data.value !== null) {
-      this.loadTop(10, 20, data.value.filtered.length - 1, data.value.filtered.length - 1)
+      this.loadTop(12, 24, data.value.filtered.length - 1, data.value.filtered.length - 1)
     }
   }
 }
@@ -292,9 +288,9 @@ export default () => {
       const handleScroll = (event: WheelEvent): void => {
         if (data.value !== null && EntryManager.loadingImages.size === 0) {
           if (event.deltaY < 0 && (range.value.top > 0 && containerRefrence.current!.scrollTop < window.innerHeight / 5)) {
-            EntryManager.loadTop(10, 20)
+            EntryManager.loadTop(12, 24)
           } else if (event.deltaY > 0 && (Math.round(containerRefrence.current!.scrollTop + containerRefrence.current!.clientHeight) >= containerRefrence.current!.scrollHeight - (window.innerHeight / 5))) {
-            EntryManager.loadBottom(10, 20)
+            EntryManager.loadBottom(12, 24)
           }
         }
       }
@@ -319,9 +315,6 @@ export default () => {
             )
           }
         </div>
-
-        <button onClick={() => EntryManager.jumpBottom()} style={{ textWrap: 'nowrap', marginRight: 'var(--spacing-small)', cursor: 'pointer' }}>To Bottom</button>
-        <button onClick={() => EntryManager.jumpTop()} style={{ textWrap: 'nowrap', marginRight: 'var(--spacing-medium)', cursor: 'pointer' }}>To Top</button>
 
         {
           (data.value === null) ? (
@@ -380,6 +373,12 @@ export default () => {
         }
 
         <div style={{ backgroundColor: 'var(--color-foreground)', width: '100%', height: '0.05rem', opacity: 0.1 }}></div>
+      </div>
+
+      <div class={(State.settings.reduceTransparency) ? 'container-solid-light' : 'container-glassy-light'} style={{ flex: 1, display: 'flex', alignItems: 'center', padding: 'var(--spacing-medium)' }}>
+        <p style={{ flex: 1, opacity: 0.5 }}>{range.value.top} ~ {range.value.bottom} ({range.value.bottom - range.value.top})</p>
+        <button onClick={() => EntryManager.jumpBottom()} style={{ textWrap: 'nowrap', marginRight: 'var(--spacing-small)', cursor: 'pointer' }}>To Bottom</button>
+        <button onClick={() => EntryManager.jumpTop()} style={{ textWrap: 'nowrap', marginRight: 'var(--spacing-medium)', cursor: 'pointer' }}>To Top</button>
       </div>
     </div>
   )
