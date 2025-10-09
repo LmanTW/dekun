@@ -1,17 +1,13 @@
+from typing import List
 import torch.nn as nn
 import torch
 
-# The convolutional block.
-class ConvolutionalBlock(nn.Module):
+# A double convolutional block.
+class DoubleConvolutionalBlock(nn.Module):
 
-    # Initialize a convolutional block.
+    # Initialize a double convolutional block.
     def __init__(self, in_channels: int, out_channels: int):
-        super(ConvolutionalBlock, self).__init__()
-
-        if in_channels < 1:
-            raise ValueError(f"Invalid input channels: {in_channels}")
-        if out_channels < 1:
-            raise ValueError(f"Invalid output channels: {out_channels}") 
+        super(DoubleConvolutionalBlock, self).__init__()
 
         self.block = nn.Sequential(
             nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1),
@@ -19,72 +15,62 @@ class ConvolutionalBlock(nn.Module):
             nn.ReLU(inplace=True),
             nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1),
             nn.BatchNorm2d(out_channels),
-            nn.ReLU(inplace=True),
+            nn.ReLU(inplace=True)
         )
 
-    # Forward the convolutional block.
-    def forward(self, x):
-        return self.block(x)
+    def forward(self, input: torch.Tensor):
+        return self.block(input)
 
-# The U-Net.
+# A standard U-Net.
 class UNet(nn.Module):
 
     # Initialize a U-Net.
-    def __init__(self, in_channels: int, out_channels: int, depth: int = 4):
+    def __init__(self, in_channels: int, out_channels: int, features: List[int] = [64, 128, 256, 512]):
         super(UNet, self).__init__()
 
         if in_channels < 1:
             raise ValueError(f"Invalid input channels: {in_channels}")
         if out_channels < 1:
             raise ValueError(f"Invalid output channels: {out_channels}")
-        if depth < 1:
-            raise ValueError(f"Invalid depth: {depth}")
+        if len(features) < 1:
+            raise ValueError(f"Not enough features: {len(features)}")
 
-        self.encoders = nn.ModuleList()
-        self.pools = nn.ModuleList()
+        self.downs = nn.ModuleList()
+        self.ups = nn.ModuleList()
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
 
-        for layer in range(1, depth + 1):
-            self.encoders.append(ConvolutionalBlock(in_channels, 2 ** (layer + 5)))
-            self.pools.append(nn.MaxPool2d(2))
+        for feature in features:
+            self.downs.append(DoubleConvolutionalBlock(in_channels, feature))
+            in_channels = feature
 
-            in_channels = 2 ** (layer + 5)
+        self.bottleneck = DoubleConvolutionalBlock(features[-1], features[-1] * 2)
 
-        self.decoders = nn.ModuleList()
-        self.decoder_blocks = nn.ModuleList()
-        self.attention_blocks = nn.ModuleList()
-        self.bottleneck = ConvolutionalBlock(in_channels, in_channels * 2)
+        for feature in reversed(features):
+            self.ups.append(nn.ConvTranspose2d(feature * 2, feature, kernel_size=2, stride=2))
+            self.ups.append(DoubleConvolutionalBlock(feature * 2, feature))
 
-        in_channels = (2 ** (depth + 5)) * 2
+        self.final_convolution = nn.Conv2d(features[0], out_channels, kernel_size=1)
 
-        for layer in reversed(range(1, depth + 1)):
-            channels = 2 ** (layer + 5)
-
-            self.decoders.append(nn.ConvTranspose2d(in_channels, channels, kernel_size=2, stride=2))
-            self.decoder_blocks.append(ConvolutionalBlock(channels * 2, channels))
-
-            in_channels = channels
-
-        self.final_convolution = nn.Conv2d(in_channels, out_channels, kernel_size=1)
-
-    # Forward the detector.
-    def forward(self, tensor: torch.Tensor):
+    # Forward the U-Net. 
+    def forward(self, input: torch.Tensor):
         skip_connections = []
 
-        for encoder, pool in zip(self.encoders, self.pools):
-            tensor = encoder(tensor)
-            skip_connections.append(tensor)
-            tensor = pool(tensor)
+        for down in self.downs:
+            input = down(input)
+            skip_connections.append(input)
+            input = self.pool(input)
 
-        tensor = self.bottleneck(tensor)
+        input = self.bottleneck(input)
         skip_connections = skip_connections[::-1]
 
-        for decoder, decoder_block, skip in zip(self.decoders, self.decoder_blocks, skip_connections):
-            tensor = decoder(tensor)
+        for index in range(0, len(self.ups), 2):
+            input = self.ups[index](input)
+            skip_connection = skip_connections[index // 2]
 
-            if tensor.shape != skip.shape:
-                tensor = nn.functional.interpolate(tensor, size=skip.shape[2:])
+            if input.shape != skip_connection.shape:
+                input = nn.functional.interpolate(input, size=skip_connection.shape[2:])
 
-            tensor = torch.cat((skip, tensor), dim=1)
-            tensor = decoder_block(tensor)
+            concat_skip = torch.cat((skip_connection, input), dim=1)
+            input = self.ups[index + 1](concat_skip)
 
-        return self.final_convolution(tensor)
+        return self.final_convolution(input)

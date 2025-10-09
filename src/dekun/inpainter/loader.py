@@ -39,7 +39,7 @@ def load_entry(index: int, entry: Entry, width: int, height: int, device: torch.
     with pil.open(str(entry.mask_path)) as mask:
         mask_tensor = fit_tensor(cast(torch.Tensor, transform_image(mask.convert('L'))).to(device), width, height)[0]
 
-    return image_tensor.unsqueeze(0), mask_tensor.unsqueeze(0), apply_mask(index, image_tensor, mask_tensor).unsqueeze(0)
+    return apply_mask(index, image_tensor, mask_tensor).unsqueeze(0), mask_tensor.unsqueeze(0)
 
 # A inpainter dataset loader.
 class Loader(object):
@@ -108,7 +108,7 @@ class Loader(object):
         gc.collect()
 
     # Loop through the dataset.
-    def loop(self, callback: Callable[[torch.Tensor, torch.Tensor, torch.Tensor], None]):
+    def loop(self, callback: Callable[[torch.Tensor, torch.Tensor], None]):
         if self.cache == "none":
             for index, entry in enumerate(self.entries):
                 callback(*load_entry(index, entry, self.width, self.height, self.device))
@@ -117,9 +117,9 @@ class Loader(object):
         elif self.cache == "disk":
             for i in range(0, self.chunks + 1):
                 for entry in torch.load(str(self.temporary.joinpath(f"chunk-{i + 1}.pth")), self.device):
-                    callback(entry[0], entry[1], entry[2])
+                    callback(entry[0], entry[1])
 
                 gc.collect()
         elif self.cache == "memory":
             for entry in self.processed_entries:
-                callback(entry[0], entry[1], entry[2])
+                callback(entry[0], entry[1])
