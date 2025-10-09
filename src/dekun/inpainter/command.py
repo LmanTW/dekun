@@ -49,7 +49,6 @@ def inpaint_command(path: str, image: str, mask: str, output: str, device: str):
     inpainter = Inpainter.load(device, Path(path))
 
     output_image = inpainter.inpaint(pil.open(Path(image)), pil.open(Path(mask)))
-    output_image = (output_image - output_image.min()) / (output_image.max() - output_image.min())
     output_image = (output_image * 255).byte().cpu().numpy()
     output_image = numpy.transpose(output_image, (1, 2, 0))
     output_image = pil.fromarray(output_image.astype(numpy.uint8))
