@@ -119,7 +119,7 @@ def start_editor(port: int, dataset_path: Path):
             entry = dataset.get(request.path_params["name"])
         
             return FileResponse(entry.image_path, 200, headers = {
-                "Cache-Control": "no-store "
+                "Cache-Control": "no-store"
             })
 
         return PlainTextResponse("Not Found", 404)
@@ -130,7 +130,7 @@ def start_editor(port: int, dataset_path: Path):
             entry = dataset.get(request.path_params["name"])
         
             return FileResponse(entry.mask_path, 200, headers = {
-                "Cache-Control": "no-store "
+                "Cache-Control": "no-store"
             })
 
         return PlainTextResponse("Not Found", 404)

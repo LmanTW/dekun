@@ -1,3 +1,4 @@
+from torchvision import models
 from typing import cast, List
 import torch.nn as nn
 import torch
@@ -118,11 +119,11 @@ class FastFourierConvolution(nn.Module):
         return self.act(output)
 
 # Residual fast fourier convolution block.
-class FastFourierConvolutionResidualBlock(nn.Module):
+class FFCResidualBlock(nn.Module):
 
     # Initialize a residual fast fourier convolution block.
     def __init__(self, channels: int, global_ratio: float= 0.5):
-        super(FastFourierConvolutionResidualBlock, self).__init__()
+        super(FFCResidualBlock, self).__init__()
 
         self.fast_fourier_convolution = FastFourierConvolution(channels, channels, global_in_ratio=global_ratio, global_out_ratio=global_ratio)
         self.convolutional = nn.Conv2d(channels, channels, kernel_size=3, padding=1)
@@ -162,7 +163,7 @@ class LaMaGenerator(nn.Module):
         residual_blocks = []
 
         for _ in range(residual_amount):
-            residual_blocks.append(FastFourierConvolutionResidualBlock(channels, global_ratio=global_ratio))
+            residual_blocks.append(FFCResidualBlock(channels, global_ratio=global_ratio))
 
         decoder_layers = []
 
@@ -188,8 +189,6 @@ class LaMaGenerator(nn.Module):
         encoded = self.encoder(input)
         bottlenecked = self.bottleneck(encoded)
         decoded = self.decoder(bottlenecked)
-
-        # Map from [-1,1] to [0,1] if needed outside.
 
         return self.output_convolution(decoded)
 
@@ -218,3 +217,20 @@ class PatchDiscriminator(nn.Module):
     # Forward the patch discriminator.
     def forward(self, input: torch.Tensor):
         return self.model(input)
+
+# A VGG feature extractor.
+class VGGFeatureExtractor(nn.Module):
+
+    # Initialize a VGG feature extractor.
+    def __init__(self, layer_index: int = 16):
+        super(VGGFeatureExtractor, self).__init__()
+
+        self.vgg = models.vgg19(weights=models.VGG19_Weights.IMAGENET1K_V1).features
+        self.features = nn.Sequential(*list(self.vgg.children())[:layer_index])
+
+        for param in self.features.parameters():
+            param.requires_grad = False
+
+    # Forward the VGG feature extractor.
+    def forward(self, input: torch.Tensor):
+        return self.features(input)

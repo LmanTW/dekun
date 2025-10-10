@@ -1,3 +1,4 @@
+import { h } from 'preact'
 import Control from './control'
 import Editor from './editor'
 import State from './state'
@@ -303,38 +304,48 @@ export default class Image {
     if (this.data !== null) {
       this.data.strokes = []
 
-      for (let i = 0; i < (this.data.element.width + this.data.element.height) / 50; i++) {
-        const type = Math.random()
+      for (let i = 0; i < 5; i++) {
+        const x = Math.random() * this.data.element.width
+        const y = Math.random() * this.data.element.height
+        const width = Math.max(0.5, Math.random()) * (this.data.element.width / 2)
+        const height = Math.max(0.5, Math.random()) * (this.data.element.height / 2)
 
-        if (type > 0.1) {
-          const startX = Math.random() * this.data.element.width
-          const startY = Math.random() * this.data.element.height
-          const distance = Math.random() * ((this.data.element.width + this.data.element.width) / 2.5)
-          const direction = (Math.random() * 360) * (Math.PI / 180)
+        this.data.strokes.push({
+          type: 3,
+          points: [
+            { x, y },
+            { x: x + width, y },
+            { x: x + width, y: y + height },
+            { x: x, y: y + height }
+          ]
+        })
+      }
 
-          this.data.strokes.push({
-            type: (Math.random() > 0.75) ? 2 : 1,
-            size: Math.max(0.1, Math.random()) * 10,
+      for (let i = 0; i < 20; i++) {
+        this.data.strokes.push({
+          type: (Math.random() > 0.5) ? 2 : 1,
+          size: Math.max(0.5, Math.random()) * ((this.data.element.width + this.data.element.height) / 250),
 
-            x1: startX,
-            y1: startY,
-            x2: startX + (distance * Math.cos(direction)),
-            y2: startY + (distance * Math.sin(direction))
-          })
-        } else {
-          const startX = Math.random() * this.data.element.width
-          const startY = Math.random() * this.data.element.height
+          x1: Math.random() * this.data.element.width,
+          y1: Math.random() * this.data.element.height,
+          x2: Math.random() * this.data.element.width,
+          y2: Math.random() * this.data.element.height
+        })
+      }
 
-          this.data.strokes.push({
-            type: 2,
-            size: Math.max(0.5, Math.random()) * 25,
+      for (let i = 0; i < 5; i++) {
+        const startX = Math.random() * this.data.element.width
+        const startY = Math.random() * this.data.element.height
 
-            x1: startX,
-            y1: startY,
-            x2: startX,
-            y2: startY
-          })        
-        }
+        this.data.strokes.push({
+          type: 2,
+          size: Math.max(0.5, Math.random()) * ((this.data.element.width + this.data.element.height) / 100),
+
+          x1: startX,
+          y1: startY,
+          x2: startX,
+          y2: startY
+        })
       }
     }
   }

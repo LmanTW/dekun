@@ -102,3 +102,5 @@ class Loader(object):
         elif self.cache == "memory":
             for entry in self.processed_entries:
                 callback(entry[0], entry[1])
+
+            gc.collect()

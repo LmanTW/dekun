@@ -40,11 +40,11 @@ export default () => {
     if (Image.data !== null) {
       if (randomStrokes) {
         Image.generateRandomStrokes()
-        Image.renderImage()
       } else {
         Image.data.strokes = []
-        Image.renderImage()
       }
+
+      Image.renderBase()
     }
   }
 

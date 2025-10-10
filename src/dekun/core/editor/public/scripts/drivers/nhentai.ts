@@ -77,6 +77,8 @@ export default {
     }
 
     if (cache.length > 0) {
+      console.log('Pop', cache[0].id)
+
       return Object.assign(cache.splice(0, 1)[0], { source: '' })
     }
 
@@ -87,6 +89,8 @@ export default {
     if (current === null) {
       if (cache.length < amount) {
         const info = cache[cache.push(await fetchRandomGallery()) - 1]
+
+        console.log('Push', info.id)
 
         return {
           id: info.id,

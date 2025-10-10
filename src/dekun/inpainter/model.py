@@ -6,7 +6,7 @@ import torch
 import time
 
 from dekun.core.utils import LoadProgress, TrainProgress, resolve_device, transform_image, fit_tensor
-from dekun.core.lama import LaMaGenerator, PatchDiscriminator
+from dekun.core.lama import LaMaGenerator, PatchDiscriminator, VGGFeatureExtractor
 from dekun.inpainter.loader import Loader
 from dekun.core.dataset import Dataset
 
@@ -51,6 +51,7 @@ class Inpainter:
         self.discriminator_optimizer = torch.optim.Adam(self.discriminator.parameters(), lr=1e-4, betas=(0.5, 0.999))
 
         self.l1 = nn.L1Loss()
+        self.vgg = VGGFeatureExtractor().to(self.device).eval()
 
     # Train the inpainter.
     def train(self, dataset: Dataset, cache: str = "none", load_callback: Union[Callable[[LoadProgress], None], None] = None, train_callback: Union[Callable[[TrainProgress], bool], None] = None):
@@ -62,25 +63,22 @@ class Inpainter:
                 start = time.time()
                 average = []
 
-                def train_step(combined: torch.Tensor, mask: torch.Tensor):
-                    masked_img = combined * (1 - mask)
-                    generator_input = torch.cat([masked_img, mask], dim=1)
-
-                    prediction = self.generator(generator_input)
+                def train_step(image: torch.Tensor, mask: torch.Tensor, combined: torch.Tensor):
+                    prediction = self.generator(torch.cat([combined, mask], dim=1))
                     composite = (prediction * mask) + (combined * (1 - mask))
 
                     self.discriminator_optimizer.zero_grad()
-                    real_output = self.discriminator(combined)
+                    real_output = self.discriminator(image)
                     fake_output = self.discriminator(composite.detach())
                     discriminator_loss = torch.mean(nn.functional.relu(1.0 - real_output)) + torch.mean(nn.functional.relu(1.0 + fake_output))
                     discriminator_loss.backward()
-                    self.discriminator_optimizer.step()
+                    self.discriminator_optimizer.step() 
 
                     self.generator_optimizer.zero_grad()
                     fake_output = self.discriminator(composite)
                     adversarial_loss = -torch.mean(fake_output)
-                    reconstruction_loss = self.reconstruction_loss(prediction, combined, mask)
-                    perceptual_loss = torch.tensor(0.0, device=self.device) # ?
+                    reconstruction_loss = self.reconstruction_loss(prediction, image, mask)
+                    perceptual_loss = self.perceptual_loss(prediction * mask + image * (1 - mask), image)
                     generator_loss = reconstruction_loss * 1.0 + adversarial_loss * 0.1 + perceptual_loss * 0.1
                     generator_loss.backward()
                     self.generator_optimizer.step()
@@ -123,6 +121,19 @@ class Inpainter:
             return self.l1(prediction, target)
         else:
             return self.l1(prediction * mask, target * mask)
+
+    # Calculate the perceptual loss.
+    def perceptual_loss(self, prediction: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        mean = torch.tensor([0.485, 0.456, 0.406], device=self.device).view(1, 3, 1, 1)
+        std = torch.tensor([0.229, 0.224, 0.225], device=self.device).view(1, 3, 1, 1)
+
+        prediction_normal = (prediction - mean) / std
+        target_normal = (target - mean) / std
+
+        prediction_features = self.vgg(prediction_normal)
+        target_features = self.vgg(target_normal)
+
+        return self.l1(prediction_features, target_features)
 
     # Save the inpainter.
     def save(self, path: Path):

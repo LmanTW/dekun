@@ -20,7 +20,7 @@ def inpainter_command():
 @click.option("-w", "--width", type=click.INT, default=512)
 @click.option("-h", "--height", type=click.INT, default=512)
 def init_command(path: str, width: int, height: int):
-    processed_path=Path(path).with_suffix(".pth")
+    processed_path = Path(path).with_suffix(".pth")
 
     if processed_path.exists():
         raise Exception(f"The file already exists: {str(processed_path)}")
@@ -31,7 +31,7 @@ def init_command(path: str, width: int, height: int):
 @click.command("info")
 @click.argument("path", type=click.Path(True))
 def info_command(path: str):
-    data=torch.load(str(Path(path)), "cpu")
+    data = torch.load(str(Path(path)), "cpu")
 
     print(f"Width: {data['width']}")
     print(f"Height: {data['height']}")
