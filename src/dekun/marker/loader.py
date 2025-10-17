@@ -10,15 +10,14 @@ class Loader(torch.utils.data.Dataset):
     # Initialize a marker dataset loader.
     def __init__(self, dataset: Dataset, width: int, height: int):
         self.entries = []
+        self.width = width
+        self.height = height
 
         for name in dataset.list():
             entry = dataset.get(name)
 
             if entry.exists():
                 self.entries.append(entry)
-
-        self.width = width
-        self.height = height
 
     # Get the size of the dataset.
     def __len__(self):
