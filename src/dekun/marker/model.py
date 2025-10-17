@@ -3,11 +3,15 @@ from pathlib import Path
 import PIL.Image as pil
 import torch
 import time
+import os
 
 from dekun.core.utils import DummyContext, TrainProgress, resolve_device, transform_image, fit_tensor
 from dekun.core.dataset import Dataset
 from dekun.marker.loader import Loader
 from dekun.core.unet import UNet
+
+CPU_CORES = os.cpu_count()
+WORKER_AMOUNT = 1 if CPU_CORES == None else CPU_CORES // 2
 
 # A marker to mark a certain parts of an image.
 class Marker:
@@ -48,16 +52,16 @@ class Marker:
 
     # Train the marker.
     def train(self, dataset: Dataset, callback: Union[Callable[[TrainProgress], bool], None] = None):
-        self.model.train()
+        self.model.train() 
 
         loader = torch.utils.data.DataLoader(
             Loader(dataset, self.width, self.height),
 
             batch_size=4,
-            num_workers=4,
+            num_workers=WORKER_AMOUNT,
             prefetch_factor=2,
 
-            pin_memory=self.device.type == "cuda",
+            pin_memory=self.device.type == "cuda"
         )
 
         while True:
@@ -70,15 +74,14 @@ class Marker:
                 images = images.to(self.device, non_blocking=True)
                 masks = masks.to(self.device, non_blocking=True)
                 
-                with torch.autocast(self.device.type) if self.device.type == "cuda" else DummyContext():
-                    predictions = self.model(images)
-                    loss = self.criterion(predictions, masks)
+                predictions = self.model(images)
+                loss = self.criterion(predictions, masks)
 
-                    self.optimizer.zero_grad()
-                    loss.backward()
-                    self.optimizer.step()
+                self.optimizer.zero_grad()
+                loss.backward()
+                self.optimizer.step()
 
-                    average.append(loss.item())
+                average.append(loss.item())
 
             self.loss = sum(average) / len(average)
             self.iterations += 1

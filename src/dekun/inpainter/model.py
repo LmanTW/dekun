@@ -4,11 +4,15 @@ import PIL.Image as pil
 import torch.nn as nn
 import torch
 import time
+import os
 
 from dekun.core.utils import TrainProgress, DummyContext, resolve_device, transform_image, fit_tensor
 from dekun.core.lama import LaMaGenerator, PatchDiscriminator, VGGFeatureExtractor
 from dekun.inpainter.loader import Loader
 from dekun.core.dataset import Dataset
+
+CPU_CORES = os.cpu_count()
+WORKER_AMOUNT = 1 if CPU_CORES == None else CPU_CORES // 2
 
 # An inpainter to generator a certain parts of an image.
 class Inpainter:
@@ -62,10 +66,10 @@ class Inpainter:
             Loader(dataset, self.width, self.height),
 
             batch_size=4,
-            num_workers=4,
+            num_workers=WORKER_AMOUNT,
             prefetch_factor=2,
 
-            pin_memory=self.device.type == "cuda",
+            pin_memory=self.device.type == "cuda"
         )
 
         while True:
@@ -80,25 +84,24 @@ class Inpainter:
                 masks = masks.to(self.device, non_blocking=True)
                 combineds = combineds.to(self.device, non_blocking=True)
                 
-                with torch.autocast(self.device.type) if self.device.type == "cuda" else DummyContext():
-                    prediction = self.generator(torch.cat([combineds, masks], dim=1))
-                    composite = (prediction * masks) + (combineds * (1 - masks))
+                prediction = self.generator(torch.cat([combineds, masks], dim=1))
+                composite = (prediction * masks) + (combineds * (1 - masks))
 
-                    real_output = self.discriminator(images)
-                    fake_output = self.discriminator(composite.detach())
-                    discriminator_loss = torch.mean(nn.functional.relu(1.0 - real_output)) + torch.mean(nn.functional.relu(1.0 + fake_output))
-                    discriminator_loss.backward()
-                    self.discriminator_optimizer.step() 
+                real_output = self.discriminator(images)
+                fake_output = self.discriminator(composite.detach())
+                discriminator_loss = torch.mean(nn.functional.relu(1.0 - real_output)) + torch.mean(nn.functional.relu(1.0 + fake_output))
+                discriminator_loss.backward()
+                self.discriminator_optimizer.step() 
 
-                    fake_output = self.discriminator(composite)
-                    adversarial_loss = -torch.mean(fake_output)
-                    reconstruction_loss = self.reconstruction_loss(prediction, images, masks)
-                    perceptual_loss = self.perceptual_loss(prediction * masks + images * (1 - masks), images)
-                    generator_loss = reconstruction_loss * 1.0 + adversarial_loss * 0.1 + perceptual_loss * 0.1
-                    generator_loss.backward()
-                    self.generator_optimizer.step()
+                fake_output = self.discriminator(composite)
+                adversarial_loss = -torch.mean(fake_output)
+                reconstruction_loss = self.reconstruction_loss(prediction, images, masks)
+                perceptual_loss = self.perceptual_loss(prediction * masks + images * (1 - masks), images)
+                generator_loss = reconstruction_loss * 1.0 + adversarial_loss * 0.1 + perceptual_loss * 0.1
+                generator_loss.backward()
+                self.generator_optimizer.step()
 
-                    average.append(generator_loss.item())
+                average.append(generator_loss.item())
 
             self.loss = sum(average) / len(average)
             self.iterations += 1
