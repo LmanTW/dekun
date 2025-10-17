@@ -11,14 +11,6 @@ class TrainProgress:
         self.loss = loss
         self.duration = duration
 
-# A dummy context.
-class DummyContext:
-    def __enter__(self):
-        return None
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        return None
-
 # Resolve a device.
 def resolve_device(device: str):
     if device == "auto":
@@ -58,8 +50,6 @@ def device_available_memory(device: str):
         return torch.cuda.mem_get_info()[0]
     else:
         raise ValueError(f"Unsupported device: {device}")
-
-transform_image = transform.Compose([transform.ToTensor()])
 
 # Fit a tensor into a specified size.
 def fit_tensor(tensor: torch.Tensor, width: int, height: int):

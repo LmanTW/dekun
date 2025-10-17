@@ -1,16 +1,15 @@
-from typing import Union, Callable, cast
+from typing import Union, Callable
+from os import cpu_count
 from pathlib import Path
-import PIL.Image as pil
+from time import time
 import torch
-import time
-import os
 
-from dekun.core.utils import DummyContext, TrainProgress, resolve_device, transform_image, fit_tensor
+from dekun.core.utils import TrainProgress, resolve_device, fit_tensor
 from dekun.core.dataset import Dataset
 from dekun.marker.loader import Loader
 from dekun.core.unet import UNet
 
-CPU_CORES = os.cpu_count()
+CPU_CORES = cpu_count()
 WORKER_AMOUNT = 1 if CPU_CORES == None else CPU_CORES // 2
 
 # A marker to mark a certain parts of an image.
@@ -65,7 +64,7 @@ class Marker:
         )
 
         while True:
-            start = time.time()
+            start = time()
             average = []
 
             for images, masks in loader:
@@ -86,20 +85,19 @@ class Marker:
             self.loss = sum(average) / len(average)
             self.iterations += 1
 
-            if callback == None or not callback(TrainProgress(self.iterations, self.loss, round(time.time() - start))):
+            if callback == None or not callback(TrainProgress(self.iterations, self.loss, round(time() - start))):
                 break
 
     # Mark an image.
-    def mark(self, image: Union[torch.Tensor, pil.Image]):
+    def mark(self, image: torch.Tensor):
         self.model.eval()
 
         with torch.no_grad():
-            image_tensor = cast(torch.Tensor, image if isinstance(image, torch.Tensor) else transform_image(image.convert("RGB")))
-            resized_tensor, transform = fit_tensor(image_tensor, self.width, self.height)
+            resized_tensor, transform = fit_tensor(image, self.width, self.height)
 
             output = self.model(resized_tensor.unsqueeze(0))
             output = output[:, :, transform[1]:transform[1] + transform[3], transform[0]:transform[0] + transform[2]]
-            output = torch.nn.functional.interpolate(output, size=(image_tensor.shape[1], image_tensor.shape[2])).squeeze(0).squeeze()
+            output = torch.nn.functional.interpolate(output, size=(image.shape[1], image.shape[2])).squeeze(0).squeeze()
 
             return torch.sigmoid(output)
 

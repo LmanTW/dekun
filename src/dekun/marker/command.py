@@ -1,8 +1,9 @@
 from pathlib import Path
 import PIL.Image as pil
 from math import ceil
-import click
+import torchvision
 import torch
+import click
 
 from dekun.core.utils import TrainProgress, format_duration, average_difference
 from dekun.core.dataset import Dataset
@@ -47,11 +48,11 @@ def info_command(path: str):
 def mark_command(path: str, image: str, output: str, device: str):
     marker = Marker.load(device, Path(path))
 
-    output_image=marker.mark(pil.open(Path(image)))
-    output_image=(output_image * 255).byte().cpu().numpy()
-    output_image=pil.fromarray(output_image)
+    output_image = marker.mark(
+        torchvision.io.decode_image(image, torchvision.io.ImageReadMode.RGB).float() / 255
+    )
 
-    output_image.save(output)
+    torchvision.utils.save_image(output_image.squeeze(0), output)
 
 # Train a marker.
 @click.command("train")

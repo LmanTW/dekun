@@ -1,8 +1,7 @@
-from typing import cast
-import PIL.Image as pil
+import torchvision
 import torch
 
-from dekun.core.utils import transform_image, fit_tensor
+from dekun.core.utils import fit_tensor
 from dekun.core.dataset import Dataset
 
 # Apply a mask onto an image.
@@ -44,10 +43,7 @@ class Loader(torch.utils.data.Dataset):
     def __getitem__(self, index: int):
         entry = self.entries[index]
 
-        with pil.open(str(entry.image_path)) as image:
-            image_tensor = fit_tensor(cast(torch.Tensor, transform_image(image.convert('RGB'))), self.width, self.height)[0]
-
-        with pil.open(str(entry.mask_path)) as mask:
-            mask_tensor = fit_tensor(cast(torch.Tensor, transform_image(mask.convert('L'))), self.width, self.height)[0]
+        image_tensor = fit_tensor(torchvision.io.decode_image(str(entry.image_path), torchvision.io.ImageReadMode.RGB), self.width, self.height)[0].float() / 255
+        mask_tensor = fit_tensor(torchvision.io.decode_image(str(entry.mask_path), torchvision.io.ImageReadMode.GRAY), self.width, self.height)[0].float() / 255
 
         return image_tensor, mask_tensor, apply_mask(image_tensor, mask_tensor)

@@ -1,9 +1,8 @@
 from pathlib import Path
-import PIL.Image as pil
 from math import ceil
-import click
+import torchvision
 import torch
-import numpy
+import click
 
 from dekun.core.utils import TrainProgress, format_duration, average_difference
 from dekun.inpainter.model import Inpainter
@@ -49,12 +48,12 @@ def info_command(path: str):
 def inpaint_command(path: str, image: str, mask: str, output: str, device: str):
     inpainter = Inpainter.load(device, Path(path))
 
-    output_image = inpainter.inpaint(pil.open(Path(image)), pil.open(Path(mask)))
-    output_image = (output_image * 255).byte().cpu().numpy()
-    output_image = numpy.transpose(output_image, (1, 2, 0))
-    output_image = pil.fromarray(output_image.astype(numpy.uint8))
+    output_image = inpainter.inpaint(
+        torchvision.io.decode_image(image, torchvision.io.ImageReadMode.RGB).float() / 255,
+        torchvision.io.decode_image(mask, torchvision.io.ImageReadMode.GRAY).float() / 255
+    )
 
-    output_image.save(output)
+    torchvision.utils.save_image(output_image.squeeze(0), output)
 
 # Train a generator.
 @click.command("train")

@@ -6,8 +6,8 @@ import torch
 import time
 import os
 
-from dekun.core.utils import TrainProgress, DummyContext, resolve_device, transform_image, fit_tensor
 from dekun.core.lama import LaMaGenerator, PatchDiscriminator, VGGFeatureExtractor
+from dekun.core.utils import TrainProgress, resolve_device, fit_tensor
 from dekun.inpainter.loader import Loader
 from dekun.core.dataset import Dataset
 
@@ -110,15 +110,12 @@ class Inpainter:
                 break
 
     # Inpaint an image.
-    def inpaint(self, image: Union[torch.Tensor, pil.Image], mask: Union[torch.Tensor, pil.Image]):
+    def inpaint(self, image: torch.Tensor, mask: torch.Tensor):
         self.generator.eval()
 
         with torch.no_grad():
-            image_tensor = cast(torch.Tensor, image if isinstance(image, torch.Tensor) else transform_image(image.convert("RGB")))
-            mask_tensor = cast(torch.Tensor, mask if isinstance(mask, torch.Tensor) else transform_image(mask.convert("L")))
-
-            resized_image, transform = fit_tensor(image_tensor, self.width, self.height)
-            resized_mask = fit_tensor(mask_tensor, self.width, self.height)[0]
+            resized_image, transform = fit_tensor(image, self.width, self.height)
+            resized_mask = fit_tensor(mask, self.width, self.height)[0]
  
             output = self.generator(torch.cat((resized_image.unsqueeze(0), resized_mask.unsqueeze(0)), dim=1))
             output = torch.clamp(output, 0.0, 1.0)
@@ -127,7 +124,7 @@ class Inpainter:
 
             output = (resized_image * (1 - binary_mask)) + (output * binary_mask)
             output = output[:, :, transform[1]:transform[1] + transform[3], transform[0]:transform[0] + transform[2]]
-            output = torch.nn.functional.interpolate(output, size=(image_tensor.shape[1], image_tensor.shape[2])).squeeze(0)
+            output = torch.nn.functional.interpolate(output, size=(image.shape[1], image.shape[2])).squeeze(0)
 
             return output.squeeze(0)
 
