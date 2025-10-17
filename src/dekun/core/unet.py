@@ -42,7 +42,7 @@ class UNet(nn.Module):
         features = []
 
         for _ in range(depth):
-            features.append(64 if len(features) == 0 else features[-1] ^ 2)
+            features.append(64 if len(features) == 0 else features[-1] * 2)
 
         for feature in features:
             self.downs.append(DoubleConvolutionalBlock(in_channels, feature))
