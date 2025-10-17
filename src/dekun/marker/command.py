@@ -18,7 +18,7 @@ def marker_command():
 @click.argument("path", type = click.Path())
 @click.option("-w", "--width", type = click.INT, default = 512)
 @click.option("-h", "--height", type = click.INT, default = 512)
-@click.option("-d", "--depth", type = click.INT, default = 4)
+@click.option("-d", "--depth", type = click.INT, default = 5)
 def init_command(path: str, width: int, height: int, depth: int):
     processed_path = Path(path).with_suffix(".pth")
 

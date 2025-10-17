@@ -16,7 +16,7 @@ class Marker:
     @staticmethod
     def load(device: str, path: Path):
         data = torch.load(str(path), resolve_device(device))
-        marker = Marker(device, data["width"], data["height"])
+        marker = Marker(device, data["width"], data["height"], data["depth"])
 
         marker.model.load_state_dict(data["model_state"])
         marker.optimizer.load_state_dict(data["optimizer_state"])
@@ -27,17 +27,18 @@ class Marker:
         return marker
 
     # Initialize a marker.
-    def __init__(self, device: str, width: int, height: int, features: int = 5):
+    def __init__(self, device: str, width: int, height: int, depth: int = 5):
         if width < 1:
             raise ValueError(f"Invalid width: {width}")
         if height < 1:
             raise ValueError(f"Invalid height: {height}")
 
         self.device = torch.device(resolve_device(device))
-        self.model = UNet(3, 1, features).to(self.device)
+        self.model = UNet(3, 1, depth).to(self.device)
 
         self.width = width
         self.height = height
+        self.depth = depth
 
         self.loss = 1.0
         self.iterations = 0
@@ -91,6 +92,7 @@ class Marker:
         torch.save({
             "width": self.width,
             "height": self.height,
+            "depth": self.depth,
 
             "loss": self.loss,
             "iterations": self.iterations,
