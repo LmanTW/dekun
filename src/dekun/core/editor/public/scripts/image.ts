@@ -291,7 +291,7 @@ export default class Image {
 
     return {
       x: (Editor.canvas.width - newWidth) / 2,
-      y: (((Editor.canvas.height + yOffset) - newHeight) / 2),
+      y: ((Editor.canvas.height + yOffset) - newHeight) / 2,
       width: newWidth,
       height: newHeight,
       widthScale: newWidth / width,

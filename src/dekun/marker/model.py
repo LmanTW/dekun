@@ -27,14 +27,14 @@ class Marker:
         return marker
 
     # Initialize a marker.
-    def __init__(self, device: str, width: int, height: int):
+    def __init__(self, device: str, width: int, height: int, features: int = 5):
         if width < 1:
             raise ValueError(f"Invalid width: {width}")
         if height < 1:
             raise ValueError(f"Invalid height: {height}")
 
         self.device = torch.device(resolve_device(device))
-        self.model = UNet(3, 1).to(self.device)
+        self.model = UNet(3, 1, features).to(self.device)
 
         self.width = width
         self.height = height

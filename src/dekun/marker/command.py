@@ -18,13 +18,14 @@ def marker_command():
 @click.argument("path", type = click.Path())
 @click.option("-w", "--width", type = click.INT, default = 512)
 @click.option("-h", "--height", type = click.INT, default = 512)
-def init_command(path: str, width: int, height: int):
+@click.option("-d", "--depth", type = click.INT, default = 4)
+def init_command(path: str, width: int, height: int, depth: int):
     processed_path = Path(path).with_suffix(".pth")
 
     if processed_path.exists():
         raise Exception(f"The file already exists: {str(processed_path)}")
 
-    Marker("cpu", width, height).save(processed_path)
+    Marker("cpu", width, height, depth).save(processed_path)
 
 # Get the info of a marker.
 @click.command("info")

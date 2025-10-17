@@ -25,19 +25,24 @@ class DoubleConvolutionalBlock(nn.Module):
 class UNet(nn.Module):
 
     # Initialize a U-Net.
-    def __init__(self, in_channels: int, out_channels: int, features: List[int] = [64, 128, 256, 512]):
+    def __init__(self, in_channels: int, out_channels: int, depth: int = 5):
         super(UNet, self).__init__()
 
         if in_channels < 1:
             raise ValueError(f"Invalid input channels: {in_channels}")
         if out_channels < 1:
             raise ValueError(f"Invalid output channels: {out_channels}")
-        if len(features) < 1:
-            raise ValueError(f"Not enough features: {len(features)}")
+        if depth < 1:
+            raise ValueError(f"Not enough layers: {depth}")
 
         self.downs = nn.ModuleList()
         self.ups = nn.ModuleList()
         self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
+
+        features = []
+
+        for _ in range(depth):
+            features.append(64 if len(features) == 0 else features[-1] ^ 2)
 
         for feature in features:
             self.downs.append(DoubleConvolutionalBlock(in_channels, feature))
