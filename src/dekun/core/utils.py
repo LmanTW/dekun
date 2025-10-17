@@ -2,14 +2,6 @@ import torchvision.transforms as transform
 import psutil
 import torch
 
-# Loading progress info.
-class LoadProgress:
-
-    # Initialize a loading progress info.
-    def __init__(self, loaded: int, total: int):
-        self.loaded = loaded
-        self.total = total
-
 # Training progress info.
 class TrainProgress:
 
@@ -18,6 +10,14 @@ class TrainProgress:
         self.iteration = iteration
         self.loss = loss
         self.duration = duration
+
+# A dummy context.
+class DummyContext:
+    def __enter__(self):
+        return None
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        return None
 
 # Resolve a device.
 def resolve_device(device: str):

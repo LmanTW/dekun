@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch
 import time
 
-from dekun.core.utils import LoadProgress, TrainProgress, resolve_device, transform_image, fit_tensor
+from dekun.core.utils import TrainProgress, DummyContext, resolve_device, transform_image, fit_tensor
 from dekun.core.lama import LaMaGenerator, PatchDiscriminator, VGGFeatureExtractor
 from dekun.inpainter.loader import Loader
 from dekun.core.dataset import Dataset
@@ -54,44 +54,57 @@ class Inpainter:
         self.vgg = VGGFeatureExtractor().to(self.device).eval()
 
     # Train the inpainter.
-    def train(self, dataset: Dataset, cache: str = "none", load_callback: Union[Callable[[LoadProgress], None], None] = None, train_callback: Union[Callable[[TrainProgress], bool], None] = None):
+    def train(self, dataset: Dataset, train_callback: Union[Callable[[TrainProgress], bool], None] = None):
         self.generator.train()
         self.discriminator.train()
 
-        with Loader(dataset, self.width, self.height, cache, self.device, load_callback) as loader:
-            while True:
-                start = time.time()
-                average = []
+        loader = torch.utils.data.DataLoader(
+            Loader(dataset, self.width, self.height),
 
-                def train_step(image: torch.Tensor, mask: torch.Tensor, combined: torch.Tensor):
-                    prediction = self.generator(torch.cat([combined, mask], dim=1))
-                    composite = (prediction * mask) + (combined * (1 - mask))
+            batch_size=4,
+            num_workers=4,
+            prefetch_factor=2,
 
-                    self.discriminator_optimizer.zero_grad()
-                    real_output = self.discriminator(image)
+            pin_memory=self.device.type == "cuda",
+        )
+
+        while True:
+            start = time.time()
+            average = []
+
+            for images, masks, combineds in loader:
+                self.discriminator_optimizer.zero_grad()
+                self.generator_optimizer.zero_grad()
+
+                images = images.to(self.device, non_blocking=True)
+                masks = masks.to(self.device, non_blocking=True)
+                combineds = combineds.to(self.device, non_blocking=True)
+                
+                with torch.autocast(self.device.type) if self.device.type == "cuda" else DummyContext():
+                    prediction = self.generator(torch.cat([combineds, masks], dim=1))
+                    composite = (prediction * masks) + (combineds * (1 - masks))
+
+                    real_output = self.discriminator(images)
                     fake_output = self.discriminator(composite.detach())
                     discriminator_loss = torch.mean(nn.functional.relu(1.0 - real_output)) + torch.mean(nn.functional.relu(1.0 + fake_output))
                     discriminator_loss.backward()
                     self.discriminator_optimizer.step() 
 
-                    self.generator_optimizer.zero_grad()
                     fake_output = self.discriminator(composite)
                     adversarial_loss = -torch.mean(fake_output)
-                    reconstruction_loss = self.reconstruction_loss(prediction, image, mask)
-                    perceptual_loss = self.perceptual_loss(prediction * mask + image * (1 - mask), image)
+                    reconstruction_loss = self.reconstruction_loss(prediction, images, masks)
+                    perceptual_loss = self.perceptual_loss(prediction * masks + images * (1 - masks), images)
                     generator_loss = reconstruction_loss * 1.0 + adversarial_loss * 0.1 + perceptual_loss * 0.1
                     generator_loss.backward()
                     self.generator_optimizer.step()
 
                     average.append(generator_loss.item())
-                
-                loader.loop(train_step)
 
-                self.loss = sum(average) / len(average)
-                self.iterations += 1
+            self.loss = sum(average) / len(average)
+            self.iterations += 1
 
-                if train_callback == None or not train_callback(TrainProgress(self.iterations, self.loss, round(time.time() - start))):
-                    break
+            if train_callback == None or not train_callback(TrainProgress(self.iterations, self.loss, round(time.time() - start))):
+                break
 
     # Inpaint an image.
     def inpaint(self, image: Union[torch.Tensor, pil.Image], mask: Union[torch.Tensor, pil.Image]):

@@ -5,7 +5,7 @@ import click
 import torch
 import numpy
 
-from dekun.core.utils import LoadProgress, TrainProgress, format_duration, average_difference
+from dekun.core.utils import TrainProgress, format_duration, average_difference
 from dekun.inpainter.model import Inpainter
 from dekun.core.dataset import Dataset
 
@@ -35,6 +35,7 @@ def info_command(path: str):
 
     print(f"Width: {data['width']}")
     print(f"Height: {data['height']}")
+    print(f"Height: {data['depth']}")
     print(f"Loss: {data['loss']}")
     print(f"Iterations: {data['iterations']}")
 
@@ -61,23 +62,12 @@ def inpaint_command(path: str, image: str, mask: str, output: str, device: str):
 @click.option("-d", "--dataset", type=click.Path(True, file_okay=False), required=1)
 @click.option("-i", "--iterations", type=click.INT)
 @click.option("-t", "--threshold", type=click.FLOAT)
-@click.option("-C", "--cache", type=click.Choice(["none", "disk", "memory"]), default="none")
 @click.option("-D", "--device", type=click.Choice(["auto", "cpu", "cuda"]), default="auto")
-def train_command(path: str, dataset: str, iterations: int, threshold: float, cache: str, device: str):
+def train_command(path: str, dataset: str, iterations: int, threshold: float, device: str):
     inpainter = Inpainter.load(device, Path(path))
 
     duration_history = []
     loss_history = []
-
-    # The loading callback.
-    def load_callback(progress: LoadProgress):
-        parts = [
-            f"Loading Dataset ({cache})",
-            f"Loaded: {progress.loaded}",
-            f"Total: {progress.total}"
-        ]
-
-        print(" | ".join(f"{part: <20}" for part in parts))
 
     # The training callback.
     def train_callback(progress: TrainProgress):
@@ -131,7 +121,7 @@ def train_command(path: str, dataset: str, iterations: int, threshold: float, ca
 
         print("Info     |" + " | ".join(f"{part: <20}" for part in parts))
     else:
-        inpainter.train(Dataset(Path(dataset)), cache, load_callback, train_callback)
+        inpainter.train(Dataset(Path(dataset)), train_callback)
         inpainter.save(Path(path))
 
 inpainter_command.add_command(init_command)

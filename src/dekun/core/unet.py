@@ -1,4 +1,3 @@
-from typing import List
 import torch.nn as nn
 import torch
 
@@ -58,6 +57,11 @@ class UNet(nn.Module):
 
     # Forward the U-Net. 
     def forward(self, input: torch.Tensor):
+        factor = 2 ** len(self.downs)
+
+        if (input.shape[3] % factor != 0) or (input.shape[2] % factor != 0):
+            raise ValueError(f"Invalid input size: {input.shape[3]} x {input.shape[2]} (not divisible by {factor})")
+
         skip_connections = []
 
         for down in self.downs:
@@ -71,9 +75,6 @@ class UNet(nn.Module):
         for index in range(0, len(self.ups), 2):
             input = self.ups[index](input)
             skip_connection = skip_connections[index // 2]
-
-            if input.shape != skip_connection.shape:
-                input = nn.functional.interpolate(input, size=skip_connection.shape[2:])
 
             concat_skip = torch.cat((skip_connection, input), dim=1)
             input = self.ups[index + 1](concat_skip)

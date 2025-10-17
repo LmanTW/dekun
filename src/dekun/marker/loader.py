@@ -1,38 +1,16 @@
-from typing import Callable, cast
-from shutil import rmtree
-from typing import Union
-from pathlib import Path
+from typing import cast
 import PIL.Image as pil
-import tempfile
 import torch
-import gc
 
-from dekun.core.utils import LoadProgress, device_available_memory, transform_image, fit_tensor
-from dekun.core.dataset import Dataset, Entry
-
-# Load an entry.
-def load_entry(entry: Entry, width: int, height: int, device: torch.device):
-    with pil.open(str(entry.image_path)) as image:
-        image_tensor = fit_tensor(cast(torch.Tensor, transform_image(image.convert("RGB"))).to(device), width, height)[0].unsqueeze(0)
-
-    with pil.open(str(entry.mask_path)) as mask:
-        mask_tensor = fit_tensor(cast(torch.Tensor, transform_image(mask.convert("L"))).to(device), width, height)[0].unsqueeze(0)
-
-    return image_tensor, mask_tensor
+from dekun.core.utils import transform_image, fit_tensor
+from dekun.core.dataset import Dataset
 
 # A marker dataset loader.
-class Loader(object):
+class Loader(torch.utils.data.Dataset):
 
     # Initialize a marker dataset loader.
-    def __init__(self, dataset: Dataset, width: int, height: int, cache: str, device: torch.device, load_callback: Union[Callable[[LoadProgress], None], None] = None):
-        self.dataset = dataset
+    def __init__(self, dataset: Dataset, width: int, height: int):
         self.entries = []
-
-        self.width = width
-        self.height = height
-
-        self.cache = cache
-        self.device = device
 
         for name in dataset.list():
             entry = dataset.get(name)
@@ -40,67 +18,21 @@ class Loader(object):
             if entry.exists():
                 self.entries.append(entry)
 
-        if cache == "disk":
-            chunk_size = round(device_available_memory(device.type) / ((width * height) * 50))
+        self.width = width
+        self.height = height
 
-            self.temporary = Path(tempfile.mkdtemp())
-            self.chunks = 0
+    # Get the size of the dataset.
+    def __len__(self):
+        return len(self.entries)
 
-            while True:
-                chunk = []
+    # Get an entry.
+    def __getitem__(self, index: int):
+        entry = self.entries[index]
 
-                while (len(chunk) < chunk_size) and (self.chunks * chunk_size) + len(chunk) < len(self.entries):
-                    index = (self.chunks * chunk_size) + len(chunk)
-                    chunk.append(load_entry(self.entries[index], self.width, self.height, self.device))
+        with pil.open(str(entry.image_path)) as image:
+            image_tensor = fit_tensor(cast(torch.Tensor, transform_image(image.convert("RGB"))), self.width, self.height)[0]
 
-                    if load_callback != None:
-                        load_callback(LoadProgress(index + 1, len(self.entries)))
+        with pil.open(str(entry.mask_path)) as mask:
+            mask_tensor = fit_tensor(cast(torch.Tensor, transform_image(mask.convert("L"))), self.width, self.height)[0]
 
-                torch.save(chunk, str(self.temporary.joinpath(f"chunk-{self.chunks + 1}.pth")))
-                gc.collect()
-
-                if (self.chunks * chunk_size) + len(chunk) >= len(self.entries):
-                    break
-
-                self.chunks += 1
-        elif cache == "memory":
-            self.processed_entries = []
-
-            for index, entry in enumerate(self.entries):
-                if entry.exists():
-                    self.processed_entries.append(load_entry(entry, self.width, self.height, self.device))
-
-                if load_callback != None:
-                    load_callback(LoadProgress(index + 1, len(self.entries)))
-        elif cache != "none":
-            raise ValueError(f"Unsupported cache type: {cache}")
-
-    # Enter the dataset loader.
-    def __enter__(self):
-        return self
-
-    # Exit the dataset loader.
-    def __exit__(self, exc_type, exc_value, exc_traceback):
-        if self.cache == "disk":
-            rmtree(str(self.temporary))
-
-        gc.collect()
-
-    # Loop through the dataset.
-    def loop(self, callback: Callable[[torch.Tensor, torch.Tensor], None]):
-        if self.cache == "none":
-            for entry in self.entries:
-                callback(*load_entry(entry, self.width, self.height, self.device))
-
-            gc.collect()
-        elif self.cache == "disk":
-            for i in range(0, self.chunks + 1):
-                for entry in torch.load(str(self.temporary.joinpath(f"chunk-{i + 1}.pth")), self.device):
-                    callback(entry[0], entry[1])
-
-                gc.collect()
-        elif self.cache == "memory":
-            for entry in self.processed_entries:
-                callback(entry[0], entry[1])
-
-            gc.collect()
+        return image_tensor, mask_tensor
