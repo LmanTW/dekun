@@ -58,10 +58,15 @@ def fit_tensor(tensor: torch.Tensor, width: int, height: int):
 
     resized_tensor = torch.nn.functional.interpolate(tensor.unsqueeze(0), size=(new_height, new_width), mode="bilinear", align_corners=False).squeeze(0)
 
-    new_tensor = torch.zeros((tensor.shape[0], height, width), dtype=tensor.dtype, device=tensor.device)
-    new_tensor[..., offset_y:offset_y + new_height, offset_x:offset_x + new_width] = resized_tensor
+    pad_width = width - new_width
+    pad_height = height - new_height
 
-    return new_tensor, (offset_x, offset_y, new_width, new_height)
+    pad_left = pad_width // 2
+    pad_right = pad_width - pad_left
+    pad_top = pad_height // 2
+    pad_bottom = pad_height - pad_top
+
+    return torch.nn.functional.pad(resized_tensor, (pad_left, pad_right, pad_top, pad_bottom)), (offset_x, offset_y, new_width, new_height)
 
 # Format a duration.
 def format_duration(seconds: float):

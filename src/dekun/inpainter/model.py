@@ -1,6 +1,5 @@
-from typing import Union, Callable, Optional, cast
+from typing import Union, Callable, Optional
 from pathlib import Path
-import PIL.Image as pil
 import torch.nn as nn
 import torch
 import time
