@@ -17,6 +17,7 @@ dependencies = [
 cpu = ["torch==2.8.0+cpu", "torchvision==0.23.0+cpu"]
 xpu = ["torch==2.8.0+xpu", "torchvision==0.23.0+xpu"]
 cuda = ["torch==2.8.0+cu128", "torchvision==0.23.0+cu128"]
+rocm = ["torch==2.8.0+rocm6.4", "torchvision==0.23.0+rocm6.4"]
 
 [[tool.uv.index]]
 name = "main"
@@ -34,13 +35,18 @@ url = "https://download.pytorch.org/whl/xpu"
 name = "pytorch-cuda"
 url = "https://download.pytorch.org/whl/cu128"
 
+[[tool.uv.index]]
+name = "pytorch-rocm"
+url = "https://download.pytorch.org/whl/rocm6.4"
+
 [tool.uv]
 index-strategy = "unsafe-best-match"
 conflicts = [
     [
       { group = "cpu" },
       { group = "xpu" },
-      { group = "cuda" }
+      { group = "cuda" },
+      { group = "rocm" }
     ]
 ]
 
