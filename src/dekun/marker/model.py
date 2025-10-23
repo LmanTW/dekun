@@ -95,7 +95,7 @@ class Marker:
         with torch.no_grad():
             resized_tensor, transform = fit_tensor(image, self.width, self.height)
 
-            output = self.model(resized_tensor.unsqueeze(0))
+            output = self.model(resized_tensor.to(self.device).unsqueeze(0))
             output = output[:, :, transform[1]:transform[1] + transform[3], transform[0]:transform[0] + transform[2]]
             output = torch.nn.functional.interpolate(output, size=(image.shape[1], image.shape[2])).squeeze(0).squeeze()
 
