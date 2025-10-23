@@ -116,7 +116,7 @@ class Inpainter:
             resized_image, transform = fit_tensor(image, self.width, self.height)
             resized_mask = fit_tensor(mask, self.width, self.height)[0]
  
-            output = self.generator(torch.cat((resized_image.unsqueeze(0), resized_mask.unsqueeze(0)), dim=1))
+            output = self.generator(torch.cat((resized_image.to(self.device).unsqueeze(0), resized_mask.to(self.device).unsqueeze(0)), dim=1))
             output = torch.clamp(output, 0.0, 1.0)
 
             binary_mask = (resized_mask > 0.5).float()
