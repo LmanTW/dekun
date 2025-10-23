@@ -129,7 +129,7 @@ export default () => {
             <p style={{ marginRight: 'var(--spacing-small)' }}>Decrease Stroke Size:</p>
             <Keybind id='decreaseStrokeSize'/>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', marginBottom: 'var(--spacing-big)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: 'var(--spacing-small)' }}>
             <p style={{ marginRight: 'var(--spacing-small)' }}>Change Stroke Opacity:</p>
             <Keybind id='changeStrokeOpacity'/>
           </div>
